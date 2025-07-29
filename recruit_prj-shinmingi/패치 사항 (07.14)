@@ -1,0 +1,41 @@
+----로그인 관련 노트-----
+
+로그인 버튼은 @{/login} 컨트롤 연결
+로그아웃 버튼은 @{/logout} 컨트롤 연결
+
+~~~~~view단에서 회원/비회원 나누기~~~~~
+ 
+예시) Corp_header.html (기업페이지 헤더) 에서
+
+//1. 비로그인 상태 or 기업회원이 아닐 때
+<div sec:authorize="!hasRole('ROLE_CORP')" >
+	<div>로그인</div> 
+	<div>회원가입</div>
+<div>
+
+//2. 기업회원일 때
+<div sec:authorize="hasRole('ROLE_CORP')" >
+	<div th:text="${user.name}"> //회원이름
+<div>
+
+${user}로 불러올수 있습니다.
+단, 비로그인시 ${user}를 불러오면 오류납니다. th:if에 ${user != null} 조건 추가해주세요.
+
+~~~~~ 컨트롤러 단에서 불러오기 ~~~~~
+1. GetMapping으로 페이지를 불러올 때, 비회원과 기업회원이 아닌경우 접근을막고싶다면, 메서드 매개변수에  @AuthenticationPrincipal CustomUser user 추가
+
+2. 메서드 안에서 
+	 if(user == null) { return "redirect:/accessDenied"; } //비회원은 접근 거절
+	
+	 //기업회원 권한이 없다면  접근 거절 (유저는 ROLE_USER로 고칠것) 
+	 boolean hasCorpAuth = user.getAuthorities().stream().anyMatch(auth -> 								"ROLE_CORP".equals(auth.getAuthority()));
+	 if( !hasCorpAuth) {
+  		return "redirect:/accessDenied";
+  	 }
+
+	//기타
+	user.getEmail()
+  	user.getCorpNo()
+	꺼내서 비즈니스 로직 짤 것 
+
+참고컨트롤러 : kr.co.sist.corp.contorller.JobPostController.java 

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기인력 - 리뷰관리</title>
+<link rel="stylesheet" th:href="@{/admin/css/admin_board.css}"/>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style type="text/css">
+/* 모달 스타일 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 3% auto;
+    padding: 0;
+    border: none;
+    width: 90%;
+    max-width: 900px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+.modal-body {
+    padding: 30px 40px;
+}
+
+.modal-form table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+.modal-form th {
+    width: 120px;
+    text-align: left;
+    vertical-align: top;
+    padding: 12px 10px 12px 0;
+    font-weight: 600;
+    color: #555;
+}
+
+.modal-form td {
+    padding: 8px 0;
+}
+
+.modal-form input[type="text"], 
+.modal-form textarea {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 12px;
+    border: 1.5px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.modal-form input[type="text"]:focus, 
+.modal-form textarea:focus {
+    border-color: #4caf50;
+    outline: none;
+}
+
+/* 읽기 전용 필드 스타일 */
+.modal-form input[readonly], 
+.modal-form textarea[readonly] {
+    background-color: #f5f5f5;
+    color: #666;
+    border-color: #ddd;
+}
+
+.modal-btn-group {
+    text-align: center;
+    padding: 20px 0;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 20px;
+}
+
+.modal-btn {
+    font-size: 16px;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0 10px;
+    color: white;
+    font-weight: 600;
+    min-width: 120px;
+    transition: background-color 0.3s ease;
+}
+
+.modal-btn.save-btn {
+    background-color: #4caf50;
+}
+
+.modal-btn.save-btn:hover {
+    background-color: #43a047;
+}
+
+.modal-btn.cancel-btn {
+    background-color: #9e9e9e;
+}
+
+.modal-btn.cancel-btn:hover {
+    background-color: #757575;
+}
+
+/* 답변 상태 표시 */
+.answer-status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.answer-status.waiting {
+    background-color: #ffeb3b;
+    color: #333;
+}
+
+.answer-status.completed {
+    background-color: #4caf50;
+    color: white;
+}
+
+/* 제목 링크 스타일 */
+.inquiry-title-link {
+    color: #333;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.inquiry-title-link:hover {
+    color: #4caf50;
+    text-decoration: underline;
+}
+</style>
+<script type="text/javascript">
+$(function() {
+  // 전체선택 체크박스 클릭 시
+  $('#selectAll').on('change', function() {
+    const isChecked = $(this).prop('checked');
+    $('.select-row').prop('checked', isChecked);
+  });
+
+  // 개별 체크박스 클릭 시
+  $(document).on('change', '.select-row', function() {
+    const total = $('.select-row').length;
+    const checked = $('.select-row:checked').length;
+    $('#selectAll').prop('checked', total === checked);
+  });
+
+  // 제목 클릭시 문의 상세보기 모달 열기
+  $(document).on('click', '.inquiry-title-link', function(e) {
+    e.preventDefault();
+    const askSeq = $(this).data('seq');
+    openInquiryModal(askSeq);
+  });
+
+  // 문의 상세보기 모달 열기 함수
+  function openInquiryModal(askSeq) {
+    $.ajax({
+      url: `/admin/api/inquiry/${askSeq}`,
+      method: 'GET',
+      success: function(inquiry) {
+        $('#modalTitle').text('문의 상세보기');
+        $('#askSeq').val(inquiry.askSeq);
+        $('#inquiryEmail').val(inquiry.email);
+        $('#inquiryTitle').val(inquiry.title);
+        $('#inquiryContent').val(inquiry.content);
+        $('#inquiryCategory').val(inquiry.category);
+        $('#inquiryUserType').val(inquiry.userType);
+        $('#inquiryRegsDate').val(inquiry.regsDate);
+        
+        // 답변 상태에 따른 처리
+        if (inquiry.answerStat === 'Y' || inquiry.answerStat === 1) { // DB에서 숫자로 저장
+          $('#answerContent').val(inquiry.answer || '');
+          $('#answerDate').val(inquiry.answerDate || '');
+          $('#saveBtn').text('답변 수정');
+          $('.answer-info').show();
+        } else {
+          $('#answerContent').val('');
+          $('#answerDate').val('');
+          $('#saveBtn').text('답변 등록');
+          $('.answer-info').hide();
+        }
+        
+        $('#inquiryModal').show();
+      },
+      error: function() {
+        alert('문의 정보를 불러오는 데 실패했습니다.');
+      }
+    });
+  }
+
+  // 모달 닫기
+  $('.close, .cancel-btn').on('click', function() {
+    $('#inquiryModal').hide();
+  });
+
+  // 모달 외부 클릭시 닫기
+  $(window).on('click', function(event) {
+    if (event.target.id === 'inquiryModal') {
+      $('#inquiryModal').hide();
+    }
+  });
+
+//답변 폼 제출
+  $('#inquiryForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const askSeq = $('#askSeq').val();
+    const answer = $('#answerContent').val().trim();
+    
+    if (!answer) {
+      alert('답변 내용을 입력해주세요.');
+      return;
+    }
+
+    if (!confirm('답변을 등록하시겠습니까?')) {
+      return;
+    }
+
+    // 현재 날짜를 YYYY-MM-DD HH:mm:ss 형식으로 포맷
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const answerDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+
+    $.ajax({
+      url: '/admin/updateInquiry',
+      method: 'PATCH',
+      contentType: 'application/json',
+      data: JSON.stringify({
+        askSeq: askSeq,
+        answer: answer,
+        answerStat: "Y", 
+        // adminId 제거 - 서버에서 인증된 사용자 정보로 설정
+        answerDate: answerDate
+      }),
+      success: function(response) {
+        alert('답변이 등록되었습니다.');
+        $('#inquiryModal').hide();
+        location.reload(); // 페이지 새로고침으로 답변 상태 업데이트
+      },
+      error: function() {
+        alert('답변 등록 중 오류가 발생했습니다.');
+      }
+    });
+  });
+
+  // 삭제 버튼 기능
+  $('#btnWithdraw').on('click', function() {
+    let selectedIds = [];
+
+    $('.select-row:checked').each(function() {
+      selectedIds.push($(this).val());
+    });
+
+    if (selectedIds.length === 0) {
+      alert('삭제할 리뷰를 선택해주세요.');
+      return;
+    }
+
+    if (!confirm('선택한 리뷰를 삭제 처리하시겠습니까?')) {
+      return;
+    }
+
+    $.ajax({
+      url: '/admin/deleteInquiry',
+      method: 'DELETE',
+      contentType: 'application/json',
+      data: JSON.stringify({ askSeq: selectedIds }),
+      success: function(response) {
+        alert('삭제 처리 완료');
+        location.reload();
+      },
+      error: function() {
+        alert('삭제 처리 중 오류가 발생했습니다.');
+      }
+    });
+  });
+});
+</script>
+</head>
+
+<body>
+
+<!-- 사이드바 포함 -->
+<th:block th:replace="~{fragments/adminHeader :: adminHeader}"></th:block>
+
+<!-- 콘텐츠 영역 -->
+<div class="admin-container">
+  <section class="review-wrapper">
+    <h2 class="review-title">문의내역</h2>
+
+    <!-- 검색+필터 form -->
+    <form th:action="@{/admin/admin_inquiry}" method="get">
+
+      <!-- 검색 영역 -->
+      <div class="search-area">
+        <div class="search-group">
+         <select name="type" aria-label="검색 조건 선택">
+		  <option th:value="전체" th:selected="${type == '전체'}">전체</option>
+		  <option th:value="title" th:selected="${type == 'title'}">제목</option>
+		  <option th:value="email" th:selected="${type == 'email'}">이메일</option>
+		  <option th:value="content" th:selected="${type == 'content'}">내용</option>
+		</select>
+        </div>
+        <div class="search-group">
+          <input type="text" name="keyword" th:value="${keyword}" placeholder="검색어 입력" aria-label="검색어 입력"/>
+        </div>
+        <button class="search-btn" type="submit">검색</button>
+      </div>
+
+      <!-- 필터 영역 -->
+      <div class="filter-area">
+        <div class="filter-group">
+          <label>기술:</label>
+          <select name="category" aria-label="상태 선택">
+            <option th:value="전체" th:selected="${category == '전체'}">전체</option>
+            <option th:value="general" th:selected="${category == 'general'}">일반 문의</option>
+            <option th:value="technical" th:selected="${category == 'technical'}">기술 문의</option>
+            <option th:value="account" th:selected="${category == 'account'}">계정 문의</option>
+            <option th:value="recruitment" th:selected="${category == 'recruitment'}">구직 관련</option>
+            <option th:value="company-general" th:selected="${category == 'company-general'}">기업 일반</option>
+            <option th:value="company-service" th:selected="${category == 'company-service'}">기업 서비스</option>
+            <option th:value="company-payment" th:selected="${category == 'company-payment'}">기업 결제</option>
+            <option th:value="other" th:selected="${category == 'other'}">기타</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>답변상태:</label>
+          <select name="answer_stat" aria-label="상태 선택">
+            <option th:value="전체" th:selected="${answer_stat == '전체'}">전체</option>
+            <option th:value="Y" th:selected="${answer_stat == 'Y'}">답변완료</option>
+            <option th:value="N" th:selected="${answer_stat == 'N'}">답변대기</option>
+          </select>
+        </div>
+      </div>
+    </form>
+
+    <!-- 테이블 -->
+    <div class="review-table-wrapper">
+      <table class="admin-table" summary="리뷰 목록 테이블">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll" /></th>
+            <th>번호</th>
+            <th>이메일</th>
+            <th>제목</th>
+            <th>답변상태</th>
+            <th>유저타입</th> 
+            <th>카테고리</th> 
+            <th>문의일자
+            <a th:href="@{/admin/admin_inquiry(
+			          order=${#strings.equals(order,'regs_asc') ? 'regs_desc' : 'regs_asc'},
+			          currentPage=${currentPage},
+			          type=${type},
+			          keyword=${keyword},
+			          category=${category},
+			          answer_stat=${answer_stat})}"
+			     title="공고게시일 정렬">
+			      <span th:text="${#strings.equals(order,'regs_asc') ? '▲' : '▼'}"></span>
+			  </a>
+            </th>
+            <th>답변일자
+            <a th:href="@{/admin/admin_inquiry(
+			          order=${#strings.equals(order,'answer_asc') ? 'answer_desc' : 'answer_asc'},
+			          currentPage=${currentPage},
+			          type=${type},
+			          keyword=${keyword},
+			          category=${category},
+			          answer_stat=${answer_stat})}"
+			     title="공고게시일 정렬">
+			      <span th:text="${#strings.equals(order,'answer_asc') ? '▲' : '▼'}"></span>
+			  </a>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="list, iterStat : ${inquiryList}">
+            <td><input type="checkbox" class="select-row" th:value="${list.askSeq}"/></td>
+            <td th:text="${no - iterStat.index}">번호</td>
+            <td th:text="${list.email}">이메일</td>
+            <td>
+              <a href="#" class="inquiry-title-link" th:data-seq="${list.askSeq}" th:text="${list.title}">제목</a>
+            </td>
+            <td th:switch="${list.answerStat}">
+			  <span th:case="'N'" class="answer-status waiting">답변대기</span>
+			  <span th:case="'Y'" class="answer-status completed">답변완료</span>
+			  <span th:case="*">-</span>
+			</td>
+            <td class="stat" th:text="${list.userType}">유저타입</td>
+            <td class="stat" th:switch="${list.category}">
+			  <span th:case="'general'">일반 문의</span>
+			  <span th:case="'technical'">기술 문의</span>
+			  <span th:case="'account'">계정 문의</span>
+			  <span th:case="'recruitment'">구직 관련</span>
+			  <span th:case="'company-general'">기업 일반</span>
+			  <span th:case="'company-service'">기업 서비스</span>
+			  <span th:case="'company-payment'">기업 결제</span>
+			  <span th:case="'other'">기타</span>
+			  <span th:case="*">-</span>
+			</td>
+
+            <td th:text="${list.regsDate}">문의일자</td>
+            <td th:text="${list.answerDate}">답변일자</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 하단 페이지 네비 + 버튼 -->
+    <div class="pagination-wrapper">
+	 <!-- 버튼 그룹: 수직 정렬 -->
+      <div class="button-group">
+      <span sec:authorize="hasRole('팀장') or hasRole('SUPER')">
+        <button id="btnWithdraw" class="delete-btn" type="button">삭제</button>
+        </span>
+      </div>
+      
+      <nav class="pagination" aria-label="페이지 네비게이션">
+		<ul class="pagination">
+          <!-- 이전 버튼 -->
+          <li class="page-item" th:if="${startPage > 1}">
+              <a class="page-link" th:href="@{/admin/admin_inquiry(currentPage=${startPage - 1})}" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+              </a>
+          </li>
+
+          <!-- 페이지 번호 -->
+          <th:block th:each="pp : ${#numbers.sequence(startPage, endPage)}">
+              <li class="page-item" th:classappend="${currentPage == pp} ? 'active'">
+                  <a class="page-link" th:href="@{/admin/admin_inquiry(currentPage=${pp})}" th:text="${pp}">1</a>
+              </li>
+          </th:block>
+
+          <!-- 다음 버튼 -->
+          <li class="page-item" th:if="${endPage < totalPage}">
+              <a class="page-link" th:href="@{/admin/admin_inquiry(currentPage=${endPage + 1})}" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+              </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </section>
+</div>
+
+<!-- 문의 상세보기/답변 모달 -->
+<div id="inquiryModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">문의 상세보기</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="inquiryForm" class="modal-form">
+                <input type="hidden" id="askSeq" name="askSeq" />
+                <table>
+                    <tr>
+                        <th>이메일</th>
+                        <td><input type="text" id="inquiryEmail" readonly /></td>
+                    </tr>
+                    <tr>
+                        <th>제목</th>
+                        <td><input type="text" id="inquiryTitle" readonly /></td>
+                    </tr>
+                    <tr>
+                        <th>문의 내용</th>
+                        <td><textarea id="inquiryContent" rows="6" readonly></textarea></td>
+                    </tr>
+                    <tr>
+                        <th>카테고리</th>
+                        <td><input type="text" id="inquiryCategory" readonly /></td>
+                    </tr>
+                    <tr>
+                        <th>유저타입</th>
+                        <td><input type="text" id="inquiryUserType" readonly /></td>
+                    </tr>
+                    <tr>
+                        <th>문의일자</th>
+                        <td><input type="text" id="inquiryRegsDate" readonly /></td>
+                    </tr>
+                    <tr class="answer-info">
+                        <th>답변일자</th>
+                        <td><input type="text" id="answerDate" readonly /></td>
+                    </tr>
+                    <tr>
+                        <th>답변 내용</th>
+                        <td><textarea id="answerContent" name="answer" rows="8" placeholder="답변 내용을 입력해주세요..." required></textarea></td>
+                    </tr>
+                </table>
+                <div class="modal-btn-group">
+                    <button type="submit" id="saveBtn" class="modal-btn save-btn">답변 등록</button>
+                    <button type="button" class="modal-btn cancel-btn">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

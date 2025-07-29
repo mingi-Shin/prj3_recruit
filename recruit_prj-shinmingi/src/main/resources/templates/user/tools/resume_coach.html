@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기 인력</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/user/tools/css/tools_header.css}"/>
+<link rel="stylesheet" th:href="@{/user/tools/css/resume_coach.css}"/>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const analyzeBtn = document.querySelector('.analyze-button');
+    const resetBtn = document.querySelector('.reset-button');
+    const resumeTextarea = document.getElementById('resumeInput');
+    const coachingDiv = document.querySelector('.coaching-result');
+
+    // 간단한 텍스트 포맷팅
+    function formatText(text) {
+        return text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    }
+
+    // 로딩 상태 설정
+    function setLoading(isLoading) {
+        if (isLoading) {
+            // textarea와 버튼들 비활성화
+            resumeTextarea.classList.add('disabled');
+            analyzeBtn.classList.add('disabled');
+            resetBtn.classList.add('disabled');
+            
+            // 로딩 애니메이션 표시
+            coachingDiv.innerHTML = `
+                <div class="loading">
+                    🔍 AI가 자기소개서를 분석 중입니다
+                    <div class="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+        } else {
+            // textarea와 버튼들 활성화
+            resumeTextarea.classList.remove('disabled');
+            analyzeBtn.classList.remove('disabled');
+            resetBtn.classList.remove('disabled');
+        }
+    }
+
+    analyzeBtn.addEventListener('click', async function () {
+        const resume = resumeTextarea.value.trim();
+
+        if (resume.length < 200) {
+            alert("자기소개서는 최소 200자 이상 입력해야 분석이 가능합니다.");
+            return;
+        }
+
+        setLoading(true);
+
+        try {
+            const response = await fetch('/resume/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content: resume })
+            });
+
+            const data = await response.json();
+
+            if (data.choices && data.choices.length > 0) {
+                const result = data.choices[0].message.content;
+                coachingDiv.innerHTML = formatText(result);
+            } else {
+                coachingDiv.innerHTML = '⚠️ 분석 결과를 불러오는 데 문제가 발생했습니다.';
+            }
+        } catch (err) {
+            coachingDiv.innerHTML = '❌ 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+            console.log(err.message);
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    resetBtn.addEventListener('click', function () {
+        resumeTextarea.value = '';
+        coachingDiv.innerHTML = '';
+    });
+});
+</script>
+
+</head>
+
+<body>
+<header>
+<div th:replace="~{fragments/header :: header}"></div>
+</header>
+
+<main>
+<div th:replace="~{user/tools/tools_header :: tools-header}"></div>
+<div>
+<div class="resume-coaching-container">
+<div class="resume-input-section">
+<label for="resumeInput" class="section-title">자기소개서</label>
+<textarea id="resumeInput" placeholder="자기소개서를 입력해주세요.
+사람인 자소서 검점 AI가 더 돋보이는 자소서를 첨삭해 드려요!
+최소 200자 이상 최대 4000자까지 입력해주셔야 첨삭가능합니다."></textarea>
+</div>
+<div class="resume-coaching-section">
+<label class="section-title">코칭</label>
+<div class="coaching-result"></div>
+</div>
+</div>
+
+<div class="resume-info">
+AI자소서 코칭은 입력하신 자기소개서와 그 정보를 바탕으로 추천 및 분석하며, 관련 사항은 1년간 보관됩니다.<br>
+(다만, 알리미를 거절 및 회원탈퇴 등을 위해 필요한 경우 수집한 정보는 기업사정에 따라 기간 동안 보관 및 이용할 수 있습니다.)<br>
+등의 내용을 올바르게 입력하신 것으로 보아 AI자소서 코칭 서비스를 제공합니다.<br>
+AI자소서 코칭 분석시 입력하신 정보는 기명화되며, 작성자 정보로 분석하지 않으므로 AI자소서 코칭 분석 내역의 목적이나 삭제는 추가하며, 코칭 내용은 외부에 노출되지 않습니다.
+</div>
+
+<div class="resume-buttons">
+<button type="button" class="reset-button">초기화</button>
+<button type="button" class="analyze-button">동의 후 분석</button>
+</div>
+</div>
+</main>
+
+<footer>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기 인력</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/user/jobPosting/css/header.css}" />
+<link rel="stylesheet" th:href="@{/user/jobPosting/css/footer.css}" />
+<link rel="stylesheet" th:href="@{/user/jobPosting/css/review.css}"/>
+<style type="text/css">
+
+</style>   
+<script type="text/javascript">
+//별점을 별 문자로 변환하는 함수
+function convertRatingToStars(rating) {
+ let stars = '';
+ for(let i = 1; i <= 5; i++) {
+     if(i <= rating) {
+         stars += '⭐';
+     } else {
+         stars += '☆';
+     }
+ }
+ return stars;
+}
+
+//평균 별점을 별 문자로 변환하는 함수
+function convertAvgRatingToStars(avgRating) {
+ let stars = '';
+ let fullStars = Math.floor(avgRating);
+ let decimal = avgRating - fullStars;
+ 
+ for(let i = 1; i <= 5; i++) {
+     if(i <= fullStars) {
+         stars += '⭐';
+     } else if(i == fullStars + 1 && decimal >= 0.5) {
+         stars += '⭐';
+     } else {
+         stars += '☆';
+     }
+ }
+ return stars;
+}
+</script>
+</head>
+<body>
+<header>
+<div th:replace="~{fragments/header :: header}"></div>
+</header>
+<main>
+  <div class="container">
+        <div class="review-section">
+            
+            <!-- 알림 메시지 -->
+            <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+            <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+            
+            <h1 th:text="${companyName != null ? companyName + ' 기업 후기' : '기업 후기'}">기업 후기</h1>
+            
+            <!-- corpNo가 있을 때만 통계 표시 -->
+            <div class="company-stats" th:if="${corpNo != null}">
+               <p class="total-review" th:text="'전체 리뷰 통계 (' + ${reviewStats != null ? reviewStats.totalReviews : 0} + '명)'">
+				    전체 리뷰 통계 (0명)
+				</p>
+		        <div class="score-display" th:if="${reviewStats != null && reviewStats.totalReviews > 0}">
+                    <span class="score-number" th:text="${reviewStats.avgRating}">0.0</span>
+                    <span class="rating-stars" th:text="${@reviewService.convertAvgRatingToStars(reviewStats.avgRating)}">☆☆☆☆☆</span>
+                </div>
+                <div class="score-display" th:unless="${reviewStats.totalReviews > 0}">
+                    <span class="score-number">0.0</span>
+                    <span class="rating-stars">☆☆☆☆☆</span>
+                </div>
+            </div>
+            
+            <!-- corpNo가 없으면 기본 메시지 표시 -->
+            <div th:unless="${corpNo != null}" class="empty-message">
+                <p>올바른 기업 정보가 필요합니다.</p>
+            </div>
+            
+            <div class="review-list" th:if="${corpNo != null}">
+                <!-- 리뷰가 없는 경우 -->
+                <div th:if="${reviewList == null or #lists.isEmpty(reviewList)}" class="empty-message">
+                    <p>리뷰가 없습니다.</p>
+                    <a th:href="@{/user/job_posting/review_write(corpNo=${corpNo})}" class="write-review-btn">리뷰 작성</a>
+                </div>
+                
+                <!-- 리뷰가 있는 경우 -->
+                <div th:unless="${reviewList == null or #lists.isEmpty(reviewList)}">
+                    <div class="review-item" th:each="review : ${reviewList}">
+                        <div class="review-content">
+                        
+                         <div class="review-meta">
+						  <div class="review-rating" th:text="${@reviewService.convertRatingToStars(review.rating)}">⭐⭐⭐⭐⭐</div>
+						  <span class="score-number" th:text="${review.rating}">0.0</span>
+						  <div class="review-date" th:text="'작성일: ' + ${review.createdAt}">작성일: 2024-01-01</div>
+						</div>
+                            
+                         <!-- 한줄평 -->
+                         <div class="review-title" th:text="${review.summary}">한줄평</div>
+                            
+                         <div style="display: flex; gap: 40px;">
+  
+						  <!-- 장점 -->
+						  <div class="review-section-item" style="max-width: 300px;">
+						    <strong style="color: green;">장점</strong>
+						    <div class="review-text ellipsis" th:text="${review.pros}">장점 내용</div>
+						  </div>
+						
+						  <!-- 단점 -->
+						  <div class="review-section-item" style="max-width: 300px;">
+						    <strong style="color: red;">단점</strong>
+						    <div class="review-text ellipsis" th:text="${review.cons}">단점 내용</div>
+						  </div>
+						
+						</div>
+                            
+                        </div>
+                    </div>
+                    
+                    <!-- 리뷰 작성 버튼 -->
+                    <div style="margin-top: 20px;">
+                        <a th:href="@{/user/job_posting/review_write(corpNo=${corpNo})}" class="write-review-btn">리뷰 작성</a>
+                    </div>
+                </div>
+            </div>
+            
+             <!-- 페이징 (리뷰가 있을 때만 표시) -->
+         <div class="pagination" th:if="${corpNo != null && reviewList != null && !#lists.isEmpty(reviewList)}">
+		    <!-- 이전 페이지 -->
+		    <a th:href="@{/user/job_posting/review(corpNo=${corpNo}, page=${currentPage - 1})}" 
+		       th:class="${currentPage == 1} ? 'disabled' : ''"
+		       th:if="${currentPage > 1}">이전</a>
+		    <span th:if="${currentPage == 1}" class="disabled">이전</span>
+		    
+		    <!-- 페이지 번호들 -->
+		    <th:block th:each="page : ${#numbers.sequence(startPage, endPage)}">
+		        <a th:href="@{/user/job_posting/review(corpNo=${corpNo}, page=${page})}"
+		           th:text="${page}"
+		           th:class="${page == currentPage} ? 'active' : ''">1</a>
+		    </th:block>
+		    
+		    <!-- 다음 페이지 -->
+		    <a th:href="@{/user/job_posting/review(corpNo=${corpNo}, page=${currentPage + 1})}" 
+		       th:class="${currentPage == totalPages} ? 'disabled' : ''"
+		       th:if="${currentPage < totalPages}">다음</a>
+		    <span th:if="${currentPage == totalPages}" class="disabled">다음</span>
+		</div>
+        </div>
+    </div>
+</main>
+<footer>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+</body>
+</html>

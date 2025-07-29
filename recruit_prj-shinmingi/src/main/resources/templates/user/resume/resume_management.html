@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기 인력</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet"
+	th:href="@{/user/resume/css/resume_management.css}" />
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script th:src="@{/user/resume/js/resume_management.js}"></script>
+</head>
+<body>
+	<header>
+		<div th:replace="~{fragments/header :: header}"></div>
+	</header>
+	<main>
+		<div class="container">
+			<h2>이력서 관리</h2>
+			<br>
+			<div class="management-section" id="resumeContainer">
+				<!-- 이력서 카드 시작 -->
+				<th:block th:each="resume : ${resumes}">
+					<div class="card" th:attr="data-resumeseq=${resume.resumeSeq}">
+						<span class="card-title" th:text="${resume.title}"></span> <span
+							class="card-subtitle" th:text="|${resume.createdAt} 등록|"></span>
+						<br> <br>
+						<div class="card-actions">
+							<button class="action-btn edit edit-btn">이력서 수정</button>
+							<button class="action-btn delete delete-btn">이력서 삭제</button>
+							<button class="action-btn download download-btn">다운로드</button>
+						</div>
+					</div>
+				</th:block>
+				<!-- 이력서 카드 끝 -->
+				<div class="card add-resume" id="addResumeBtn">
+					<div class="upload-icon">+</div>
+					<div class="upload-text">새로운 이력서를 추가해보세요!</div>
+				</div>
+			</div>
+
+			<div class="upload-section">
+				<div class="card-title">첨부파일</div>
+				<p style="color: #6b7280; margin-bottom: 20px;">경험을 보여줄 수 있는
+					포트폴리오 / 경력기술서 등을 첨부해주세요. (PDF를 권장합니다.)</p>
+
+				<!-- 첨부파일 -->
+				<div id="fileListContainer">
+					<th:block th:each="file: ${files}">
+						<div class="file-item" th:attr="data-value=${file.attachmentSeq}">
+							<div class="file-info">
+								<div class="file-icon" th:text=${file.fileType}></div>
+								<div class="file-details">
+									<div class="file-name download" th:value="${file.attachmentSeq}" th:text="${file.originalName}"></div>
+									<div class="file-date" th:text="${file.createdAt}"></div>
+								</div>
+							</div>
+							<div class="file-actions">
+								<button class="action-btn delete">
+									<i class="fas fa-trash-alt"></i>
+								</button>
+							</div>
+						</div>
+					</th:block>
+				</div>
+
+				<button class="add-btn" id="addFileBtn">
+					<i class="fas fa-plus"></i> 첨부파일 추가
+				</button>
+				<input type="file" id="fileInput" class="file-input"
+					accept=".pdf,.doc,.docx">
+			</div>
+		</div>
+	</main>
+	<footer>
+		<div th:replace="~{fragments/footer :: footer}"></div>
+	</footer>
+</body>
+<script>
+
+</script>
+</html>

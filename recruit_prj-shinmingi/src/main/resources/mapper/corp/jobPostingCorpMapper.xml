@@ -1,0 +1,474 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<!-- @Mapper와 패키지명, 인터페이스명 같아야함 -->
+<mapper namespace="kr.co.sist.corp.mapper.JobPostingCorpMapper">    
+
+<!-- 이메일로 유저 가져오기 : 임시데이터 생성에 사용 -->
+<select id="selectUserInfo" parameterType="string" resultType="kr.co.sist.user.dto.UserDTO">
+SELECT email, name FROM member WHERE email = #{email}
+</select>
+
+<!-- 새로운 공고 등록 -->
+<insert id="insertJobPost" parameterType="kr.co.sist.corp.dto.JobPostingDTO">
+	<selectKey keyProperty="jobPostingSeq" resultType="int" order="BEFORE">
+		SELECT JOB_POSTING_SEQ.NEXTVAL FROM DUAL	
+	</selectKey>
+
+INSERT INTO job_posting (JOB_POSTING_SEQ, CORP_NO, POSITION_SEQ, POSTING_TITLE, POSTING_DETAIL, EXP_LEVEL,
+    POSTING_END_DT, POSTING_START_DT, RECRUIT_CNT, EMPLOY_TYPE, WORKDAY, WORK_START_TIME, WORK_END_TIME,
+    SALARY, CONT_START_DT, CONT_END_DT, EDU_LEVEL, VIEW_CNT, ZIPCODE, ROAD_ADDRESS, DETAIL_ADDRESS, REGION, DISTRICT)
+VALUES (#{jobPostingSeq}, #{corpNo}, #{positionSeq}, #{postingTitle}, #{postingDetail}, #{expLevel},
+    #{postingEndDt}, #{postingStartDt}, #{recruitCnt}, #{employType}, #{workday}, #{workStartTime}, #{workEndTime},
+    #{salary}, #{contStartDt}, #{contEndDt}, #{eduLevel}, #{viewCnt}, #{zipcode}, #{roadAddress}, #{detailAddress}, #{region}, #{district} )
+</insert>
+
+<!-- 공고 수정 -->
+<update id="modifyJobPost" parameterType="kr.co.sist.corp.dto.JobPostingDTO">
+UPDATE job_posting SET
+	CORP_NO = #{corpNo},
+	POSITION_SEQ = #{positionSeq},
+	POSTING_TITLE = #{postingTitle},
+	POSTING_DETAIL = #{postingDetail},
+	EXP_LEVEL = #{expLevel},
+	POSTING_END_DT = #{postingEndDt},
+	POSTING_START_DT = #{postingStartDt},
+	RECRUIT_CNT = #{recruitCnt},
+	EMPLOY_TYPE = #{employType},
+	WORKDAY = #{workday},
+	WORK_START_TIME = #{workStartTime},
+	WORK_END_TIME = #{workEndTime},
+	SALARY = #{salary},
+	CONT_START_DT = #{contStartDt},
+	CONT_END_DT = #{contEndDt},
+	EDU_LEVEL = #{eduLevel},
+	VIEW_CNT = #{viewCnt},
+	ZIPCODE = #{zipcode},
+	ROAD_ADDRESS = #{roadAddress},
+	DETAIL_ADDRESS = #{detailAddress},
+	REGION = #{region},
+	DISTRICT = #{district}
+WHERE JOB_POSTING_SEQ = #{jobPostingSeq}
+</update>
+
+
+<!-- 전체건수(total), 진행중건수(ing), 마감건수(end) -->
+<select id="selectMyPostingCount" parameterType="java.lang.Long" resultType="map">
+SELECT 
+	COUNT(*) AS total_posting_cnt,
+	COUNT(CASE WHEN jp.is_ended = 'N' THEN 1 END) AS ing_posting_cnt,
+	COUNT(CASE WHEN jp.is_ended = 'Y' THEN 1 END) AS end_posting_cnt
+FROM job_posting jp
+WHERE jp.corp_no = #{corpNo}
+</select>
+
+<!-- 사업자등록번호로 모든 공고 목록 가져오기(사업자번호, 마감상태, 정렬순서), 비교에 #{}쓰지말고 변수명 그대로 쓰기   -->
+<select id="selectMyAllPosting" resultType="kr.co.sist.corp.dto.JobPostingDTO" parameterType="kr.co.sist.corp.dto.JobPostingDTO">
+	SELECT 	jp.JOB_POSTING_SEQ AS job_posting_seq,
+			jp.CORP_NO AS corp_no, 
+			jp.POSTING_TITLE AS posting_title, 
+			jp.employ_type AS employ_type, 
+			jp.exp_level AS exp_level, 
+			jp.posting_start_dt AS posting_start_dt, 
+			jp.posting_end_dt AS posting_end_dt, 
+			c.CORP_NM AS corp_nm, 
+			pc.position_name AS position_name, 
+			LISTAGG(DISTINCT ts.stack_name, ', ') WITHIN GROUP (ORDER BY ts.TECH_STACK_SEQ) AS tech_names,
+      count(DISTINCT ja.RESUME_SEQ) AS app_cnt, 
+      jp.view_cnt AS view_cnt,
+      jp.is_ended AS is_ended
+	FROM job_posting jp 
+	INNER JOIN company c on jp.corp_no = c.corp_no
+	INNER JOIN job_posting_tech_stack jpts on jp.job_posting_seq = jpts.job_posting_seq
+	INNER JOIN position_code pc on jp.position_seq = pc.position_seq 
+	INNER JOIN tech_stack ts on jpts.tech_stack_seq = ts.tech_stack_seq
+	LEFT JOIN job_application ja on jp.job_posting_seq = ja.job_posting_seq
+	<choose>
+		<when test="postSts == 'ing'">
+	  	WHERE jp.corp_no = #{corpNo} AND jp.is_ended = 'N'
+		</when>
+		<when test="postSts == 'end'">
+			WHERE jp.corp_no = #{corpNo} AND jp.is_ended = 'Y'
+		</when>
+		<when test="postSts == 'total'">
+			WHERE jp.corp_no = #{corpNo}
+		</when>
+	</choose>
+	GROUP BY jp.CORP_NO, jp.JOB_POSTING_SEQ, jp.POSTING_TITLE, c.CORP_NM, pc.position_name, jp.posting_start_dt, jp.posting_end_dt, jp.employ_type, jp.exp_level, jp.view_cnt, jp.is_ended
+  <choose>
+  	<when test="orderBy == 'start'">
+   	ORDER BY jp.posting_start_dt DESC <!-- 최신순 -->
+  	</when>
+  	<when test="orderBy == 'end'">
+    ORDER BY jp.posting_end_dt ASC <!-- 마감빠른순 -->
+  	</when>
+  	<when test="orderBy == 'viewCnt'">
+    ORDER BY jp.view_cnt DESC <!-- 조회순 -->
+  	</when>
+  </choose>
+</select>
+
+
+
+
+
+<!-- 특정 공고 가져오기 : selectJobPost -->
+
+
+
+<!-- 공고 수정 : modifyJobPost-->
+
+
+
+<!-- 공고 마감 : finishJobPosting-->
+<update id="finishJobPosting" parameterType="int" >
+UPDATE job_posting SET is_ended = 'Y', posting_end_dt = TO_CHAR(SYSDATE, 'YYYY-MM-DD') WHERE job_posting_seq = #{jobPostingSeq}
+</update>
+
+
+<!-- 공고안에서 포지션리스트 키워드로 조회 -->
+<select id="selectPostionList" parameterType="string" resultType="kr.co.sist.user.dto.PositionCodeDTO">
+SELECT position_seq, position_name FROM POSITION_CODE 
+WHERE position_name LIKE '%' || #{keyword} || '%'
+</select>
+
+<!-- 공고안에서 기술스택 키워드로 조회 -->
+<select id="selectTechStackList" parameterType="string" resultType="kr.co.sist.user.dto.TechStackDTO">
+SELECT tech_stack_seq, stack_name FROM TECH_STACK
+WHERE UPPER(stack_name) LIKE UPPER( '%' || #{keyword} || '%' )
+</select>
+
+
+<!-- 지원자 통계 조회 : 집계 후에 결합 방식   -->
+<select id="selectApplicantStats" parameterType="int" resultType="kr.co.sist.corp.dto.JobPostingApplicantStatsDTO">
+WITH base_applicants AS ( 
+  SELECT DISTINCT ja.RESUME_SEQ, r.email  
+  FROM job_posting jp
+  JOIN JOB_APPLICATION ja ON jp.job_posting_seq = ja.job_posting_seq
+  JOIN resume r ON ja.resume_seq = r.resume_seq
+  WHERE jp.JOB_POSTING_SEQ = #{jobPostingSeq}
+),
+career_stats AS (
+  SELECT 
+    ba.RESUME_SEQ,
+    CASE 
+      WHEN MAX(TO_NUMBER(SUBSTR(c.end_date, 1, 4)) - TO_NUMBER(SUBSTR(c.start_date, 1, 4))) &lt; 1 THEN '신입'
+      WHEN MAX(TO_NUMBER(SUBSTR(c.end_date, 1, 4)) - TO_NUMBER(SUBSTR(c.start_date, 1, 4))) BETWEEN 1 AND 3 THEN '1~3년'
+      WHEN MAX(TO_NUMBER(SUBSTR(c.end_date, 1, 4)) - TO_NUMBER(SUBSTR(c.start_date, 1, 4))) BETWEEN 4 AND 5 THEN '3~5년'
+      WHEN MAX(TO_NUMBER(SUBSTR(c.end_date, 1, 4)) - TO_NUMBER(SUBSTR(c.start_date, 1, 4))) > 5 THEN '5년이상'
+      ELSE '신입'
+    END AS career_level
+  FROM base_applicants ba
+  LEFT JOIN career c ON ba.RESUME_SEQ = c.resume_seq
+  GROUP BY ba.RESUME_SEQ
+),
+
+member_stats AS (
+  SELECT 
+    ba.RESUME_SEQ,
+    m.gender,
+    CASE 
+      WHEN (TO_NUMBER(TO_CHAR(SYSDATE, 'yyyy')) - TO_NUMBER(SUBSTR(m.birth, 1, 4))) BETWEEN 20 AND 29 THEN '20대'
+      WHEN (TO_NUMBER(TO_CHAR(SYSDATE, 'yyyy')) - TO_NUMBER(SUBSTR(m.birth, 1, 4))) BETWEEN 30 AND 39 THEN '30대'
+      WHEN (TO_NUMBER(TO_CHAR(SYSDATE, 'yyyy')) - TO_NUMBER(SUBSTR(m.birth, 1, 4))) BETWEEN 40 AND 49 THEN '40대'
+      WHEN (TO_NUMBER(TO_CHAR(SYSDATE, 'yyyy')) - TO_NUMBER(SUBSTR(m.birth, 1, 4))) BETWEEN 50 AND 59 THEN '50대'
+      WHEN (TO_NUMBER(TO_CHAR(SYSDATE, 'yyyy')) - TO_NUMBER(SUBSTR(m.birth, 1, 4))) BETWEEN 60 AND 69 THEN '60대'
+    END AS age_group
+  FROM base_applicants ba
+  JOIN member m ON ba.email = m.email
+),
+education_stats AS (
+  SELECT 
+    ba.RESUME_SEQ,
+    CASE 
+      WHEN MAX(CASE WHEN ed.education_type = '대학원(박사)' THEN 5
+                   WHEN ed.education_type = '대학원(석사)' THEN 4
+                   WHEN ed.education_type = '대학(4년)' THEN 3
+                   WHEN ed.education_type = '대학(2,3년)' THEN 2
+                   WHEN ed.education_type = '고등학교' THEN 1
+                   ELSE 0 END) = 5 THEN '박사'
+      WHEN MAX(CASE WHEN ed.education_type = '대학원(박사)' THEN 5
+                   WHEN ed.education_type = '대학원(석사)' THEN 4
+                   WHEN ed.education_type = '대학(4년)' THEN 3
+                   WHEN ed.education_type = '대학(2,3년)' THEN 2
+                   WHEN ed.education_type = '고등학교' THEN 1
+                   ELSE 0 END) = 4 THEN '석사'
+      WHEN MAX(CASE WHEN ed.education_type = '대학원(박사)' THEN 5
+                   WHEN ed.education_type = '대학원(석사)' THEN 4
+                   WHEN ed.education_type = '대학(4년)' THEN 3
+                   WHEN ed.education_type = '대학(2,3년)' THEN 2
+                   WHEN ed.education_type = '고등학교' THEN 1
+                   ELSE 0 END) = 3 THEN '4년제'
+      WHEN MAX(CASE WHEN ed.education_type = '대학원(박사)' THEN 5
+                   WHEN ed.education_type = '대학원(석사)' THEN 4
+                   WHEN ed.education_type = '대학(4년)' THEN 3
+                   WHEN ed.education_type = '대학(2,3년)' THEN 2
+                   WHEN ed.education_type = '고등학교' THEN 1
+                   ELSE 0 END) = 2 THEN '2~3년제'
+      ELSE '고졸이하'
+    END AS education_level
+  FROM base_applicants ba
+  LEFT JOIN education_history ed ON ba.RESUME_SEQ = ed.resume_seq
+  GROUP BY ba.RESUME_SEQ
+),
+cert_stats AS (
+  SELECT 
+    ba.RESUME_SEQ,
+    MAX(CASE WHEN ai.activity_name = '토익' THEN 1 ELSE 0 END) AS has_toeic,
+    MAX(CASE WHEN ai.activity_name = '토플' THEN 1 ELSE 0 END) AS has_toefl,
+    MAX(CASE WHEN ai.activity_name = '텝스' THEN 1 ELSE 0 END) AS has_teps,
+    MAX(CASE WHEN ai.activity_name = '토익스피킹' THEN 1 ELSE 0 END) AS has_toeic_speaking,
+    MAX(CASE WHEN ai.activity_name = '오픽' THEN 1 ELSE 0 END) AS has_opic,
+    MAX(CASE WHEN ai.activity_name = 'JPT' THEN 1 ELSE 0 END) AS has_jpt,
+    MAX(CASE WHEN ai.activity_name = 'HSK' THEN 1 ELSE 0 END) AS has_hsk,
+    MAX(CASE WHEN ai.activity_name = '정보처리기사' THEN 1 ELSE 0 END) AS has_engineer,
+    MAX(CASE WHEN ai.activity_name = 'SQLD' THEN 1 ELSE 0 END) AS has_sqld,
+    MAX(CASE WHEN ai.activity_name = '리눅스마스터' THEN 1 ELSE 0 END) AS has_linux,
+    MAX(CASE WHEN ai.activity_name = 'OCP' THEN 1 ELSE 0 END) AS has_ocp,
+    MAX(CASE WHEN ai.activity_name = 'ADSP' THEN 1 ELSE 0 END) AS has_adsp
+  FROM base_applicants ba
+  LEFT JOIN additional_info ai ON ba.RESUME_SEQ = ai.resume_seq
+  GROUP BY ba.RESUME_SEQ
+),
+project_stats AS (
+  SELECT 
+    ba.RESUME_SEQ,
+    CASE WHEN pj.project_seq IS NOT NULL THEN 1 ELSE 0 END AS has_project,
+    CASE WHEN pj.project_seq IS NULL THEN 1 ELSE 0 END AS has_no_project    
+  FROM base_applicants ba
+  LEFT JOIN project pj ON ba.RESUME_SEQ = pj.resume_seq
+),
+
+cert_count_stats AS(
+    SELECT 
+        ba.RESUME_SEQ,
+        CASE
+            WHEN COUNT(CASE WHEN ai.record_type='자격증' THEN 1 END) &lt; 1 THEN '0개'
+            WHEN COUNT(CASE WHEN ai.record_type='자격증' THEN 1 ENd) = 1 THEN '1개'
+            WHEN COUNT(CASE WHEN ai.record_type = '자격증' THEN 1 END) = 2 THEN '2개'
+            WHEN COUNT(CASE WHEN ai.record_type = '자격증' THEN 1 END) = 3 THEN '3개'
+            ELSE '4개이상'
+        END AS cert_count
+    FROM base_applicants ba
+    LEFT JOIN additional_info ai ON ba.resume_seq = ai.resume_seq
+    AND ai.record_type = '자격증'
+    GROUP BY ba.RESUME_SEQ
+)
+
+SELECT 
+  COUNT(*) AS totalApplicantCount,
+  
+  COUNT(CASE WHEN cs.career_level = '신입' THEN 1 END) AS newEmployee,
+  COUNT(CASE WHEN cs.career_level = '1~3년' THEN 1 END) AS oneYearEmployee,
+  COUNT(CASE WHEN cs.career_level = '3~5년' THEN 1 END) AS threeYearEmployee,
+  COUNT(CASE WHEN cs.career_level = '5년이상' THEN 1 END) AS fiveYearEmployee,
+  
+  COUNT(CASE WHEN ms.gender = 'M' THEN 1 END) AS maleCount,
+  COUNT(CASE WHEN ms.gender = 'F' THEN 1 END) AS femaleCount,
+  ROUND(COUNT(CASE WHEN ms.gender = 'M' THEN 1 END) * 100.0 / COUNT(*), 2) AS maleRatio,
+  ROUND(COUNT(CASE WHEN ms.gender = 'F' THEN 1 END) * 100.0 / COUNT(*), 2) AS femaleRatio,
+  
+  COUNT(CASE WHEN ms.age_group = '20대' THEN 1 END) AS ageGroup20s,
+  COUNT(CASE WHEN ms.age_group = '30대' THEN 1 END) AS ageGroup30s,
+  COUNT(CASE WHEN ms.age_group = '40대' THEN 1 END) AS ageGroup40s,
+  COUNT(CASE WHEN ms.age_group = '50대' THEN 1 END) AS ageGroup50s,
+  COUNT(CASE WHEN ms.age_group = '60대' THEN 1 END) AS ageGroup60s,
+  
+  COUNT(CASE WHEN es.education_level = '고졸이하' THEN 1 END) AS highSchoolCount,
+  COUNT(CASE WHEN es.education_level = '2~3년제' THEN 1 END) AS associateDegreeCount,
+  COUNT(CASE WHEN es.education_level = '4년제' THEN 1 END) AS bachelorDegreeCount,
+  COUNT(CASE WHEN es.education_level = '석사' THEN 1 END) AS masterDegreeCount,
+  COUNT(CASE WHEN es.education_level = '박사' THEN 1 END) AS doctorateDegreeCount,
+  
+  SUM(cts.has_toeic) AS hasToeicCount,
+  SUM(cts.has_toefl) AS hasToeflCount,
+  SUM(cts.has_teps) AS hasTepsCount,
+  SUM(cts.has_toeic_speaking) AS hasToeicSpeakingCount,
+  SUM(cts.has_opic) AS hasOpicCount,
+  SUM(cts.has_jpt) AS hasJptCount,
+  SUM(cts.has_hsk) AS hasHskCount,
+  
+  SUM(cts.has_engineer) AS hasJcgCount,
+  SUM(cts.has_sqld) AS hasSqldCount,
+  SUM(cts.has_linux) AS hasLinuxCount,
+  SUM(cts.has_ocp) AS hasOcpCount,
+  SUM(cts.has_adsp) AS hasAdspCount,
+  
+  SUM(CASE WHEN ccs.cert_count = '0개' THEN 1 END) AS has0CertCount,
+  SUM(CASE WHEN ccs.cert_count = '1개' THEN 1 END) AS has1CertCount,
+  SUM(CASE WHEN ccs.cert_count = '2개' THEN 1 END) AS has2CertCount,
+  SUM(CASE WHEN ccs.cert_count = '3개' THEN 1 END) AS has3CertCount,
+  SUM(CASE WHEN ccs.cert_count = '4개이상' THEN 1 END) AS has4OrMoreCount,
+  
+  SUM(pj.has_project) AS sentProjectCount,
+  SUM(pj.has_no_project) AS noSentProjectCount,
+  ROUND(SUM(pj.has_project) * 100.0 / COUNT(*), 2) AS sentProjectRatio
+
+FROM base_applicants ba
+LEFT JOIN career_stats cs ON ba.RESUME_SEQ = cs.RESUME_SEQ
+LEFT JOIN member_stats ms ON ba.RESUME_SEQ = ms.RESUME_SEQ
+LEFT JOIN education_stats es ON ba.RESUME_SEQ = es.RESUME_SEQ
+LEFT JOIN cert_stats cts ON ba.RESUME_SEQ = cts.RESUME_SEQ
+LEFT JOIN project_stats pj ON ba.RESUME_SEQ = pj.RESUME_SEQ
+LEFT JOIN cert_count_stats ccs ON ba.RESUME_SEQ = ccs.RESUME_SEQ
+</select>
+
+
+<!-- 엑셀로 뽑으려는 해당 공고의 지원자별 이력 리스트 -->
+<select id="selectAllApplicantInfo" parameterType="int"  resultType="kr.co.sist.corp.dto.AllApplicantInfoDTO">
+WITH base_applicants AS ( 
+  SELECT DISTINCT ja.RESUME_SEQ, r.email
+  FROM job_posting jp
+  JOIN JOB_APPLICATION ja ON jp.job_posting_seq = ja.job_posting_seq
+  JOIN resume r ON ja.resume_seq = r.resume_seq
+  WHERE jp.JOB_POSTING_SEQ = #{jobPostingSeq}
+),
+career_stats AS (
+  SELECT 
+    ba.RESUME_SEQ, c.position,
+    CASE 
+      WHEN MAX(TO_NUMBER(SUBSTR(c.end_date, 1, 4)) - TO_NUMBER(SUBSTR(c.start_date, 1, 4))) &lt; 1 THEN '1년 미만'
+      WHEN MAX(TO_NUMBER(SUBSTR(c.end_date, 1, 4)) - TO_NUMBER(SUBSTR(c.start_date, 1, 4))) BETWEEN 1 AND 3 THEN '1~3년'
+      WHEN MAX(TO_NUMBER(SUBSTR(c.end_date, 1, 4)) - TO_NUMBER(SUBSTR(c.start_date, 1, 4))) BETWEEN 4 AND 5 THEN '3~5년'
+      WHEN MAX(TO_NUMBER(SUBSTR(c.end_date, 1, 4)) - TO_NUMBER(SUBSTR(c.start_date, 1, 4))) > 5 THEN '5년이상'
+      ELSE '신입'
+    END AS career_level
+  FROM base_applicants ba
+  LEFT JOIN career c ON ba.RESUME_SEQ = c.resume_seq
+  GROUP BY ba.RESUME_SEQ, c.POSITION
+),
+
+member_stats AS (
+  SELECT 
+    ba.RESUME_SEQ,
+    m.name, m.email, m.road_address, SUBSTR(m.birth, 1, 4) birth_4, m.gender,
+    CASE 
+      WHEN (TO_NUMBER(TO_CHAR(SYSDATE, 'yyyy')) - TO_NUMBER(SUBSTR(m.birth, 1, 4))) BETWEEN 20 AND 29 THEN '20대'
+      WHEN (TO_NUMBER(TO_CHAR(SYSDATE, 'yyyy')) - TO_NUMBER(SUBSTR(m.birth, 1, 4))) BETWEEN 30 AND 39 THEN '30대'
+      WHEN (TO_NUMBER(TO_CHAR(SYSDATE, 'yyyy')) - TO_NUMBER(SUBSTR(m.birth, 1, 4))) BETWEEN 40 AND 49 THEN '40대'
+      WHEN (TO_NUMBER(TO_CHAR(SYSDATE, 'yyyy')) - TO_NUMBER(SUBSTR(m.birth, 1, 4))) BETWEEN 50 AND 59 THEN '50대'
+      WHEN (TO_NUMBER(TO_CHAR(SYSDATE, 'yyyy')) - TO_NUMBER(SUBSTR(m.birth, 1, 4))) BETWEEN 60 AND 69 THEN '60대'
+    END AS age_group
+  FROM base_applicants ba
+  JOIN member m ON ba.email = m.email
+),
+education_stats AS (
+  SELECT 
+    ba.RESUME_SEQ, ed.school_name, ed.department, ed.grade, ed.education_type, ed.graduate_date,
+    CASE 
+      WHEN MAX(CASE WHEN ed.education_type = '대학원(박사)' THEN 5
+                   WHEN ed.education_type = '대학원(석사)' THEN 4
+                   WHEN ed.education_type = '대학(4년)' THEN 3
+                   WHEN ed.education_type = '대학(2,3년)' THEN 2
+                   WHEN ed.education_type = '고등학교' THEN 1
+                   ELSE 0 END) = 5 THEN '박사'
+      WHEN MAX(CASE WHEN ed.education_type = '대학원(박사)' THEN 5
+                   WHEN ed.education_type = '대학원(석사)' THEN 4
+                   WHEN ed.education_type = '대학(4년)' THEN 3
+                   WHEN ed.education_type = '대학(2,3년)' THEN 2
+                   WHEN ed.education_type = '고등학교' THEN 1
+                   ELSE 0 END) = 4 THEN '석사'
+      WHEN MAX(CASE WHEN ed.education_type = '대학원(박사)' THEN 5
+                   WHEN ed.education_type = '대학원(석사)' THEN 4
+                   WHEN ed.education_type = '대학(4년)' THEN 3
+                   WHEN ed.education_type = '대학(2,3년)' THEN 2
+                   WHEN ed.education_type = '고등학교' THEN 1
+                   ELSE 0 END) = 3 THEN '4년제'
+      WHEN MAX(CASE WHEN ed.education_type = '대학원(박사)' THEN 5
+                   WHEN ed.education_type = '대학원(석사)' THEN 4
+                   WHEN ed.education_type = '대학(4년)' THEN 3
+                   WHEN ed.education_type = '대학(2,3년)' THEN 2
+                   WHEN ed.education_type = '고등학교' THEN 1
+                   ELSE 0 END) = 2 THEN '2~3년제'
+      ELSE '고졸이하'
+    END AS education_level
+  FROM base_applicants ba
+  LEFT JOIN education_history ed ON ba.RESUME_SEQ = ed.resume_seq
+  GROUP BY ba.RESUME_SEQ, ed.school_name, ed.department, ed.grade, ed.education_type, ed.graduate_date
+),
+cert_stats AS (
+  SELECT 
+    ba.RESUME_SEQ,
+    MAX(CASE WHEN ai.activity_name = '토익' THEN 1 ELSE 0 END) AS has_toeic,
+    MAX(CASE WHEN ai.activity_name = '토플' THEN 1 ELSE 0 END) AS has_tofel,
+    MAX(CASE WHEN ai.activity_name = '텝스' THEN 1 ELSE 0 END) AS has_teps,
+    MAX(CASE WHEN ai.activity_name = '토익스피킹' THEN 1 ELSE 0 END) AS has_toeic_speaking,
+    MAX(CASE WHEN ai.activity_name = '오픽' THEN 1 ELSE 0 END) AS has_opic,
+    MAX(CASE WHEN ai.activity_name = 'JPT' THEN 1 ELSE 0 END) AS has_jpt,
+    MAX(CASE WHEN ai.activity_name = 'HSK' THEN 1 ELSE 0 END) AS has_hsk,
+    MAX(CASE WHEN ai.activity_name = '정보처리기사' THEN 1 ELSE 0 END) AS has_engineer,
+    MAX(CASE WHEN ai.activity_name = 'SQLD' THEN 1 ELSE 0 END) AS has_sqld,
+    MAX(CASE WHEN ai.activity_name = '리눅스마스터' THEN 1 ELSE 0 END) AS has_linux,
+    MAX(CASE WHEN ai.activity_name = 'OCP' THEN 1 ELSE 0 END) AS has_ocp,
+    MAX(CASE WHEN ai.activity_name = 'ADSP' THEN 1 ELSE 0 END) AS has_adsp
+  FROM base_applicants ba
+  LEFT JOIN additional_info ai ON ba.RESUME_SEQ = ai.resume_seq
+  GROUP BY ba.RESUME_SEQ
+),
+project_stats AS (
+  SELECT 
+    ba.RESUME_SEQ,
+    CASE WHEN pj.project_seq IS NOT NULL THEN 1 ELSE 0 END AS has_project,
+    CASE WHEN pj.project_seq IS NULL THEN 1 ELSE 0 END AS has_no_project    
+  FROM base_applicants ba
+  LEFT JOIN project pj ON ba.RESUME_SEQ = pj.resume_seq
+),
+
+cert_count_stats AS(
+    SELECT 
+        ba.RESUME_SEQ,
+        CASE
+            WHEN COUNT(CASE WHEN ai.record_type='자격증' THEN 1 END) &lt; 1 THEN '0개'
+            WHEN COUNT(CASE WHEN ai.record_type='자격증' THEN 1 ENd) = 1 THEN '1개'
+            WHEN COUNT(CASE WHEN ai.record_type = '자격증' THEN 1 END) = 2 THEN '2개'
+            WHEN COUNT(CASE WHEN ai.record_type = '자격증' THEN 1 END) = 3 THEN '3개'
+            ELSE '4개이상'
+        END AS cert_count
+    FROM base_applicants ba
+    LEFT JOIN additional_info ai ON ba.resume_seq = ai.resume_seq
+    AND ai.record_type = '자격증'
+    GROUP BY ba.RESUME_SEQ
+)
+
+SELECT 
+	ms.name, ms.email, ms.road_address, ms.birth_4 , ms.gender ,
+	cs.position AS exp, cs.career_level AS exp_year,
+	es.school_name , es.department AS major, es.grade , es.education_type , es.graduate_date , 
+	cts.HAS_TOEIC, cts.HAS_TOFEL, cts.HAS_TEPS, cts.HAS_TOEIC_SPEAKING, cts.HAS_OPIC, cts.HAS_JPT, cts.HAS_HSK, 
+	cts.HAS_ENGINEER, cts.HAS_SQLD, cts.HAS_LINUX, cts.HAS_OCP, cts.HAS_ADSP,
+	pj.has_project, 
+	ccs.cert_count
+
+FROM base_applicants ba
+LEFT JOIN career_stats cs ON ba.RESUME_SEQ = cs.RESUME_SEQ
+LEFT JOIN member_stats ms ON ba.RESUME_SEQ = ms.RESUME_SEQ
+LEFT JOIN education_stats es ON ba.RESUME_SEQ = es.RESUME_SEQ
+LEFT JOIN cert_stats cts ON ba.RESUME_SEQ = cts.RESUME_SEQ
+LEFT JOIN project_stats pj ON ba.RESUME_SEQ = pj.RESUME_SEQ
+LEFT JOIN cert_count_stats ccs ON ba.RESUME_SEQ = ccs.RESUME_SEQ
+</select>
+
+
+<!--  
+	<	&lt;
+	>	&gt;
+	&	&amp;
+	"	&quot;
+	'	&apos; 
+-->
+
+<!--  엑셀 자료 뽑는거에서 null처리 안되면 아래 select 문으로 대체 (null 대신 0)
+
+  ms.name, ms.email, ms.road_address, NVL(ms.birth_4 , 0) AS birth_4, NVL(ms.gender , 0) AS gender ,
+  NVL(cs.position , 0) AS exp, NVL(cs.career_level, 0) AS exp_year,
+  NVL(es.school_name , 0) AS school_name, NVL(es.department, 0) AS major, NVL(es.grade, 0) AS grade, NVL(es.education_type, 0) AS education_type, NVL(es.graduate_date, 0) AS graduate_date, 
+  cts.HAS_TOEIC, cts.HAS_TOFEL, cts.HAS_TEPS, cts.HAS_TOEIC_SPEAKING, cts.HAS_OPIC, cts.HAS_JPT, 
+  cts.HAS_ENGINEER, cts.HAS_SQLD, cts.HAS_LINUX, cts.HAS_OCP, cts.HAS_ADSP,
+  pj.has_project, 
+  ccs.cert_count
+	  
+-->
+
+</mapper>

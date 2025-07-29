@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기 인력</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/user/tools/css/tools_header.css}" />
+<link rel="stylesheet" th:href="@{/user/tools/css/severance_calculator.css}" />
+<style type="text/css">
+
+</style>
+<script type="text/javascript">
+$(document).ready(function() {
+    function addAmount(amount) {
+        const currentValue = parseInt($('.salary-input').val()) || 0;
+        $('.salary-input').val(currentValue + amount);
+        calculateSeverance();
+    }
+    
+    function calculateSeverance() {
+        const salary = parseInt($('.salary-input').val()) || 0;
+        const startDate = new Date($('input[type="date"]').eq(0).val());
+        const endDate = new Date($('input[type="date"]').eq(1).val());
+        
+        // 근무기간 계산 (년 단위)
+        const workPeriod = (endDate - startDate) / (1000 * 60 * 60 * 24 * 365);
+        
+        // 퇴직금 계산 (월급 * 근무년수)
+        const severancePay = Math.floor(salary * workPeriod);
+        const dailyAverage = Math.floor(salary / 30);
+        
+        // 결과 업데이트
+        $('.result-amount').text(severancePay.toLocaleString() + '원');
+        $('.result-detail span:last-child').text(dailyAverage.toLocaleString() + '원');
+    }
+    
+    // 입력값 변경시 자동 계산
+    $(document).on('input change', 'input', calculateSeverance);
+    
+    // 빠른 금액 추가 버튼
+    $('.quick-btn').on('click', function() {
+        const amount = $(this).text() === '+100만' ? 1000000 : 100000;
+        addAmount(amount);
+    });
+    
+    // 초기화 버튼
+    $('.btn-reset').on('click', function() {
+        $('input[type="number"]').val(0);
+        calculateSeverance();
+    });
+    
+    // 복사 버튼
+    $('.btn-copy').on('click', function() {
+        const result = $('.result-amount').text();
+        navigator.clipboard.writeText(result).then(() => {
+            alert('결과가 클립보드에 복사되었습니다.');
+        });
+    });
+});	
+</script>
+</head>
+<body>
+	<header>
+		<div th:replace="~{fragments/header :: header}"></div>
+	</header>
+	<main>
+		<div th:replace="~{user/tools/tools_header :: tools-header}"></div>
+		<div class="calculator-container">
+			<div class="left-panel">
+				<div class="section-title">필수 입력</div>
+
+				<div class="form-group">
+					<div class="form-row">
+						<div class="form-field">
+							<label>입사일</label> <input type="date" value="2016-01-01">
+						</div>
+						<div class="form-field">
+							<label>퇴사일 (미지급 근무일)</label> <input type="date"
+								value="2017-12-31">
+						</div>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label>월급 (세전)</label>
+					<div class="salary-input-group">
+						<input type="number" class="salary-input" value="0"> <span
+							class="unit">원</span>
+					</div>
+					<div class="checkbox-group">
+						<input type="checkbox" id="tax-exclude" checked> <label
+							for="tax-exclude">퇴사 전 3개월 등급</label>
+					</div>
+					<div class="button-group">
+						<button class="quick-btn" onclick="addAmount(1000000)">+100만</button>
+						<button class="quick-btn" onclick="addAmount(100000)">+10만</button>
+					</div>
+				</div>
+
+				<div class="section-title">선택 입력</div>
+
+				<div class="form-group">
+					<div class="form-row">
+						<div class="form-field">
+							<label>연차보상금</label>
+							<div class="salary-input-group">
+								<input type="number" class="salary-input" value="0"> <span
+									class="unit">원</span>
+							</div>
+						</div>
+						<div class="form-field">
+							<label>평균수당</label>
+							<div class="salary-input-group">
+								<input type="number" class="salary-input" value="0"> <span
+									class="unit">원</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="notice">
+					<p>• 본 계산기는 무역계산 결과로 법적 근거와 다릅니다.</p>
+					<p>• 시용차 갱신만 근무기간 및 임금 가준으로만 산정됩니다.</p>
+					<p>• 근로복지부다음관리청의 각 지자체근로기준 권역 정보제 3호에의 의한의 평균임금으로 계산됩니다.</p>
+					<p>• 통상임금 🅘 이 평균임금 🅘 보다 큰 성우에는 통상임금을 기준으로 계산됩니다.</p>
+					<p>• 최저임 상여금 임금계제에 따른 실질 산정는 금액과 차이가 날 수 있으며 활용에치 비닙니다.</p>
+				</div>
+			</div>
+
+			<div class="right-panel">
+				<div class="result-panel">
+					<h2>예상 퇴직금</h2>
+					<div class="result-amount">0원</div>
+					<div class="result-detail">
+						<span>1일 평균 임금</span> <span>0원</span>
+					</div>
+
+					<div class="action-buttons">
+						<button class="btn btn-primary">결과 복사</button>
+						<button class="btn btn-secondary">↻ 초기화</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+	</main>
+	<footer>
+		<div th:replace="~{fragments/footer :: footer}"></div>
+	</footer>
+</body>
+</html>
+

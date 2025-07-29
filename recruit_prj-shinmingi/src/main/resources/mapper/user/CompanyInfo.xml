@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//MyBatis//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.user.mapper.CompanyInfoMapper">
+
+<select id="selectCompanyByCorpNo" resultType="kr.co.sist.user.dto.CompanyDTO" parameterType="long">
+select 
+  corp_no AS corpNo,
+  corp_nm AS corpNm,
+  corp_info AS corpInfo,
+  corp_url AS corpUrl,
+  corp_logo AS corpLogo,
+  corp_img AS corpImg,
+  corp_avg_sal AS corpAvgSal,
+  corp_annual_revenue AS corpAnnualRevenue,
+  corp_created_at AS corpCreatedAt,
+  corp_emp_cnt AS corpEmpCnt,
+  biz_cert AS bizCert,
+  corp_ai_active AS corpAiActive,
+  industry AS industry,
+  company_size AS companySize,
+  corp_ceo AS corpCeo 
+from company 
+WHERE corp_no = #{corpNo}
+</select>
+
+</mapper>

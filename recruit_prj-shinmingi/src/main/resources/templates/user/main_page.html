@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기 인력</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/user/css/header.css}" />
+<link rel="stylesheet" th:href="@{/user/css/footer.css}" />
+<link rel="stylesheet" th:href="@{/user/jobPosting/css/main_page.css}"/>
+<style type="text/css">
+</style>   
+<script type="text/javascript">
+let current = 0;
+const total = 4; 
+
+function moveSlide(direction) {    
+    current += direction; 
+    if (current >= total) current = 0;
+    if (current < 0) current = total - 1;
+    updateSlide();
+}
+
+function updateSlide() {
+    const track = document.querySelector('.header-carousel-track');
+    if (track) {  // 요소 존재 확인 추가
+        track.style.transform = `translateX(-${current * 100}%)`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // 버튼 이벤트 리스너만 여기에 등록
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function() {
+            moveSlide(-1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            moveSlide(1);
+        });
+    }
+    
+    // 자동 슬라이드도 DOM이 로드된 후에 시작
+    setInterval(() => moveSlide(1), 5000);
+});
+
+// 알림 기능
+let isDropdownOpen = false;
+let unreadCount = 3;
+
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    
+    if (!dropdown) return; // 로그인하지 않은 경우 알림 기능 없음
+    
+    isDropdownOpen = !isDropdownOpen;
+    
+    if (isDropdownOpen) {
+        dropdown.classList.add('show');
+    } else {
+        dropdown.classList.remove('show');
+    }
+}
+
+function markAsRead(element) {
+    if (element.classList.contains('unread')) {
+        element.classList.remove('unread');
+        unreadCount--;
+        updateNotificationBadge();
+    }
+}
+
+function updateNotificationBadge() {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge) return; // 로그인하지 않은 경우 배지 없음
+    
+    if (unreadCount > 0) {
+        badge.textContent = unreadCount;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function clearAllNotifications() {
+    const items = document.querySelectorAll('.notification-item');
+    items.forEach(item => {
+        if (item.classList.contains('unread')) {
+            item.classList.remove('unread');
+        }
+    });
+    unreadCount = 0;
+    updateNotificationBadge();
+    
+    // 알림 목록 비우기
+    setTimeout(() => {
+        const dropdown = document.getElementById('notificationDropdown');
+        if (dropdown) {
+            dropdown.innerHTML = '<div class="notification-empty">알림이 없습니다.</div>';
+        }
+    }, 300);
+}
+
+// 외부 클릭 시 드롭다운 닫기 - 로그인한 사용자만
+document.addEventListener('click', function(event) {
+    const notificationArea = document.querySelector('.notification-area');
+    if (notificationArea && !notificationArea.contains(event.target) && isDropdownOpen) {
+        toggleNotifications();
+    }
+});
+
+// 새 알림 추가 함수 - 로그인한 사용자만
+function addNewNotification(message, time, icon = '📢') {
+    const dropdown = document.getElementById('notificationDropdown');
+    if (!dropdown) return; // 로그인하지 않은 경우 알림 추가 불가
+    
+    const footer = dropdown.querySelector('.notification-footer');
+    
+    const newItem = document.createElement('div');
+    newItem.className = 'notification-item unread';
+    newItem.onclick = function() { markAsRead(this); };
+    newItem.innerHTML = `
+        <div class="notification-content">
+            <div class="notification-icon-small">${icon}</div>
+            <div class="notification-text">
+                <div class="notification-message">${message}</div>
+            </div>
+        </div>
+    `;
+    
+    dropdown.insertBefore(newItem, footer);
+    unreadCount++;
+    updateNotificationBadge();
+}
+
+//검색기능
+$(document).ready(function(){
+	
+	const $input= $("#keywordInput");
+	const $box=$("#autocomplete-box");
+	
+	$input.on("keyup", function(){
+		
+		const term =$(this).val();
+		if(term.length <1){
+			$box.hide().empty();
+			return;
+		}
+		
+		$.ajax({
+			
+			url:"/autocomplete",
+			method:"GET",
+			data:{term:term},
+			success:function(data){
+				$box.empty();
+				if(data.length==0){
+					$box.hide();
+					return;
+				}//end if
+				
+				data.forEach(function (item){
+					
+					const $item= $("<div>")
+					 			.css({padding:"8px", cursor:"pointer"})
+					 			.append($("<span>")
+					 			.text(item))
+					 			.on("click", function(){
+					 				$input.val(item);
+					 				$box.empty().hide();
+					 			});
+						$box.append($item);
+				});
+				
+				
+				$box.show();
+			}
+			
+			
+		});//ajax
+		
+		
+	});
+	
+	$(document).on("click", function(e){
+		if(!$(e.target).closest("#autocomplete-box", "keywordInput").length){
+			$box.hide();
+		}
+			
+	})
+	
+	
+});//ready
+
+
+</script>
+</head>
+<body>
+<header>
+<div th:replace="~{fragments/header :: header}"></div>
+</header>
+<main>
+<div class="main-container">
+    <!-- 히어로 섹션 -->
+    <section class="hero-section">
+        <h1 class="hero-title">개발자 커리어의 시작</h1>
+        <p class="hero-subtitle">전국 최고의 IT 기업들이 당신을 기다리고 있습니다</p>
+
+        <div class="hero-search">
+        	<form th:action="@{/search}" method="get" style="position: relative;">
+            <input type="text" name="keyword" id="keywordInput" class="hero-search-box"
+                   placeholder="어떤 포지션을 찾고 계신가요?"/>
+            <div class="autocomplete-dropdown" id="autocomplete-box"  style="position: absolute; top: 100%; left: 0; right: 0; border: 1px solid #ccc;
+                background-color: white; display: none; z-index: 999;"></div>
+            <button type="submit" id="searchButton" class="hero-search-button">🔍</button>
+        	</form>
+        </div>
+
+        <!-- 선택한 키워드 표시 -->
+        <div id="selectedKeywords" class="selected-keywords"></div>
+        
+</section>
+    
+    <!-- 오른쪽 헤더부분 : 채용공고 + 공지 -->
+    <div class="side-by-side-section">
+      <div class="header-section">
+        <!-- Carousel Container -->
+        <div class="header-carousel-container">
+          <div class="header-carousel-track">
+            <!-- 타임리프를 이용하여 랜덤 공고 출력 -->
+          <th:block th:if="${randomPostings != null and randomPostings.size() > 0}">
+		    <th:block th:each="randomPosting : ${randomPostings}">
+		        <div class="main-img">
+		            <a th:href="@{/user/job_posting/job_posting_detail(jobPostingSeq=${randomPosting.jobPostingSeq})}"
+		               class="main-img-link">
+		                <img th:src="@{/images/corpimg/{img}(img=${randomPosting.corpImg})}" alt="기업 이미지"/> 
+		                <div class="main-content">
+		                    <h2 th:text="${randomPosting.corpNm}">회사 이름</h2>
+		                    <p th:text="${randomPosting.postingTitle != null ? randomPosting.postingTitle : '제목 없음'}">공고 제목</p>
+		                </div>
+		            </a>
+		        </div>
+		    </th:block>
+		</th:block>
+		<th:block th:unless="${randomPostings != null and randomPostings.size() > 0}">
+		    <div class="main-img">
+		        <img src="/images/default_img.jpg" />
+		        <div class="main-content">
+		            <h2>현재 랜덤 공고가 없습니다.</h2>
+		            <p>새로운 공고를 기다려 주세요.</p>
+		        </div>
+		    </div>
+		</th:block>
+	          </div>
+          <button class="header-carousel-btn prev" id="prevBtn">‹</button>
+          <button class="header-carousel-btn next" id="nextBtn">›</button>
+        </div>
+      </div>
+
+      <div class="notice-wrapper">
+        <!-- 사용자 정보 박스 (권한별로 다른 내용 표시) -->
+        <div class="user-info-section">
+          <!-- 기업회원 -->
+          <div sec:authorize="hasRole('ROLE_CORP')">
+           <div class="user-info-box">
+              <div class="access-denied-container">
+                  <h2 style="font-size: 17px;">기업회원은 개인회원 메뉴에 접근할 수 없습니다.</h2>
+                  <a th:href="@{/corp/main}" class="redirect-btn">기업회원 메인</a>
+              </div>
+              </div>
+          </div>
+          
+          <!-- 비회원 -->
+          <div sec:authorize="!hasRole('ROLE_USER') and !hasRole('ROLE_CORP')">
+           <div class="user-info-box">
+              <div class="login-required">
+                  <h2 style="font-size: 17px;">로그인이 필요합니다</h2>
+                  <a th:href="@{/login}" class="login-btn">로그인</a>
+                  <a th:href="@{/user/join}" class="signup-btn">회원가입</a>
+              </div>
+              </div>
+          </div>
+          
+          <!--사용자  -->
+          <div sec:authorize="hasRole('ROLE_USER')">
+          <div class="user-info-box">
+              <div th:if="${user != null and user.corpNo == null}">
+                  <p class="user-welcome" th:text="${user.name}">사용자</p>
+                  <p class="user-email" th:text="${user.email}">이메일 없음</p>
+                  <div class="user-menu-buttons">
+                      <a th:href="@{/user/resume/resume_management}" class="user-menu-btn resume-btn">이력서작성</a>
+                      <a th:href="@{/user/mypage}" class="user-menu-btn mypage-btn">마이페이지</a>
+                  </div>
+              </div>
+          </div>
+          </div>
+        </div>
+        <br>
+        <!-- 공지사항 섹션 (모든 사용자가 볼 수 있음) -->
+          <div class="notice-section">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h2 style="color: #1DD45A;">Notice</h2>
+            <a th:href="@{/user/job_posting/notice_list}" style="font-size: 13px; color: gray; text-decoration: none;">더보기</a>
+            </div>
+          <div class="notice-info">
+            <!-- 공지사항이 없을 때 -->
+            <div th:if="${noticeList == null}">
+              <p style="color: #666; font-size: 12px;">등록된 공지사항이 없습니다.</p>
+            </div>
+            <!-- 공지사항이 있을 때 -->
+            <div th:each="notice : ${noticeList}">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin: 3px 0;">
+             <a th:href="@{/notice/detail/{seq}(seq=${notice.noticeSeq})}"
+           style="max-width: 60%;
+                  white-space: nowrap;
+                  overflow: hidden;
+                  text-overflow: ellipsis;
+                  font-size: 13px;
+                  cursor: pointer;
+                  text-decoration: none;
+                  color: black;"
+           th:text="${notice.title}"></a>
+  			<div style="font-size: 12px; color: gray; margin-left: 5px;" th:text="${notice.regsDate}"></div>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 인기순 공고 섹션 -->
+    <div class="announcement-section">
+    <h3>인기순</h3>
+    <div class="announcement-list">
+        <th:block th:if="${popularPostings != null and popularPostings.size() > 0}">
+            <th:block th:each="posting : ${popularPostings}">
+                <div class="announcement-card">
+                    <a th:href="@{/user/job_posting/job_posting_detail(jobPostingSeq=${posting.jobPostingSeq})}"
+                       class="announcement-card-link">
+                        <div class="image-wrapper">
+                             <img th:src="@{/images/corpimg/{img}(img=${posting.corpImg})}" alt="기업 이미지">
+                        </div>
+                        <div class="company-name" th:text="${posting.corpNm}">회사 이름</div>
+                        <div class="announcement-title">
+                            <strong th:text="${posting.postingTitle}">공고 제목</strong>
+                        </div>
+                        
+                         <div class="stack-name">
+		                  <span th:text="${posting != null} ? ${posting.techNames} : ''"></span>
+		                </div>
+                        <div class="company-info">
+                            <span  th:text="|${posting.region} ${posting.district}|">위치</span> |
+                            <span th:text="${posting.expLevel}">경력</span>
+                        </div>
+                    </a>
+                </div>
+            </th:block>
+        </th:block>
+        <th:block th:unless="${popularPostings != null and popularPostings.size() > 0}">
+            <div class="no-postings">
+                <p>현재 인기 공고가 없습니다.</p>
+            </div>
+        </th:block>
+    </div>
+</div>
+</div>
+</main>
+<footer>
+  <div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//MyBatis//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.user.mapper.JobApplicationMapper">
+
+    <!-- 1. 이메일로 이력서 조회 -->
+    <select id="selectResumesByEmail" resultType="kr.co.sist.user.dto.ResumeDTO">
+        SELECT
+            resume_seq,
+            email,
+            title,
+            image,
+            introduction,
+            created_at,
+            updated_at,
+            career_type,
+            is_public
+        FROM RESUME
+        WHERE email = #{email}
+    </select>
+    
+
+ <insert id="insertJobApplicationVO" parameterType="kr.co.sist.user.dto.JobApplicationDTO"
+ 			  useGeneratedKeys="true" keyProperty="jobApplicationSeq" keyColumn="job_application_seq">
+    INSERT INTO JOB_APPLICATION (
+        resume_seq,
+        job_posting_seq,
+        application_status,
+        application_date,
+        is_read,
+        pass_stage
+    ) VALUES (
+        #{resumeSeq},
+        #{jobPostingSeq},
+        #{applicationStatus},
+        #{applicationDate},
+        #{isRead},
+        #{passStage}
+    )
+</insert>
+
+<select id="selectExistingApplication" resultType="kr.co.sist.user.dto.JobApplicationDTO">
+    SELECT
+        job_application_seq AS jobApplicationSeq,
+        resume_seq AS resumeSeq,
+        job_posting_seq AS jobPostingSeq,
+        application_status AS applicationStatus,
+        application_date AS applicationDate,
+        interview_date AS interviewDate,
+        is_read AS isRead,
+        pass_stage AS passStage
+    FROM JOB_APPLICATION
+    WHERE resume_seq = #{resumeSeq}
+      AND job_posting_seq = #{jobPostingSeq}
+      AND application_status IN (0, 1)
+</select>
+
+
+ <select id="selectAttachmentsByEmail" resultType="kr.co.sist.user.dto.AttahDTO">
+        SELECT
+            attachment_seq AS attachmentSeq,
+            email,
+            original_name AS originalName,
+            file_name AS fileName,
+            file_size AS fileSize,
+            created_at AS createdAt,
+            file_type AS fileType
+        FROM ATTACHMENT
+        WHERE email = #{email}
+        ORDER BY created_at DESC
+    </select>
+    
+    <insert id="insertApplicationAttachment">
+        INSERT INTO APPLICATION_ATTACHMENT (
+            job_application_seq,
+            attachment_seq
+        ) VALUES (
+            #{jobApplicationSeq},
+            #{attachmentSeq}
+        )
+    </insert>
+
+
+</mapper>

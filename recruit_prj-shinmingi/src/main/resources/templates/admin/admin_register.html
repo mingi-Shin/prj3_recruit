@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>관리자 회원가입</title>
+  <link rel="stylesheet" th:href="@{admin/css/admin_register.css}"> 
+  <style>
+   
+  </style>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(function() {
+      let isIdChecked = false;
+      let isCodeVerified = false; // 인증번호 확인 상태 추가
+      let timerInterval; // 타이머 변수 추가
+      let verificationCode; // 서버에서 받은 인증번호 저장
+
+      function setError(id, message) {
+        $('#' + id).text(message);
+      }
+
+      function setSuccess(id, message) {
+        $('#' + id).text(message);
+      }
+
+      function clearErrors() {
+        ['id_error', 'id_success', 'password_error', 'password_confirm_error', 'password_confirm_success', 'name_error', 'dept_error', 'phone_error', 'job_error', 'emailCode_error', 'emailCode_success']
+          .forEach(function(id) {
+            $('#' + id).text('');
+          });
+      }
+      
+      function openCode(){
+        $("#emailCode").show();
+        $("#emailLbl").show();
+        $("#time").show();
+        $("#verifyCodeBtn").show(); // 인증번호 확인 버튼 표시
+        TIMER(); // 5분 타이머 시작
+      }
+	
+      // 아이디 중복확인 (이메일 형식 체크) - 실제 서버 요청 부분은 유지
+      $('#checkIdBtn').click(function() {
+        const admin_id = $('#admin_id').val().trim();
+        const domain = $('#email_domain').val();
+
+        if (!admin_id) {
+          setError('id_error', '아이디를 먼저 입력해주세요.');
+          setSuccess('id_success', '');
+          return;
+        }
+
+        if (!domain) {
+          setError('id_error', '도메인을 선택해주세요.');
+          setSuccess('id_success', '');
+          return;
+        }
+
+        if (!/^[a-zA-Z0-9._%+-]+$/.test(admin_id)) {
+          setError('id_error', '아이디는 영문, 숫자, 특수문자(._%+-)만 가능합니다.');
+          setSuccess('id_success', '');
+          return;
+        }
+
+        const fullEmail = admin_id + '@' + domain;
+
+        // 실제 서버 요청 대신 임의 중복 체크
+        var jsonParam = { email: fullEmail };  
+        var jsonParamStr = JSON.stringify(jsonParam);
+        $.ajax({
+          url: "/sendEmail",
+          type: "POST",
+          contentType: "application/json",
+          data: jsonParamStr,
+          dataType: "json",
+          success: function(jsonObj) {
+            console.log("응답:", jsonObj);
+
+            if(jsonObj.exists){
+              isIdChecked = false;
+              setError('id_error', '이미 사용 중인 이메일입니다.');
+              setSuccess('id_success', '');
+            } else {
+              openCode();
+              verificationCode = jsonObj.code;  // 인증코드 저장
+              setError('id_error', '');
+              setSuccess('id_success', '이메일주소로 인증번호가 전송되었습니다.');
+              isIdChecked = true;
+              isCodeVerified = false; // 새로운 인증코드이므로 초기화
+            }
+          },
+          error: function(err) {
+            console.error("에러 발생:", err);
+            isIdChecked = false;
+            setError('id_error', '서버 오류가 발생했습니다.');
+            setSuccess('id_success', '');
+          }
+        });
+      });
+		
+      $('#password, #password_confirm').on('input', function () {
+    	  const password = $('#password').val().trim();
+    	  const password_confirm = $('#password_confirm').val().trim();
+
+    	  // 에러 메시지 초기화
+    	  $('#password_error').text('');
+    	  $('#password_confirm_error').text('');
+    	  $('#password_confirm_success').text('');
+
+    	  let isValid = true;
+
+    	  if (password.length < 8) {
+    	    $('#password_error').text('비밀번호는 8자 이상이어야 합니다.');
+    	    isValid = false;
+    	  } else if ((password.match(/[~!@#$%^&*]/g) || []).length < 2) {
+    	    $('#password_error').text('비밀번호에 특수문자(~!@#$%^&*)를 최소 2개 이상 포함해야 합니다.');
+    	    isValid = false;
+    	  }
+
+    	  if (password && password_confirm) {
+    	    if (password !== password_confirm) {
+    	      $('#password_confirm_error').text('비밀번호가 일치하지 않습니다.');
+    	      isValid = false;
+    	    } else if (isValid) {
+    	      // 모든 조건이 만족되었을 때 성공 메시지
+    	      $('#password_confirm_success').text('비밀번호가 일치합니다.').css('color', 'green');
+    	    }
+    	  }
+    	});
+
+    	  
+      
+      // 인증번호 확인 버튼 클릭 (프론트 직접 검증)
+      $('#verifyCodeBtn').click(function() {
+        const inputCode = $('#emailCode').val().trim();
+
+        if (!inputCode) {
+          setError('emailCode_error', '인증번호를 입력해주세요.');
+          setSuccess('emailCode_success', '');
+          return;
+        }
+
+        if (inputCode === verificationCode) {
+          isCodeVerified = true;
+          setError('emailCode_error', '');
+          setSuccess('emailCode_success', '인증번호가 확인되었습니다.');
+          clearInterval(timerInterval); // 타이머 정지
+          $('#Timer').val('인증완료');
+          $('#verifyCodeBtn').prop('disabled', true).text('인증완료');
+        } else {
+          isCodeVerified = false;
+          setError('emailCode_error', '인증번호가 일치하지 않습니다.');
+          setSuccess('emailCode_success', '');
+        }
+      });
+
+      // 아이디나 도메인 입력 시 중복확인 초기화
+      $('#admin_id, #email_domain').on('input change', function() {
+        setError('id_error', '');
+        setSuccess('id_success', '');
+        setError('emailCode_error', '');
+        setSuccess('emailCode_success', '');
+        isIdChecked = false;
+        isCodeVerified = false;
+        
+        // 인증번호 관련 요소들 숨기기
+        $("#emailCode").hide();
+        $("#emailLbl").hide();
+        $("#time").hide();
+        $("#verifyCodeBtn").hide();
+        
+        // 타이머 정지
+        if (timerInterval) {
+          clearInterval(timerInterval);
+        }
+      });
+
+      // 인증번호 입력 시 버튼 활성화
+      $('#emailCode').on('input', function() {
+        const inputCode = $(this).val().trim();
+        if (inputCode && !isCodeVerified) {
+          $('#verifyCodeBtn').prop('disabled', false);
+        } else if (!inputCode) {
+          $('#verifyCodeBtn').prop('disabled', true);
+        }
+      });
+
+      $('#signupForm').submit(function(e) {
+        e.preventDefault();
+        clearErrors();
+
+        const admin_id = $('#admin_id').val().trim();
+        const email_domain = $('#email_domain').val();
+        const fullEmail = admin_id + '@' + email_domain;
+        const password = $('#password').val().trim();
+        const password_confirm = $('#password_confirm').val().trim();
+        const name = $('#name').val().trim();
+        const dept = $('#dept').val();
+        const phone = $('#phone').val().trim();
+        const job = $('#job').val();
+
+        let isValid = true;
+
+        if (!admin_id) {
+          setError('id_error', '아이디를 입력해주세요.');
+          isValid = false;
+        } else if (!email_domain) {
+          setError('id_error', '도메인을 선택해주세요.');
+          isValid = false;
+        } else if (!/^[a-zA-Z0-9._%+-]+$/.test(admin_id)) {
+          setError('id_error', '아이디는 영문, 숫자, 특수문자(._%+-)만 가능합니다.');
+          isValid = false;
+        } else if (!isIdChecked) {
+          setError('id_error', '이메일 중복확인을 해주세요.');
+          isValid = false;
+        } else if (!isCodeVerified) {
+          setError('emailCode_error', '인증번호 확인을 완료해주세요.');
+          isValid = false;
+        }
+
+        if (!password) {
+          setError('password_error', '비밀번호를 입력해주세요.');
+          isValid = false;
+        }
+
+
+        if (!password_confirm) {
+          setError('password_confirm_error', '비밀번호 확인을 입력해주세요.');
+          isValid = false;
+        }
+        if (!name) {
+          setError('name_error', '이름을 입력해주세요.');
+          isValid = false;
+        }
+
+        if (!dept) {
+          setError('dept_error', '부서를 선택해주세요.');
+          isValid = false;
+        }
+
+        if (!phone) {
+          setError('phone_error', '전화번호를 입력해주세요.');
+          isValid = false;
+        } else if (!/^[0-9\-]+$/.test(phone)) {
+          setError('phone_error', '전화번호 형식이 올바르지 않습니다.');
+          isValid = false;
+        }
+
+        if (!job) {
+          setError('job_error', '직급을 선택해주세요.');
+          isValid = false;
+        }
+
+        if (!isValid) return;
+
+        // 실제 서버로 데이터 전송
+        const formData = {
+            adminId: fullEmail,
+            password: password,
+            name: name,
+            dept: dept,
+            tel: phone,
+            job: job
+        };
+
+        console.log('전송할 데이터:', formData);
+
+        $.ajax({
+            url: "/admin_register_process",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(formData),
+            success: function(response) {
+                console.log('서버 응답:', response);
+                alert('회원가입이 완료되었습니다!');
+                window.location.href = '/admin/admin_login';
+            },
+            error: function(xhr, status, error) {
+                console.error("회원가입 실패:", error);
+                console.error("응답:", xhr.responseText);
+                alert('회원가입에 실패했습니다. 다시 시도해주세요.');
+            }
+        });
+      });
+      
+      // 타이머 함수 수정
+      function TIMER(){
+        const Timer = document.getElementById('Timer');
+        let totalSeconds = 300; // 5분 = 300초
+        
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+        
+        Timer.value = "5:00";
+        
+        timerInterval = setInterval(function(){
+            totalSeconds--;
+            
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            
+            const displaySeconds = seconds < 10 ? '0' + seconds : seconds;
+            Timer.value = minutes + ':' + displaySeconds;
+            
+            if (totalSeconds <= 0) {
+                clearInterval(timerInterval);
+                Timer.value = "0:00";
+                alert('인증시간이 만료되었습니다.');
+                isCodeVerified = false;
+                $('#verifyCodeBtn').prop('disabled', true);
+            }
+        }, 1000);
+      }
+    });
+    
+  </script>
+</head>
+<body>
+  <div class="signup-container">
+    <h1 class="title">관리자 회원가입</h1>
+
+    <form id="signupForm" method="post" action="/admin_register_process" novalidate>
+      <div class="form-group">
+        <label for="admin_id">이메일</label>
+        <div class="email-wrapper">
+          <input type="text" id="admin_id" name="admin_id" placeholder="아이디" />
+          <span class="at-symbol">@</span>
+          <select id="email_domain" name="email_domain">
+            <option value="">도메인 선택</option>
+            <option value="gmail.com">gmail.com</option>
+            <option value="naver.com">naver.com</option>
+            <option value="daum.net">daum.net</option>
+          </select>
+          <button type="button" class="check-btn" id="checkIdBtn">이메일 인증받기</button>
+        </div>
+        <small class="input-help">아이디를 입력하고 도메인을 선택해주세요.</small>
+        <small class="error-msg" id="id_error"></small>
+        <small class="success-msg" id="id_success"></small>
+      </div>
+
+      <div class="form-group">
+        <label id="emailLbl" for="emailCode" style="display:none">인증번호 입력</label>
+        <div class="email-wrapper">
+          <input type="text" id="emailCode" name="emailCode" placeholder="인증번호 입력" maxlength="30" style="display:none"/>
+          <button type="button" class="check-btn" id="verifyCodeBtn" style="display:none" disabled>인증번호 확인</button>
+        </div>
+        <small class="input-help" id="time" style="display:none"><label for="Timer">남은 시간:</label><input id="Timer" type="text" value="" readonly/></small>
+        <small class="error-msg" id="emailCode_error"></small>
+        <small class="success-msg" id="emailCode_success"></small>
+      </div>
+      
+      <div class="form-group">
+        <label for="password">비밀번호</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" maxlength="30" />
+        <small class="error-msg" id="password_error"></small>
+      </div>
+
+      <div class="form-group">
+        <label for="password_confirm">비밀번호 확인</label>
+        <input type="password" id="password_confirm" name="password_confirm" placeholder="비밀번호를 다시 입력하세요" maxlength="30" />
+        <small class="error-msg" id="password_confirm_error"></small>
+      </div>
+
+      <div class="form-group">
+        <label for="name">이름</label>
+        <input type="text" id="name" name="name" placeholder="Enter your name" maxlength="10" />
+        <small class="input-help">실명을 입력해주세요.</small>
+        <small class="error-msg" id="name_error"></small>
+      </div>
+
+      <div class="form-group">
+        <label for="dept">부서</label>
+        <select id="dept" name="dept">
+          <option value="">선택하세요</option>
+          <option value="고객센터팀">고객센터팀</option>
+          <option value="회원관리팀">회원관리팀</option>
+          <option value="기업관리팀">기업관리팀</option>
+        </select>
+        <small class="input-help">부서를 선택해주세요.</small>
+        <small class="error-msg" id="dept_error"></small>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">전화번호</label>
+        <input type="tel" id="phone" name="phone" placeholder="전화번호 입력" maxlength="15" pattern="[0-9\-]+" />
+        <small class="input-help">예) 01012345678</small>
+        <small class="error-msg" id="phone_error"></small>
+      </div>
+
+      <div class="form-group">
+        <label for="job">직급</label>
+        <select id="job" name="job">
+          <option value="">선택하세요</option>
+          <option value="사원">사원</option>
+          <option value="대리">대리</option>
+          <option value="과장">과장</option>
+          <option value="팀장">팀장</option>
+        </select>
+        <small class="input-help">직급을 선택해주세요.</small>
+        <small class="error-msg" id="job_error"></small>
+      </div>
+
+      <button type="submit" class="signup-btn">회원가입</button>
+    </form>
+
+    <button class="back-btn" onclick="history.back()">뒤로가기</button>
+  </div>
+</body>
+</html>

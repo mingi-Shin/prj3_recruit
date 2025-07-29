@@ -1,0 +1,647 @@
+/* ======================
+   Reset & 기본 설정
+====================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* ======================
+   필터 버튼 & 컨테이너
+====================== */
+.filter-container {
+  position: relative;
+  margin: 0 10px 20px 0;
+  display: inline-block;
+}
+
+.filter-btn {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: #495057;
+  cursor: pointer;
+  min-width: 100px;
+  transition: all 0.2s;
+}
+
+/* ======================
+   기술스택: 상단 직무 버튼
+====================== */
+.stack span {
+  display: inline-block;
+  margin: 6px 8px 6px 0;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background-color: #f0f0f0;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.stack span:hover {
+  background-color: #ddd;
+}
+
+.stack span.active {
+  background-color: #00c471;
+  color: #fff;
+  font-weight: bold;
+}
+
+
+/* ======================
+   기술스택 드롭다운 메뉴
+====================== */
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 4px;
+  padding: 20px;
+  min-width: 320px;
+  display: none;
+}
+
+/* 검색창 */
+.form-control {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 14px;
+  background-color: #f8f9fa;
+  margin-bottom: 16px;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #00c471;
+  background-color: white;
+  box-shadow: 0 0 0 2px rgba(0, 196, 113, 0.1);
+}
+
+.form-control::placeholder {
+  color: #6c757d;
+}
+
+/* 추천 기술스택 섹션 */
+#recommendedTechStacks {
+  margin-bottom: 20px;
+}
+
+#recommendedTechStacks h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 12px;
+}
+
+.recommended-stack {
+  display: inline-block;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  color: #495057;
+  padding: 8px 14px;
+  margin: 0 8px 8px 0;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+/* 스킬 목록 */
+.custom-options {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border-top: 1px solid #e9ecef;
+  padding-top: 16px;
+}
+
+.custom-options li {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  margin-bottom: 4px;
+  transition: all 0.2s;
+  font-size: 14px;
+  color: #495057;
+}
+
+
+/* 선택된 기술스택 태그들 */
+.skills-container {
+  margin-bottom: 16px;
+}
+
+.skill-tag {
+  display: inline-block;
+  background-color: #e8f5e8;
+  color: #00c471;
+  padding: 6px 12px;
+  margin: 4px 4px 0 0;
+  border-radius: 20px;
+  font-size: 12px;
+  border: 1px solid #00c471;
+  font-weight: 500;
+}
+
+.skill-tag .remove {
+  margin-left: 6px;
+  cursor: pointer;
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.skill-tag .remove:hover {
+  color: #b02a37;
+}
+
+
+/* ======================
+   경력 드롭다운
+====================== */
+.radio-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.radio-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  position: relative;
+}
+
+.radio-item:hover {
+  border-color: #00c471;
+  background-color: #f8f9fa;
+}
+
+.radio-item input[type="radio"] {
+  display: none;
+}
+
+.radio-item input[type="radio"]:checked + label {
+  color: #00c471;
+  font-weight: 600;
+}
+
+.radio-item input[type="radio"]:checked ~ .radio-item,
+.radio-item:has(input[type="radio"]:checked) {
+  border-color: #00c471;
+  background-color: #e8f5e8;
+}
+
+.radio-item input[type="radio"]:checked ~ .radio-item::after,
+.radio-item:has(input[type="radio"]:checked)::after {
+  content: "✓";
+  position: absolute;
+  right: 14px;
+  color: #00c471;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.radio-item label {
+  flex: 1;
+  font-size: 14px;
+  color: #495057;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 0;
+}
+
+.reset-btn {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 13px;
+  color: #6c757d;
+  transition: all 0.2s;
+}
+
+.reset-btn:hover {
+  background-color: #e9ecef;
+  color: #495057;
+  text-decoration: none;
+}
+
+/* ======================
+   지역 드롭다운
+====================== */
+ .area-dropdown {
+    width: 400px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.area-content {
+    display: flex;
+    gap: 20px;
+}
+
+.region-wrapper {
+    flex: 1;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.region-item {
+    padding: 8px 12px;
+    margin: 2px 0;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.region-item:hover {
+    background-color: #f0f8ff;
+}
+
+.region-item.selected {
+    background-color: #00d084;
+    color: white;
+}
+
+.sub-region-popup {
+    flex: 1;
+    max-height: 300px;
+    overflow-y: auto;
+    border-left: 1px solid #eee;
+    padding-left: 20px;
+}
+
+.sub-region-item {
+    display: flex;
+    align-items: center;
+    padding: 5px 0;
+    cursor: pointer;
+}
+
+.sub-region-item input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.sub-region-item label {
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.selected-tags {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.region-tag {
+    display: inline-block;
+    background-color: #00d084;
+    color: black;
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin: 2px;
+    font-size: 12px;
+}
+
+.region-tag .remove-tag {
+    background: none;
+    border: none;
+    color: red;
+    margin-left: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.region-reset {
+    background: none;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.region-reset:hover {
+    background-color: #f8f9fa;
+}
+
+/* ======================
+   공고 카드
+====================== */
+.announcement-list {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    padding: 10px;
+}
+
+.announcement-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: all 0.3s ease;
+}
+
+.announcement-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.announcement-card {
+    border: none;
+    border-radius: 8px;
+    padding: 16px;
+    background-color: #F8F9FA;
+    width: 100%;
+    height: 100%;
+    min-width: 300px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+}
+
+.announcement-card:hover {
+    transform: translateY(-8px);
+}
+
+.image-wrapper {
+    width: 100%;
+    height: 180px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.company-name {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 8px;
+    font-weight: normal;
+}
+
+.announcement-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 8px;
+    line-height: 1.4;
+    color: #333;
+}
+
+.stack-name {
+    font-size: 12px;
+    color: #007bff;
+    margin-bottom: 8px;
+    font-weight: normal;
+}
+
+.company-info {
+    font-size: 12px;
+    color: #888;
+    font-weight: normal;
+}
+
+/* 반응형 처리 */
+@media (max-width: 1200px) {
+    .announcement-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .announcement-list {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    /* 모바일에서는 hover 효과 제거 */
+    .announcement-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .announcement-list {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 12px;
+    }
+}
+.d-day {
+    color: #ff5722;
+    font-weight: bold;
+}
+
+/* 드롭다운 스타일 */
+.dropdown {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ddd;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  width: 100%;
+}
+
+.custom-options {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.custom-options li {
+  padding: 8px;
+  cursor: pointer;
+}
+
+.custom-options li:hover {
+  background-color: #f0f0f0;
+}
+
+.tag {
+  background-color: #e0e0e0;
+  padding: 5px;
+  margin: 2px;
+  display: inline-block;
+  border-radius: 4px;
+}
+
+.remove-tag {
+  background: none;
+  border: none;
+  color: red;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.tech-tag {
+    display: inline-block;
+    background-color: #f0f0f0;
+    color: #333;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 14px;
+    margin-right: 6px;
+    margin-bottom: 6px;
+}
+
+.dday-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #6c757d;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 1;
+}
+
+/* D-day (오늘 마감) - 초록색 */
+.dday-badge.dday {
+    background-color: #28a745;
+    animation: pulse 1.5s infinite;
+}
+
+/* 마감임박 (3일 이내) - 빨간색 */
+.dday-badge.urgent {
+    background-color: #dc3545;
+    animation: pulse 1.5s infinite;
+}
+
+/* 마감된 공고 - 어두운 회색 */
+.dday-badge.expired {
+    background-color: #495057;
+}
+
+/* 일반 공고 - 회색 (기본값) */
+.dday-badge.normal {
+    background-color: #6c757d;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.deadline-info {
+    font-size: 12px;
+    color: #666;
+    margin-top: 8px;
+}
+
+
+
+.floating-apply-btn.disabled {
+    background-color: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+}
+
+.floating-apply-btn:disabled {
+    background-color: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+}
+
+/* 전체 초기화 버튼 - 다른 필터 버튼과 동일한 스타일 */
+.all-reset-button {
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #495057;
+    cursor: pointer;
+    min-width: 100px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 10px 20px 0;
+    height: auto;
+    white-space: nowrap;
+    font-weight: normal;
+}
+
+.all-reset-button:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
+}
+
+.all-reset-button:active {
+    background-color: #e9ecef;
+    transform: translateY(1px);
+}
+
+.reset-icon {
+    font-size: 14px;
+    transition: transform 0.3s ease;
+}
+
+.all-reset-button:hover .reset-icon {
+    transform: rotate(180deg);
+}
+
+/* 클릭 애니메이션 효과 */
+.all-reset-button.clicked {
+    background-color: #00c471;
+    color: white;
+    border-color: #00c471;
+}
+
+.all-reset-button.clicked .reset-icon {
+    transform: rotate(360deg);
+}
+
+/* 반응형 대응 */
+@media (max-width: 768px) {
+    .all-reset-button {
+        padding: 10px 16px;
+        font-size: 14px;
+        min-width: 100px;
+    }
+}

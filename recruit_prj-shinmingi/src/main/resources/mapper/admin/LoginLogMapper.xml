@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.sist.admin.login.log.AdminLoginLogMapper">
+
+	
+	 <!-- 모든 로그인 로그 조회 (상위 5개) -->
+    <select id="selectTop5LoginLogs" resultType="kr.co.sist.admin.login.log.AdminLoginLogDTO">
+        SELECT * FROM (
+            SELECT log_seq, admin_id, login_time, login_ip, login_result, user_agent, login_fail
+            FROM ADMIN_LOGIN_LOG
+            ORDER BY login_time DESC
+        )
+        WHERE ROWNUM &lt;= 5 and admin_id = #{adminId}
+    </select>
+    
+    <!-- 로그인 로그 기록 -->
+    <insert id="insertLoginLog">
+        INSERT INTO ADMIN_LOGIN_LOG
+        (admin_id, login_time, login_ip, login_result, user_agent, login_fail)
+        VALUES
+        (#{adminId}, #{loginTime}, #{loginIp}, #{loginResult}, #{userAgent}, #{loginFail})
+    </insert>
+
+    <!-- 로그인 실패 횟수 증가 -->
+    <update id="increaseLoginFailCount">
+        UPDATE ADMIN
+        SET login_fail_cnt = login_fail_cnt + 1
+        WHERE admin_id = #{adminEmail}
+    </update>
+
+    <!-- 로그인 실패 횟수 조회 -->
+    <select id="selectLoginFailCount" resultType="int">
+        SELECT login_fail_cnt FROM ADMIN WHERE admin_id = #{adminId}
+    </select>
+
+    <!-- 계정 잠금 -->
+    <update id="lockAccount">
+        UPDATE ADMIN
+        SET stat = '계정잠김'
+        WHERE admin_id = #{adminId}
+    </update>
+
+    <!-- 로그인 성공 시 실패 횟수 초기화 -->
+    <update id="resetLoginFailCount">
+        UPDATE ADMIN
+        SET login_fail_cnt = 0
+        WHERE admin_id = #{adminId}
+    </update>
+
+</mapper>

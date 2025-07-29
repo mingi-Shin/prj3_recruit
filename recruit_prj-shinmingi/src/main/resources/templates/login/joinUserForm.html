@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>일반회원 가입 페이지</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/login/joinUserForm.css}">
+<style>
+    
+</style>
+<!-- 카카오지도 -->
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script type="text/javascript">
+$(function(){
+	
+	//버튼딸깍 랜덤유저 10000개 생성
+	document.querySelector('#createRandomUsers').addEventListener('click', () => {
+		if(confirm("유저 1000명을 랜덤으로 생성하시겠습니까? 정말로?")){
+			addTenThousandUsers();
+		}
+	});
+	
+	
+	
+	//딸깍 랜덤 이력서 100000개 생성
+	document.querySelector('#createRandomResume').addEventListener('click', () => {
+		if(confirm("유저 1000명 이력서를 랜덤으로 생성하시겠습니까? 정말로?")){
+			addTenThousandResumes();
+		}
+	});
+	
+	isForYou();
+	
+	//비밀번호 규정에 맞는지 확인여부UI
+	isRightPassword();
+	
+	//비밀번호 확인 동일 여부
+	chkPasswordOneNTwo();
+	
+	//이메일 중복 체크 ajax
+	ckEmailDupl();
+	
+	//카카오맵 주소 찾기
+	document.getElementById("openKakaoMap").addEventListener("click", openKakaoMap);
+	
+	//모달 골라 보기 호출
+	showTheModal(); 
+	
+	// 전체 동의 체크박스 기능
+	document.getElementById('terms1').addEventListener('change', function() {
+	    const checkboxes = document.querySelectorAll('.checkbox-input:not(#terms1)');
+	    checkboxes.forEach(checkbox => {
+	        checkbox.checked = this.checked;
+	    });
+	});
+	
+	// 개별 체크박스 변경 시 전체 동의 상태 업데이트
+	document.querySelectorAll('.checkbox-input:not(#terms1)').forEach(checkbox => {
+	    checkbox.addEventListener('change', function() {
+	        const allCheckboxes = document.querySelectorAll('.checkbox-input:not(#terms1)');
+	        const checkedBoxes = document.querySelectorAll('.checkbox-input:not(#terms1):checked');
+	        document.getElementById('terms1').checked = allCheckboxes.length === checkedBoxes.length;
+	    });
+	});
+	
+	// 폼 제출 처리
+	document.querySelector('form').addEventListener('submit', function(e) {
+	    e.preventDefault();
+	    //예외처리 검사 함수 호출
+	    if(validateForm()){
+		    alert('회원가입 양식이 정상적으로 전송되었습니다!');
+		    this.submit();
+	    } else {
+	    	console.log('뭔가가 잘못되었어..');
+	    }
+	    
+	});
+	
+	//폼 예외처리 검사
+	function validateForm(){
+		
+		let isEverythingOk = true;
+		
+		// 이메일 형식 정규표현식
+		const email = document.getElementById('email').value.trim();
+		const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+		if (!emailPattern.test(email)) {
+	  	alert("올바른 이메일 형식을 입력해주세요. (예: user@example.com)");
+	  	isEverythingOk = false;
+	  	return false;
+		}
+		//이메일인증 안받았을 시 
+		if(!isEmailVerified){
+			alert("이메일 인증을 진행해주세요");
+			document.getElementById("email").focus();
+			isEverythingOk = false;
+			return false;
+		}
+		
+		//비밀번호
+		const password = document.getElementById("password").value.trim();
+		const password2 = document.getElementById("password2").value.trim();
+	  	const pwPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s#$*])[\S]{8,}$/;
+    	if (!pwPattern.test(password)) {
+	      alert("비밀번호는 8자 이상이며, 영문 대문자, 소문자, 숫자, 특수문자(공백, $#*제외)를 모두 포함해야 합니다.");
+	      isEverythingOk = false;
+	      return false;
+	    }
+	    if(password != password2){
+	    	alert("비밀번호가 서로 일치하지 않습니다.");
+	    	document.getElementById('password2').focus();
+	    	isEverythingOk = false;
+	      return false;
+	    }
+			
+		//휴대폰
+		const phone = document.getElementById("phone").value;
+	   	const phonePattern = /^010-\d{4}-\d{4}$/;
+	    if (!phonePattern.test(phone)) {
+	      alert("핸드폰 번호는 010-1234-5678 형식으로 입력해주세요.");
+	      isEverythingOk = false;
+	      return false;
+	  	}
+		
+		//이름
+    	const name = document.getElementById('name').value.trim();
+		const namePattern = /^[가-힣a-zA-Z]{2,20}$/;
+		if (!namePattern.test(name)) {
+	  	alert("이름은 2~20자의 한글 또는 영문만 입력 가능합니다.");
+	  	isEverythingOk = false;
+	 	 	return false;
+		}
+		
+		//생년월일
+		const birth = document.getElementById("birth").value.trim();
+		//const birthPattern = /^(19[0-9]{2}|20[0-9]{2})(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])$/;
+		const birthPattern = /^(19\d{2}|20\d{2})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+		if(!birthPattern.test(birth)){
+			alert("옳바른 생년월일 값을 입력해주세요.");
+			isEverythingOk = false;
+			return false;
+		}
+		
+		//성별
+		/* 	document.querySelectorAll('.form-check-input')로 성별 라디오 버튼들을 가져옴.
+				some()을 사용해서 하나라도 체크된 항목이 있는지 확인. */
+		const isGenderChecked = Array.from(document.querySelectorAll('.form-check-input')).some(checkbox => checkbox.checked);
+		if(!isGenderChecked){ //하나도 체크된게 없다면~
+			alert("성별을 선택해 주세요.");
+			isEverythingOk = false;
+			return false;
+		}
+		
+		//주소
+		/* 	.some() → 하나라도 채워져 있으면 true → 이건 전체 채움 체크에 부적절
+				.every() → 모두 조건을 만족해야 true → 하나라도 비면 false → 이게 적절! */
+		const isAddrfilled = Array.from(document.querySelectorAll('.form-input.addr')).every(input => input.value);
+		if(!isAddrfilled){
+			alert("주소를 입력해 주세요.");
+			isEverythingOk = false;
+			return false;
+		}
+		
+		
+		//약관 - 필수 항목 체크 여부 확인
+		let termFlag = true;
+		document.querySelectorAll('.checkbox-input.required').forEach(checkbox => {
+			if(!checkbox.checked){
+				termFlag = false;
+			}
+		});
+		
+		if(!termFlag){
+			alert('필수 약관에 동의해주세요.');
+			isEverythingOk = false;
+			return false;		
+		}
+		
+		
+		console.log(isEverythingOk);
+		return isEverythingOk;
+		
+	}//validateForm()
+	
+	
+	//인증번호 처리, 인증요청 버튼을 클릭시 (5분 하자)
+	document.getElementById('codeBtn').addEventListener('click', function(){
+		
+		// 이메일 형식 정규표현식
+		const email = document.getElementById('email').value.trim();
+		const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+		if (!emailPattern.test(email)) {
+	  		alert("올바른 이메일 형식을 입력해주세요. (예: user@example.com)");
+	  		return false;
+		}
+		
+		if(email == ""){
+			alert('이메일을 입력 후 인증요청을 눌러주세요.');
+			return false;
+		}
+		
+		fetch('/signup/send-verification-email', {
+				method : "POST",
+				headers : {
+					"Content-Type": "application/json"
+				},
+				body : JSON.stringify({
+					emailAddr : email,
+					subject : "민기인력 회원가입 이메일 인증",
+					target : "일반회원"
+				})
+			})
+			.then(response => {
+				if(!response.ok){
+					return response.text().then(err => { throw new Error(err); });
+				}
+				return response.text();
+			})
+			.then(result => {
+		        alert(result); 
+		        // 이후 UI 처리...
+		    })
+			.catch(error => {
+		        alert("오류 발생: " + error.message);
+		        return false;
+		    });
+		
+		
+		
+		
+		//인증번호 입력칸& 확인버튼 표시
+		document.getElementById('confirmNumberFrm').style.display='block';
+		//display를 none → block으로 바꾸면 기존 flex 속성은 사라집니다. 따라서 다시 설정해줘야합니다.
+		document.getElementById('confirmNumberFrm').style.display='flex';
+		//확인버튼은 6개 숫자일 경우에만 감지하여 확인버튼을 활성화 
+		document.getElementById('confirmNumber').addEventListener('input', function(e){
+			let length = this.value.length;
+			const btn = document.getElementById('confirmBtn');
+			if(length == 6){
+				btn.disabled = false;
+			} else {
+				btn.disabled = true;
+			}
+		})
+		//보냈으므로 인증요청 버튼의 텍스트를 재전송으로 변경
+		document.getElementById('codeBtn').textContent='재전송'; 
+		//타이머 시작
+		startTimer(300, $("#timer"));
+		document.getElementById('remainTime').style.display='block'; //남은 인증시간 표시, 만료시 숨김으로 해놨으므로 재전송시 필요
+		document.getElementById('verification-error').style.display='none';  //인증시간 만료 표시 숨김, 재전송시 필요
+		//
+		
+	});
+
+	//이메일 인증번호 확인버튼에 이벤트리스너 등록 (참조만 넘기는거에 주의, ..() x)
+	document.getElementById('confirmBtn').addEventListener('click', checkConfirmNumber); 
+	
+}); //ready
+
+//이메일 인증 여부 변수
+let isEmailVerified = false; //이 전역 변수는 이메일 인증함수에서 true로 변함
+//확인버튼 이벤트리스너에 등록될 인증번호확인 함수
+function checkConfirmNumber(){
+	let codeIsCorrect = false;
+	
+	let inputedCode = document.querySelector('#confirmNumber').value.trim();
+	if(inputedCode == ""){
+		alert("인증번호를 입력 후 확인을 눌러주세요.");
+		return;
+	}
+	let email = document.querySelector('#email').value.trim();
+	if(email == ""){
+		alert('이메일을 입력후 시도해주세요.');
+		return;	
+	}
+	//requestparam 방식은 application/x-www-form-urlencoded 헤더로 전송해야..  
+	fetch('/signup/confirm-verification-code', {
+		method : "POST",
+		headers : {
+			"Content-Type": "application/json"  
+		},
+		body : JSON.stringify({
+			emailAddr : email,
+			content : inputedCode
+		})
+	})
+	//.then(res => {...}) 는 조건문이 아닙니다.. 비동기 작업이 성공(resolve) 했을 때 실행되는 콜백 함수 등록입니다.
+	.then(response => { // response는 fetch()가 서버로부터 받은 응답(Response 객체)입니다. (HTTP 상태, 응답 헤더, 본문 등을 포함)
+		//------------------------이건 안돼--------------------------------------------------------
+		// if(!response.ok){
+		//	 throw new Error(response.text());
+		// } else {
+		//	 return reponse.text();
+		// }
+		// 1. response.text()으로 응답 본문을 먼저 비동기로 읽은 뒤, 상태에 따라 처리해야 해
+		// 2. throw new Error(response.text()) -> Promise를 그대로 에러로 던짐 — 의도한 메시지가 아님
+		// 3. return response.text() 두 번 호출 -> 스트림은 한 번만 읽을 수 있어서 오류 발생
+		//--------------------------------------------------------------------------------------
+		return response.text().then(msg => { // response.text() -> 서버 응답 본문을 문자열로 꺼내는 작업. 이 작업은 비동기(Promise 반환) → 그래서 .then(msg => {...})로 후속 처리
+			if (!response.ok) {	//200~299면 true			//본문을 문자열로 꺼내서 msg 변수에 담아줌.
+				throw new Error(msg); //.catch()로 에러가 넘어감
+			}
+			return msg;
+		});
+	})
+	.then(result => {
+  	console.log("인증 성공 ");
+	  alert(result); //성공시 메시지 날림 
+	  clearInterval(timerInterval);
+		
+		document.getElementById('remainTime').style.display='none'; //남은 인증시간 숨기고,
+		document.getElementById('verification-success').style.display='block';  //성공 텍스트 표시
+		document.getElementById('confirmBtn').disabled = true; //맞으니까 이제 확인버튼 막아
+		document.getElementById('codeBtn').disabled = true; //맞으니까 이제 재전송버튼도 막아
+		document.getElementById('email').readOnly = true; //이메일 입력창도 막아 
+		document.getElementById('confirmNumber').readOnly = true; //번호 입력창도 막아
+		document.getElementById('verification-error').style.display = 'none';
+		document.getElementById('confirmNumberFrm').style.display='block';
+		
+		isEmailVerified = true; //이메일 검증변수 true 변환 
+	  //codeIsCorrect = true;
+ 	})
+	.catch(error => { //요청이 실패하거나, .then() 중간에 throw new Error(...)가 실행되면 이 .catch()로 옵니다.
+  	console.log("인증 실패 ");
+  	alert(error.message); // alert(error.message)에서 서버에서 넘긴 메시지(e.getMessage())가 출력
+  	document.getElementById('remainTime').style.display='none'; //남은 인증시간 숨기고,
+		document.getElementById('verification-error').textContent='인증번호가 일치하지않습니다. 다시 입력해주세요.'  //에러 텍스트 수정하고,
+		document.getElementById('verification-error').style.display='block';  //에러 텍스트 표시
+		
+  });
+	/** 
+	JavaScript의 비동기 처리는 기본적으로 non-blocking, event-driven입니다.
+	fetch()는 Promise를 반환하는 비동기 함수
+	Promise는 결과가 나중에 .then()이나 .catch()로 콜백을 등록해서 처리됨
+	JS는 fetch() 호출만 해놓고, 바로 다음 줄로 넘어가버림
+	그래서 결과가 오기도 전에 다음 코드가 실행돼, 따라서 fetch 아래에 다른 함수를 쓰면 순서대로 실행되지 않기때문에 너가 원하는 결과가 안나와. 
+	
+	promise란?
+	"나중에 결과 줄게!"라고 **약속(Promise)**하는 객체
+	
+	순서 정리 : 
+	서비스에서 throw → 컨트롤러에서 catch → ResponseEntity.badRequest().body(...) → 프론트에서 비동기(fetch, axios)로 받아서 사용자에게 표시
+	*/
+}
+
+// 모달창 골라 열기 
+function showTheModal(){
+	// 약관 버튼 클릭 시 직접 모달 내용 변경
+	document.querySelectorAll('.term-btn').forEach(btn => {
+		btn.addEventListener('click', function(e){
+			// 클릭된 버튼의 data-term 속성 가져오기
+			const selectedTerm = this.getAttribute('data-term');
+			//console.log('선택된 약관:', selectedTerm);
+			
+			//모든 term fragment를 숨기기 			
+			document.querySelectorAll('.term-fragment').forEach(div => {
+				div.style.display = 'none';
+			});
+			
+			//선택하 항목만 표시
+			const target = document.getElementById(selectedTerm);
+			if(target){
+				target.style.display = 'block';
+			}
+			
+		});
+	});
+} //showTheModal()
+
+
+//------- 타이머 함수 ---------
+let timerInterval; // 🔸 전역으로 선언해야 기존 타이머 clear 가능
+
+function startTimer(duration, display) {
+    let timer = duration;
+    let minutes, seconds;
+    
+    // 기존 타이머가 있다면 정리
+    clearInterval(timerInterval);
+    
+    timerInterval = setInterval(function() {
+        minutes = parseInt(timer / 60, 10);
+        seconds = parseInt(timer % 60, 10);
+        
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+        
+        display.text(minutes + ":" + seconds);
+        
+        //인증시간 만료시
+        if (--timer < 0) {
+            clearInterval(timerInterval);
+            document.getElementById('remainTime').style.display='none';
+            //display.text("00:00");
+            $("#verification-error").show();
+            $("#verification-error").text("인증 시간이 만료되었습니다. 다시 시도해주세요.");
+            
+            document.getElementById('confirmBtn').disabled = true; //만료됐으니까 확인버튼 막아
+
+        }
+    }, 1000);
+}
+
+
+//카카오 주소찾기
+function openKakaoMap(){
+	new daum.Postcode({
+	    oncomplete: function(data) {
+	    	//console.log(data.zonecode);
+	    	//console.log(data.roadAddress);
+	    	document.getElementById("zipcode").value = data.zonecode;
+	    	document.getElementById("roadAddress").value = data.roadAddress;
+	    }
+	}).open();
+}
+
+//이메일 중복 체크 ajax
+function ckEmailDupl(){
+	document.getElementById("email").addEventListener("input",function(){
+		const isEmailDupl ="이미 등록된 이메일입니다.";
+		let emailText = document.getElementById("email").value;
+		
+		$.ajax({
+			url : "/ckEmailDupl",
+			type : "GET",
+			dataType: "json",
+			//type : "POST",  									-> 컨트롤러에서 @RequestBody EmailDTO dto로 받아야함
+			//contentType: "application/json", 	-> 컨트롤러에서 @RequestBody EmailDTO dto로 받아야함
+			//data: JSON.stringfy(jsonObj), -> POST, PUT, PATCH 같은 본문을 사용하는 요청에서 쓰기 
+			data : {
+				email : emailText
+			},
+			success : function(reponse){
+				if(reponse.duplicate){ //중복됨
+					document.getElementById("emailDuple").textContent=reponse.message;
+					document.getElementById("emailDuple").style.display="block";
+					document.getElementById("codeBtn").disabled=true;
+				} else { //중복안됨
+					document.getElementById("emailDuple").textContent=reponse.message;
+					document.getElementById("emailDuple").style.display="none";
+					document.getElementById("codeBtn").disabled=false;
+				}
+			},
+			error : function(xhr, status, error){
+				console.error("이메일 중복 체크 실패:");
+				console.error("status: ", status);
+				console.error("HTTP 상태코드: ", xhr.status);
+				console.error("에러 메시지: ", error);
+				console.error("응답 본문: ", xhr.responseText);
+
+				alert("서버 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+			}
+		});
+		
+	});
+}
+
+//올바른 비밀번호 확인 여부(편의성)
+function isRightPassword(){
+	document.getElementById('password').addEventListener('input', function(){
+		let passwordInput = document.getElementById('password');
+		const pwPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s#$*])[\S]{8,}$/;
+		if(!pwPattern.test(passwordInput.value)){
+			passwordInput.style.border = '2px solid #f4361e'; 
+			document.querySelector('#passwordAlert').textContent = '비밀번호는 8자 이상, 대/소문자, 숫자, 특수문자(공백, #, $, * 제외)를 포함해야 합니다.';
+		} else {
+			passwordInput.style.border = '2px solid #18C65D';
+			document.querySelector('#passwordAlert').textContent = '';
+		}
+	});
+}
+
+//비밀번호 확인 일치 여부 
+function chkPasswordOneNTwo(){
+	document.getElementById('password2').addEventListener('input', function(){
+		let password = document.getElementById('password').value;
+		let password2 = document.getElementById('password2').value;
+		if(password != password2){
+			document.getElementById('password2').style.border = '2px solid red';
+			document.querySelector('#passwordAlert2').textContent = '비밀번호가 일치하지 않습니다.';
+		} else {
+			document.getElementById('password2').style.border = '2px solid #18C65D';
+			document.querySelector('#passwordAlert2').textContent = '';
+		}
+		
+	})
+	
+}
+
+//숫자기입창에 하이픈- 자동기입 해주는 편의성 함수
+function isForYou(){
+	document.getElementById("phone").addEventListener('input', function(){
+		//숫자만 남기고 제거
+		let raw = this.value.replace(/[^0-9]/g, ''); // 숫자만 남김
+		
+		if(raw.length > 11) {
+			raw = raw.slice(0, 11);
+		}
+		
+		let formatted = '';
+		
+    if (raw.length >= 11) {
+        formatted = raw.slice(0, 3) + '-' + raw.slice(3, 7) + '-' + raw.slice(7, 11);
+      } else if (raw.length >= 8) {
+        formatted = raw.slice(0, 3) + '-' + raw.slice(3, 7) + '-' + raw.slice(7);
+      } else if (raw.length >= 4) {
+        formatted = raw.slice(0, 3) + '-' + raw.slice(3);
+      } else {
+        formatted = raw;
+      }
+    this.value = formatted;
+	});
+	
+	document.getElementById("birth").addEventListener('input', function(){
+		// 숫자만 남기고 나머지는 제거
+	  let raw = this.value.replace(/[^0-9]/g, '');
+	  // 최대 8자리까지만 자르기
+	  if (raw.length > 8) raw = raw.slice(0, 8);
+	  
+	  let formatted = '';
+	  
+	  if (raw.length >= 5) {
+	    formatted = raw.slice(0, 4) + '-' + raw.slice(4, 6);
+	    if (raw.length >= 7) {
+	      formatted += '-' + raw.slice(6, 8);
+	    }
+	  } else if (raw.length >= 1) {
+	    formatted = raw;
+	  }
+
+	  this.value = formatted;
+	  console.log(this.value);
+	});
+}
+
+//1000개 유저 데이터 넣기
+function addTenThousandUsers(){
+	const familyName = ["김", "신", "이", "주", "유", "박", "서", "한", "하"];
+	const lastName1 = ["가", "나", "다", "라", "마", "바", "사", "아", "자", "차", "카", "타", "파", "하"];
+	const lastName2 = ["고", "노", "도", "로", "모", "보", "소", "오", "조", "초", "코", "토", "포", "호"];
+	const digits = [1,2,3,4,5,6,7,8,9];
+
+	for(let i = 1; i <= 1000; i++){
+		// 이름 생성
+		let randomFN = familyName[Math.floor(Math.random() * familyName.length)];
+		let randomN1 = lastName1[Math.floor(Math.random() * lastName1.length)];
+		let randomN2 = lastName2[Math.floor(Math.random() * lastName2.length)];
+		let fullName = randomFN + randomN1 + randomN2;
+
+		// 전화번호 8자리 랜덤 생성
+		let num = () => digits[Math.floor(Math.random() * digits.length)];
+		let phoneNumber = `010-${num()}${num()}${num()}${num()}-${num()}${num()}${num()}${num()}`;
+
+		// 주소
+		let zipcode = Math.floor(Math.random() * 90000) + 10000;
+		let roadAddressList = ["서울시 강남구","경기도 수원시","인천시 남동구","부산시 해운대구","대구시 수성구","광주시 북구","대전시 유성구","울산시 남구",
+			"세종시 조치원읍","강원도 춘천시","경상남도 창원시","경상북도 포항시","전라남도 여수시","전라북도 전주시","충청남도 천안시","충청북도 청주시","제주도 제주시"];
+
+		let roadAddress = roadAddressList[Math.floor(Math.random() * roadAddressList.length)];
+		let detailAddress = `${num()}${num()}-${num()}${num()}`;
+
+		// 이메일 / 비밀번호
+		let email = `testuser${i}@test.com`;
+		let password = `Testuser${i}!`;
+
+		// 생일
+		let birth = `200${num()}-0${num()}-25`;
+
+		// 성별
+		let gender = Math.random() < 0.5 ? "M" : "F";
+
+		// 전송할 객체
+		let formData = {
+			name: fullName,
+			email: email,
+			password: password,
+			phone: phoneNumber,
+			zipcode: zipcode,
+			roadAddress: roadAddress,
+			detailAddress: detailAddress,
+			birth: birth,
+			gender: gender
+		};
+
+		// fetch로 전송
+		fetch('/user/joinProcessJson', {
+			method: "POST",
+			headers: {
+				'Content-Type': 'application/json',
+				'Accept': 'application/json'
+			},
+			body: JSON.stringify(formData)
+		})
+		.then(response => {
+			if(!response.ok){
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			return response.text();
+		})
+		.then(data => {
+			console.log(`회원 ${i} 가입 성공:`, data);
+		})
+		.catch(error => {
+			console.error(`회원 ${i} 가입 실패:`, error);
+		});
+	}
+}
+
+//랜덤 이력서 유저 1000명 한개씩 생성
+function addTenThousandResumes(){
+	
+	for(let i = 1; i <= 1000; i++){
+		
+		let email = `testuser${i}@test.com`;
+		
+		const resumeData = {
+			basicInfo: {
+				resumeSeq: null, // 신규 생성이므로 null 또는 제거
+				title: `이력서입니다. [${i}]`,
+				introduction: `간단한 자기소개 [${i}]`,
+				isPublic: true // boolean으로 변경 (첫 번째 코드 참조)
+			},
+			links: {
+				githubUrl: i % 3 === 0 ? `https://github.com/testuser${i}` : '',
+				notionUrl: i % 3 === 0 ? `https://notion.so/testuser${i}` : '',
+				blogUrl: i % 3 === 0 ? `https://blog.testuser${i}.com` : ''
+			},
+			positions: [], 
+			skills: [], 
+			educations: [], 
+			careers: [], 
+			projects: [], 
+			projectSkills: [], 
+			etc: [], 
+			introductions: []
+		};
+
+		// 희망 직무 수집(1번부터 21번 랜덤 배정)
+		resumeData.positions.push({ positionSeq: Math.floor(Math.random() * 21) + 1});
+
+		// 기술스택 5개씩
+		for(let j = 0; j < 5; j++){
+			resumeData.skills.push({ techStackSeq: Math.floor(Math.random() * 244) + 1});
+		}
+
+		// 학력 수집
+		const educationTypeList = ['고등학교','대학(2,3년)','대학(4년)','대학원(석사)', '대학원(박사)'];
+		const departmentList = ["컴퓨터", "공학", "IT", "소프트웨어", "인공지능", "데이터", "정보", "사이버", "로봇", "인터넷", "AI", "시스템"];
+		const gradeList = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.3, 4.5];
+		
+		const education = {
+			admissionDate: '2000.02',
+			graduateDate: '2004.02',
+			schoolName: i % 3 === 0 ? '서울도시대학교' : '춘천감자대학교',
+			department: departmentList[Math.floor(Math.random() * departmentList.length)],
+			educationType: educationTypeList[Math.floor(Math.random() * educationTypeList.length)],
+			grade: gradeList[Math.floor(Math.random() * gradeList.length)],
+			standardGrade: 4.5
+		};
+
+		// 빈 값이 아닌 경우만 추가
+		if (education.schoolName || education.department) {
+			resumeData.educations.push(education);
+		}
+
+		// 경력 수집
+		const positionList = ["프론트엔드 개발자", "백엔드 개발자", "풀스택 개발자", "웹 개발자", "앱 개발자", "모바일 개발자", "임베디드 개발자", "게임 개발자", "AI 엔지니어", "데이터 엔지니어", "데이터 사이언티스트", "머신러닝 엔지니어", "DevOps 엔지니어", "보안 엔지니어", "시스템 엔지니어", "네트워크 엔지니어", "QA 엔지니어", "테스트 엔지니어", "DBA (데이터베이스 관리자)", "소프트웨어 아키텍트", "PM (프로젝트 매니저)", "PO (프로덕트 오너)", "기술 지원 엔지니어", "기술 컨설턴트", "UI/UX 디자이너"];
+		
+		const career = {
+			startDate: '2000.02',
+			endDate: '2010.02',
+			companyName: "비밀의컴퍼니",
+			position: positionList[Math.floor(Math.random() * positionList.length)],
+			careerDescription: `${positionList[Math.floor(Math.random() * positionList.length)]} 업무를 담당했습니다.`
+		};
+
+		if (career.companyName || career.position) {
+			resumeData.careers.push(career);
+		}
+
+		// 프로젝트 수집
+		const projectSkills = [];
+		for(let j = 0; j < 5; j++){
+			projectSkills.push({ techStackSeq: Math.floor(Math.random() * 244) + 1 });
+		}
+
+		const project = {
+			startDate: '2000.02',
+			endDate: '2004.02',
+			projectName: `가데이터 테스트 프로젝트 ${i}`,
+			projectContent: `가데이터 프로젝트 내용 ${i}`,
+			releaseStatus: Math.random() > 0.5, // boolean으로 변경
+			repositoryLink: `https://github.com/testuser${i}/project${i}`
+		};
+
+		if (project.projectName && projectSkills.length > 0) {
+			resumeData.projects.push(project);
+			resumeData.projectSkills.push(projectSkills);
+		}
+
+		// 기타사항 (자격증 갯수 : 최대 5개)
+		const certCount = Math.floor(Math.random() * 5) + 1; //컴터자격증 최대 5개 
+		const langCount = Math.floor(Math.random() * 2) + 1; //어학자격증 최대 2개
+		const computerCertList = ["정보처리기사", "SQLD", "리눅스마스터", "OCP", "ADSP", "데이터분석준전문가"];
+		const languageCertList = ["토익", "토플", "텝스", "토익스피킹", "오픽", "JPT", "HSK", "기타"];
+		
+		for(let j = 0; j < certCount && j < computerCertList.length; j++){
+			const etcItem = {
+				endDate: '2005.05',
+				activityName: computerCertList[j],
+				recordType: "자격증",
+				relatedAgency: "한국자격증공단",
+				detailContent: `${computerCertList[j]} 자격증 취득`
+			};
+
+			if (etcItem.activityName) {
+				resumeData.etc.push(etcItem);
+			}
+		}
+		
+		for(let j = 0; j < langCount && j < languageCertList.length; j++){
+			const etcItem = {
+				endDate: '2002.12',
+				activityName: languageCertList[j],
+				recordType: "어학",
+				relatedAgency: "세계언어학협회",
+				detailContent: `${languageCertList[j]} 자격증 취득`
+			};
+
+			if (etcItem.activityName) {
+				resumeData.etc.push(etcItem);
+			}
+		}
+
+		// 자기소개서 수집
+		const keywordList = ["성실", "열정", "책임감", "노력", "근면", "끈기", "배려심", "정직함", "겸손함", "협동심", "문제해결력", "도전정신", "자기주도성", "시간관리 능력", "집중력", "학습욕구", "지속가능한 성장", "유연한 사고", "비판적 사고력", "창의성"];
+		let randomText = "";
+		const count = Math.floor(Math.random() * 10) + 1; // 최대 10개 키워드
+		
+		for(let j = 0; j < count && j < keywordList.length; j++){
+			randomText += keywordList[j];			
+			if (j !== count - 1) randomText += ", ";
+		}
+		
+		const introduction = {
+			title: `랜덤 자기소개서 ${i}`,
+			content: `저의 강점은 ${randomText}입니다. 이러한 장점들을 바탕으로 회사에 기여하고 싶습니다.`
+		};
+
+		if (introduction.title || introduction.content) {
+			resumeData.introductions.push(introduction);
+		}
+		
+		// FormData 생성 (파일 업로드를 위해) - 첫 번째 코드와 동일한 방식
+		const formData = new FormData();
+		
+		// 프로필 이미지는 없으므로 추가하지 않음 (필요시 더미 파일 추가 가능)
+		
+		// resumeData를 JSON 문자열로 변환해서 추가 (첫 번째 코드 방식과 동일)
+		formData.append('resumeData', JSON.stringify(resumeData));
+		
+		// userEmail은 더미 데이터용이므로 제거 (실제 컨트롤러에서 받지 않음)
+		
+		// 컨트롤러에서 요구하는 파라미터들 추가
+		formData.append('userEmail', email);
+		
+		// AJAX 전송 - 새로운 tempresume 컨트롤러 사용
+		$.ajax({
+			url: '/user/tempresume/resumeSubmit',
+			type: 'POST',
+			data: formData,
+			processData: false,
+			contentType: false,
+			success: function(response) {
+				if (response.result === 'success') {
+					console.log(`[${i}] 이력서가 성공적으로 저장되었습니다. Email: ${email}, Resume SEQ: ${response.resumeSeq}`);
+				} else if (response.result === 'user_not_found') {
+					console.error(`[${i}] 유저를 찾을 수 없습니다. Email: ${email}`);
+				} else {
+					console.error(`[${i}] 저장에 실패했습니다. Email: ${email}, Message: ${response.message || '알 수 없는 오류'}`);
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error(`[${i}] 저장 중 오류가 발생했습니다. Email: ${email}`, error);
+				console.error('Response:', xhr.responseText);
+			}
+		});
+	}
+}
+
+	
+</script>
+<body>
+ <div class="header">
+        <div class="header-content">
+            <a th:href="@{/}"> <img th:src="@{/images/logo.png}" class="logo" style="width: 100px; height: 50px;"></a>
+            <a th:href="@{/login}" class="login-link">로그인</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="form-title">민기인력 개인회원 가입</h1>
+        
+        <form id="frm" th:action="@{/user/joinProcess}" method="post">
+            <!-- 
+            <div class="form-group">
+              <label class="form-label">아이디</label>
+              <input type="text" name="username" class="form-input" placeholder="4~12자의 영문자와 숫자의 조합" required >
+            </div> 
+            -->
+            
+            <div class="form-group">
+                <label class="form-label">이메일</label>
+                <div class="email-container">
+	                <input type="email" id="email" name="email" class="form-input" placeholder="name@mingihire.co.kr">
+	                <button type="button" id="codeBtn" class="btn btn-primary btn-sm" >인증요청</button>
+                </div>
+                <div id="confirmNumberFrm" class="email-container" style="margin-top: 5px; display: none; gap: 8px;">
+	                <input type="text" id="confirmNumber" class="form-input" placeholder="인증번호를 입력해주세요." style="flex: 8;" >
+	                <button type="button" id="confirmBtn" class="btn btn-success btn-sm" style="flex: 2;" disabled>확인</button> <!-- js: 숫자 6자리일경우에만 활성화 -->
+                </div>
+                <div id="remainTime" style="display: none">
+	                <span style="color: red; font-size: 12px;" >남은시간: </span>
+	                <span id="timer" style="margin-top: 5px; color: red; font-size: 12px;"></span>
+                </div>
+                <!-- <div id="timer" style="margin-top: 5px; color: red; font-weight: bold;"></div> -->
+                <div id="verification-error" style="margin-top: 5px; color: red; font-weight: bold;"></div>
+                <div id="verification-success" style="margin-top: 5px; color: green; font-weight: bold; display: none; font-size: 12px;">인증에 성공하셨습니다.</div>
+                <div id="emailDuple" style="margin-top: 5px; color: red; font-weight: bold;"></div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">비밀번호</label>
+                <input type="password" id="password" name="password" class="form-input" placeholder="8~16자(영문 대소문자/숫자/특수문자, 모두 조합)" maxlength="16">
+                <span id="passwordAlert" style="margin-top: 5px; color: red; font-size: 12px;"></span>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">비밀번호 확인</label>
+                <input type="password" id="password2" class="form-input" placeholder="비밀번호 확인" maxlength="16">
+                <span id="passwordAlert2" style="margin-top: 5px; color: red; font-size: 12px;"></span>
+            </div>
+
+            <div class="form-group">
+            	<label class="form-label">휴대폰</label>
+            	<input type="text" id="phone" name="phone" class="form-input" placeholder="ex) 010-1234-5678" maxlength="13">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">이름</label>
+                <input type="name" id="name" name="name" class="form-input" placeholder="이름입력" maxlength="20">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">생년월일</label>
+                <input type="birth" id="birth" name="birth" class="form-input" placeholder="yyyy-MM-dd" maxlength="10">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">성별</label>
+              <div class="form_input">
+              	<label class="form-check-label">
+              		<input type="radio" class="form-check-input" name="gender" value="M">남성
+              	</label>
+              	<label class="form-check-label" style="margin-left: 15px;">
+              		<input type="radio" class="form-check-input" name="gender" value="F">여성
+              	</label>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">주소</label>
+              <!-- 주소찾기input 클릭시 다음주소API호출 -->
+              <div class="zipcode-box" >
+               <input type="text" id="zipcode" name="zipcode" class="form-input addr" placeholder="우편번호" readonly>
+               <input type="button" id="openKakaoMap" class="btn btn-secondary" value="우편번호 찾기" >
+              </div>
+              <input type="text" id="roadAddress" name="roadAddress" class="form-input addr" placeholder="주소" style="margin-bottom: 10px;" readonly>
+              <input type="text" id="detailAddress" name="detailAddress" class="form-input addr" placeholder="상세주소">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">약관</label>
+                <div class="terms-section">
+                    <div class="checkbox-group">
+                        <div class="checkbox-item required-checkbox">
+                            <input type="checkbox" class="checkbox-input" id="terms1">
+                            <label for="terms1" class="checkbox-label"><strong>전체 동의</strong></label>
+                        </div>
+                        <div class="checkbox-item">
+                       		<div class="terms-title">
+                            <input type="checkbox" class="checkbox-input required" id="terms2">
+                            <label for="terms2" class="checkbox-label"><strong>(필수) 개인회원 약관에 동의</strong></label>
+                       		</div>
+                     			<div class="terms-detail-emoji">
+                     				<a type="button" class="term-btn" data-term="userTerms" data-bs-toggle="modal" data-bs-target='#showTerm'> > </a>
+                       		</div>
+                        </div>
+                        <div class="checkbox-item">
+                        	<div class="terms-title">
+                            <input type="checkbox" class="checkbox-input required" id="terms3">
+                            <label for="terms3" class="checkbox-label"><strong>(필수) 개인정보 수집 및 이용에 동의</strong></label>
+                          </div>
+                          <div class="terms-detail-emoji">
+                        		<a type="button" class="term-btn" data-term="privacyTerm" data-bs-toggle="modal" data-bs-target='#showTerm'> > </a>
+                       		</div>
+                        </div>
+                        <div class="checkbox-item">
+                          <div class="terms-title">  
+                            <input type="checkbox" class="checkbox-input" id="terms4">
+                            <label for="terms4" class="checkbox-label">(선택) 위치기반서비스 이용동의에 동의</label>
+                          </div>
+                          <div class="terms-detail-emoji">
+                       			<a type="button" class="term-btn" data-term="locationTerm" data-bs-toggle="modal" data-bs-target='#showTerm'> > </a>
+                       		</div> 
+                        </div>
+                        <div class="checkbox-item">
+                          <div class="terms-title"> 
+                            <input type="checkbox" class="checkbox-input" id="terms5">
+                            <label for="terms5" class="checkbox-label">(선택) 마케팅 정보 수신 동의 · 이메일</label>
+                          </div>
+                          <div class="terms-detail-emoji">
+                        		<a type="button" class="term-btn" data-term="marketingTerm_email" data-bs-toggle="modal" data-bs-target='#showTerm'> > </a>
+                       		</div>  
+                        </div>
+                        <div class="checkbox-item">
+ 													<div class="terms-title">
+                            <input type="checkbox" class="checkbox-input" id="terms6">
+                            <label for="terms6" class="checkbox-label">(선택) 마케팅 정보 수신 동의 · SMS/MMS</label>
+                          </div>
+                          <div class="terms-detail-emoji">
+                        		<a type="button" class="term-btn" data-term="marketingTerm_sms" data-bs-toggle="modal" data-bs-target='#showTerm'> > </a>
+                       		</div>  
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="submit-btn" >다음단계</button>
+        </form>
+        <hr>
+        <!-- 랜덤 유저, 이력서 생성하기 버튼  -->
+        <button type="button" id="createRandomUsers" style="display: none">랜덤유저 생성</button>
+        <button type="button" id="createRandomResume" style="display: none">유저 랜덤 이력서 생성</button>
+    </div>
+    
+    <!-- Vertically centered scrollable modal -->
+    <div class="modal fade" id="showTerm" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+			  <div class="modal-content">
+			  
+			  	<div class="modal-header">
+			  		<h5 class="modal-title" id="myModalLabel">이용약관</h5>
+			  		<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+			  	</div>
+			  	
+	      	<div class="modal-body" id="modalBodyContent">
+	      		<!-- th:replace는 "fragment를 찾는 역할, 경로는 fragments일 필요없음, 그리고 해당 태그를 fragment내용으로 교체하면서 style="dislplay:none"이 무시되고 사라질수있음-->
+	      		<!-- 또한 replace는 fragment로 대체되면서 div의 id, class, style, data-* 속성 모두 사라짐.. 따라서 insert를 쓰자  -->
+						<div id="userTerms" class="term-fragment" style="display: none;" th:insert="~{login/terms/userTerms :: userTerms}"></div>
+						<div id="privacyTerm" class="term-fragment" style="display: none;" th:insert="~{login/terms/privacyPolicyAgreement :: privacyTerm}"></div>
+						<div id="locationTerm" class="term-fragment" style="display: none;" th:insert="~{login/terms/locationTerms :: locationTerm}"></div>
+						<div id="marketingTerm_email" class="term-fragment" style="display: none;" th:insert="~{login/terms/marketingTerms_email :: marketingTerm_email}"></div>
+						<div id="marketingTerm_sms" class="term-fragment" style="display: none;" th:insert="~{login/terms/marketingTerms_sms :: marketingTerm_sms}"></div>
+		      </div>
+			  </div>
+			</div>
+    </div>
+
+</body>
+</html>

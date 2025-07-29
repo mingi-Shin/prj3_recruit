@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @Mapper와 패키지명, 인터페이스명 같아야함 -->
+<mapper namespace="kr.co.sist.admin.corp.CorpMapper">
+
+	<select id="selectCorp" resultType="kr.co.sist.corp.dto.CorpEntity">
+	select * from company
+	</select>
+	<select id="selectCorpInd" resultType="java.lang.String">
+	select distinct(industry) as ind from company 
+	where industry is not null
+	</select>
+	
+	<select id="searchCorp" parameterType="map" resultType="kr.co.sist.corp.dto.CorpEntity">
+  select * from company
+  <where>
+    <if test="name != null and name != ''">
+      and corp_nm LIKE '%' || #{name} || '%'
+    </if>
+
+    <if test="corpNo != null and corpNo != ''">
+      AND corp_no LIKE '%' || #{corpNo} || '%'
+    </if>
+
+     <if test="industry != null and industry.size() > 0">
+    AND industry IN
+    <foreach collection="industry" item="item" open="(" separator="," close=")">
+      #{item, jdbcType=VARCHAR}
+    </foreach>
+    </if>
+    </where>
+    </select>
+    
+    <select id="detailCorp" parameterType="String">
+    select * from company where corp_no=#{corpNo}
+    </select>
+</mapper>

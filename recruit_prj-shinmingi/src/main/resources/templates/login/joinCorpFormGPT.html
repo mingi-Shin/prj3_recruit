@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기업회원 가입 페이지</title>
+    <th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+    <link rel="stylesheet" th:href="@{/login/joinCorpForm.css}"/>
+    <!-- 카카오지도 -->
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <style>
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .file-drop-zone {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background-color: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .file-drop-zone.drag-over {
+            border-color: #007bff;
+            background-color: #e3f2fd;
+        }
+        .file-preview {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            display: none;
+        }
+        .file-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .file-remove {
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        .success-message {
+            color: #28a745;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        .form-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .validation-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+        }
+        .validation-icon.valid {
+            color: #28a745;
+        }
+        .validation-icon.invalid {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <!-- 메시지 표시 -->
+    <div th:if="${msg}" class="alert alert-info" role="alert">
+        <p th:text="${msg}"></p>
+    </div>
+
+    <div class="header">
+        <div class="header-content">
+            <a th:href="@{/}">
+                <img th:src="@{/images/logo.png}" class="logo" style="width: 100px; height: 50px;" alt="회사 로고">
+            </a>
+            <a th:href="@{/login}" class="login-link">로그인</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="form-title">민기인력 기업회원 가입</h1>
+        
+        <form id="corpJoinForm" th:action="@{/corp/joinProcess}" method="post" enctype="multipart/form-data" novalidate>
+            
+            <!-- 사업자등록번호 -->
+            <div class="form-group">
+                <label class="form-label" for="corpNo">
+                    <span style="font-weight: bold;">사업자등록번호</span>
+                    <span class="required">*</span>
+                </label>
+                <div class="input-group">
+                    <input type="text" id="corpNo" name="corpNo" class="form-input" 
+                           placeholder="사업자 등록번호 입력(숫자 10자리)" maxlength="10" required>
+                    <div class="loading-spinner" id="corpNoSpinner"></div>
+                    <span class="validation-icon" id="corpNoValidation"></span>
+                </div>
+                <div class="api-result" id="corpNoResult"></div>
+                <div class="error-message" id="corpNoError"></div>
+            </div>
+            
+            <!-- 기업인증 파일 업로드 -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span style="font-weight: bold;">기업인증</span>
+                    <span class="required">*</span>
+                </label>
+                <div class="file-drop-zone" id="fileDropZone">
+                    <input type="file" id="upfile" name="upfile" accept=".jpg,.jpeg,.png,.pdf" style="display: none;">
+                    <div class="upload-content">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-cloud-upload" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-3.941 2.351l-.461.808-.731-.065A3.5 3.5 0 0 0 .5 7.5v1a2.5 2.5 0 0 0 2.5 2.5h1a.5.5 0 0 1 0 1h-1A3.5 3.5 0 0 1 0 8.5v-1a4.5 4.5 0 0 1 4.797-4.498A4.5 4.5 0 0 1 8 0z"/>
+                            <path fill-rule="evenodd" d="M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                        </svg>
+                        <p>파일을 드래그하여 업로드하거나 클릭하여 선택하세요</p>
+                        <p class="file-info-text">JPG, PNG, PDF 파일만 업로드 가능 (최대 10MB)</p>
+                    </div>
+                </div>
+                <div class="file-preview" id="filePreview">
+                    <div class="file-info">
+                        <span id="fileName"></span>
+                        <span class="file-remove" id="fileRemove">✕</span>
+                    </div>
+                </div>
+                <div class="error-message" id="fileError"></div>
+                <div class="success-message" id="fileSuccess"></div>
+            </div>
+            
+            <!-- 기업명 -->
+            <div class="form-group">
+                <label class="form-label" for="corpNm">
+                    기업명 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpNm" name="corpNm" class="form-input" 
+                       placeholder="기업명을 입력해주세요" maxlength="50" required>
+                <span class="validation-icon" id="corpNmValidation"></span>
+                <div class="error-message" id="corpNmError"></div>
+            </div>
+            
+            <!-- 대표자 -->
+            <div class="form-group">
+                <label class="form-label" for="corpCeo">
+                    대표자 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpCeo" name="corpCeo" class="form-input" 
+                       placeholder="예시: 김라민 외1명 (사업자등록증명원 대표자명)" maxlength="50" required>
+                <span class="validation-icon" id="corpCeoValidation"></span>
+                <div class="error-message" id="corpCeoError"></div>
+            </div>
+            
+            <!-- 회사주소 -->
+            <div class="form-group">
+                <label class="form-label">
+                    회사주소 <span class="required">*</span>
+                </label>
+                <div class="zipcode-box" style="margin-bottom: 10px;">
+                    <input type="text" id="zipcode" name="zipcode" class="form-input" 
+                           placeholder="우편번호" readonly required>
+                    <button type="button" id="openKakaoMap" class="btn btn-secondary">우편번호 찾기</button>
+                </div>
+                <input type="text" id="roadAddress" name="roadAddress" class="form-input" 
+                       placeholder="주소" style="margin-bottom: 10px;" readonly required>
+                <input type="text" id="detailAddress" name="detailAddress" class="form-input" 
+                       placeholder="상세주소" maxlength="100" required>
+                <div class="error-message" id="addressError"></div>
+            </div>
+            
+            <!-- 업종 -->
+            <div class="form-group">
+                <label class="form-label" for="industry">
+                    업종 <span class="required">*</span>
+                </label>
+                <select name="industry" id="industry" class="form-select" required>
+                    <option value="">-- 업종 선택 --</option>
+                    <option value="manufacturing">제조업</option>
+                    <option value="construction">건설업</option>
+                    <option value="itCommunications">정보통신업 (IT)</option>
+                    <option value="wholesaleRetail">도소매업</option>
+                    <option value="transportation">운수업</option>
+                    <option value="realEstate">부동산업</option>
+                    <option value="financeInsurance">금융 및 보험업</option>
+                    <option value="education">교육 서비스업</option>
+                    <option value="healthSocial">보건 및 사회복지 서비스업</option>
+                    <option value="hospitalityFood">숙박 및 음식점업</option>
+                    <option value="artsSports_leisure">예술, 스포츠 및 여가관련 서비스업</option>
+                    <option value="agricultureFishing">농업, 임업 및 어업</option>
+                    <option value="utilities">전기, 가스, 증기 및 수도사업</option>
+                    <option value="publicAdminDefense">공공행정 및 국방</option>
+                    <option value="internationalOrgs">국제 및 외국기관</option>
+                </select>
+                <div class="error-message" id="industryError"></div>
+            </div>
+            
+            <!-- 평균매출 -->
+            <div class="form-group">
+                <label class="form-label" for="corpAnnualRevenue">
+                    평균매출 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpAnnualRevenue" name="corpAnnualRevenue" 
+                       class="form-input amount" placeholder="평균매출 입력" required>
+                <div class="error-message" id="corpAnnualRevenueError"></div>
+            </div>
+            
+            <!-- 평균연봉 -->
+            <div class="form-group">
+                <label class="form-label" for="corpAvgSal">
+                    평균연봉 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpAvgSal" name="corpAvgSal" 
+                       class="form-input amount" placeholder="평균연봉 입력" required>
+                <div class="error-message" id="corpAvgSalError"></div>
+            </div>
+            
+            <!-- 설립년도 -->
+            <div class="form-group">
+                <label class="form-label" for="corpCreatedAt">
+                    설립년도 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpCreatedAt" name="corpCreatedAt" class="form-input" 
+                       placeholder="설립년도 입력 (YYYYMMDD)" maxlength="8" required>
+                <div class="error-message" id="corpCreatedAtError"></div>
+            </div>
+            
+            <!-- 사원수 -->
+            <div class="form-group">
+                <label class="form-label" for="corpEmpCnt">
+                    사원수 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpEmpCnt" name="corpEmpCnt" 
+                       class="form-input amount" placeholder="사원수 입력" required>
+                <div class="error-message" id="corpEmpCntError"></div>
+            </div>
+            
+            <!-- 관리자 이메일 -->
+            <div class="form-group">
+                <label class="form-label" for="email">
+                    관리자 이메일 <span class="required">*</span>
+                </label>
+                <div class="email-container">
+                    <input type="email" id="email" name="email" class="form-input" 
+                           placeholder="name@mingihire.co.kr" required>
+                    <button type="button" id="emailVerifyBtn" class="btn btn-primary btn-sm">인증요청</button>
+                </div>
+                <div id="emailVerifyForm" class="email-container" style="margin-top: 5px; display: none;">
+                    <input type="text" id="verifyCode" class="form-input" 
+                           placeholder="인증번호 6자리 입력" maxlength="6">
+                    <button type="button" id="verifyBtn" class="btn btn-success btn-sm" disabled>확인</button>
+                </div>
+                <div id="emailTimer" class="timer-display" style="display: none;">
+                    <span style="color: red; font-size: 12px;">남은시간: </span>
+                    <span id="timerText" style="color: red; font-size: 12px;"></span>
+                </div>
+                <div class="error-message" id="emailError"></div>
+                <div class="success-message" id="emailSuccess"></div>
+            </div>
+
+            <!-- 비밀번호 -->
+            <div class="form-group">
+                <label class="form-label" for="password">
+                    비밀번호 <span class="required">*</span>
+                </label>
+                <input type="password" id="password" name="password" class="form-input" 
+                       placeholder="8~16자 (영문 대소문자/숫자/특수문자 조합)" maxlength="16" required>
+                <div class="error-message" id="passwordError"></div>
+            </div>
+            
+            <!-- 관리자 휴대폰 -->
+            <div class="form-group">
+                <label class="form-label" for="phone">
+                    관리자 휴대폰 <span class="required">*</span>
+                </label>
+                <input type="tel" id="phone" name="phone" class="form-input" 
+                       placeholder="010-1234-5678" maxlength="13" required>
+                <div class="error-message" id="phoneError"></div>
+            </div>
+            
+            <!-- 관리자 이름 -->
+            <div class="form-group">
+                <label class="form-label" for="name">
+                    관리자 이름 <span class="required">*</span>
+                </label>
+                <input type="text" id="name" name="name" class="form-input" 
+                       placeholder="이름 입력" maxlength="20" required>
+                <div class="error-message" id="nameError"></div>
+            </div>
+
+            <!-- 약관 동의 -->
+            <div class="form-group">
+                <label class="form-label">약관 동의</label>
+                <div class="terms-section">
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" class="checkbox-input" id="allAgree">
+                            <label for="allAgree" class="checkbox-label"><strong>전체 동의</strong></label>
+                        </div>
+                        <div class="checkbox-item">
+                            <div class="terms-title">
+                                <input type="checkbox" class="checkbox-input required-term" id="userTerms" required>
+                                <label for="userTerms" class="checkbox-label">
+                                    <strong>(필수) 기업회원 약관에 동의</strong>
+                                </label>
+                            </div>
+                            <div class="terms-detail">
+                                <button type="button" class="term-btn" data-term="userTerms" 
+                                        data-bs-toggle="modal" data-bs-target="#termModal">보기</button>
+                            </div>
+                        </div>
+                        <div class="checkbox-item">
+                            <div class="terms-title">
+                                <input type="checkbox" class="checkbox-input required-term" id="privacyTerms" required>
+                                <label for="privacyTerms" class="checkbox-label">
+                                    <strong>(필수) 개인정보 수집 및 이용에 동의</strong>
+                                </label>
+                            </div>
+                            <div class="terms-detail">
+                                <button type="button" class="term-btn" data-term="privacyTerms" 
+                                        data-bs-toggle="modal" data-bs-target="#termModal">보기</button>
+                            </div>
+                        </div>
+                        <div class="checkbox-item">
+                            <div class="terms-title">
+                                <input type="checkbox" class="checkbox-input required-term" id="smsTerms" required>
+                                <label for="smsTerms" class="checkbox-label">
+                                    <strong>(필수) SMS 발송 서비스 약관에 동의</strong>
+                                </label>
+                            </div>
+                            <div class="terms-detail">
+                                <button type="button" class="term-btn" data-term="smsTerms" 
+                                        data-bs-toggle="modal" data-bs-target="#termModal">보기</button>
+                            </div>
+                        </div>
+                        <div class="checkbox-item">
+                            <div class="terms-title">
+                                <input type="checkbox" class="checkbox-input" id="emailMarketing">
+                                <label for="emailMarketing" class="checkbox-label">
+                                    (선택) 마케팅 정보 수신 동의 · 이메일
+                                </label>
+                            </div>
+                            <div class="terms-detail">
+                                <button type="button" class="term-btn" data-term="emailMarketing" 
+                                        data-bs-toggle="modal" data-bs-target="#termModal">보기</button>
+                            </div>
+                        </div>
+                        <div class="checkbox-item">
+                            <div class="terms-title">
+                                <input type="checkbox" class="checkbox-input" id="smsMarketing">
+                                <label for="smsMarketing" class="checkbox-label">
+                                    (선택) 마케팅 정보 수신 동의 · SMS/MMS
+                                </label>
+                            </div>
+                            <div class="terms-detail">
+                                <button type="button" class="term-btn" data-term="smsMarketing" 
+                                        data-bs-toggle="modal" data-bs-target="#termModal">보기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="error-message" id="termsError"></div>
+            </div>
+
+            <button type="submit" id="submitBtn" class="submit-btn">회원가입</button>
+        </form>
+    </div>
+    
+    <!-- 약관 모달 -->
+    <div class="modal fade" id="termModal" tabindex="-1" aria-labelledby="termModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="termModalLabel">이용약관</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+                </div>
+                <div class="modal-body" id="termModalBody">
+                    <div id="userTermsContent" class="term-content" style="display: none;">
+                        <div th:insert="~{login/terms/userTerms :: userTerms}"></div>
+                    </div>
+                    <div id="privacyTermsContent" class="term-content" style="display: none;">
+                        <div th:insert="~{login/terms/privacyPolicyAgreement :: privacyTerm}"></div>
+                    </div>
+                    <div id="smsTermsContent" class="term-content" style="display: none;">
+                        <div th:insert="~{login/terms/locationTerms :: locationTerm}"></div>
+                    </div>
+                    <div id="emailMarketingContent" class="term-content" style="display: none;">
+                        <div th:insert="~{login/terms/marketingTerms_email :: marketingTerm_email}"></div>
+                    </div>
+                    <div id="smsMarketingContent" class="term-content" style="display: none;">
+                        <div th:insert="~{login/terms/marketingTerms_sms :: marketingTerm_sms}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 상태 관리 객체
+        const FormState = {
+            corpNoVerified: false,
+            emailVerified: false,
+            fileUploaded: false,
+            emailTimer: null,
+            apiKey: "f2XGVPM83eg%2B2DjAAuAr6wEkvRlk4KwQYLDV1WkrveBZOQ6upT8O2otcjEJEiqqllEIhN%2B2KvRi2EKceHA5fJQ%3D%3D"
+        };
+
+        // 유틸리티 함수
+        const Utils = {
+            // 숫자만 추출
+            extractNumbers: (str) => str.replace(/[^0-9]/g, ''),
+            
+            // 천단위 콤마 추가
+            addCommas: (num) => num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','),
+            
+            // 전화번호 포맷팅
+            formatPhoneNumber: (phone) => {
+                const numbers = Utils.extractNumbers(phone);
+                if (numbers.length <= 3) return numbers;
+                if (numbers.length <= 7) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+                return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+            },
+
+            // 에러 메시지 표시
+            showError: (elementId, message) => {
+                const errorElement = document.getElementById(elementId);
+                if (errorElement) {
+                    errorElement.textContent = message;
+                    errorElement.style.display = 'block';
+                }
+            },
+
+            // 에러 메시지 숨기기
+            hideError: (elementId) => {
+                const errorElement = document.getElementById(elementId);
+                if (errorElement) {
+                    errorElement.style.display = 'none';
+                }
+            },
+
+            // 성공 메시지 표시
+            showSuccess: (elementId, message) => {
+                const successElement = document.getElementById(elementId);
+                if (successElement) {
+                    successElement.textContent = message;
+                    successElement.style.display = 'block';
+                }
+            },
+
+            // 성공 메시지 숨기기
+            hideSuccess: (elementId) => {
+                const successElement = document.getElementById(elementId);
+                if (successElement) {
+                    successElement.style.display = 'none';
+                }
+            },
+
+            // 검증 아이콘 표시
+            showValidationIcon: (elementId, isValid) => {
+                const icon = document.getElementById(elementId);
+                if (icon) {
+                    icon.innerHTML = isValid ? '✓' : '✗';
+                    icon.className = `validation-icon ${isValid ? 'valid' : 'invalid'}`;
+                    icon.style.display = 'block';
+                }
+            }
+        };
+
+        // 검증 규칙
+        const ValidationRules = {
+            corpNo: /^\d{10}$/,
+            email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,16}$/,
+            phone: /^010-\d{4}-\d{4}$/,
+            name: /^[가-힣a-zA-Z\s]{2,20}$/,
+            corpCreatedAt: /^\d{8}$/
+        };
+
+     // 파일 업로드 관리
+        const FileManager = {
+            allowedTypes: ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'],
+            maxSize: 10 * 1024 * 1024, // 10MB
+
+            init() {
+                const dropZone = document.getElementById('fileDropZone');
+                const fileInput = document.getElementById('upfile');
+                const fileRemove = document.getElementById('fileRemove');
+
+                // 드래그 앤 드롭 이벤트
+                dropZone.addEventListener('dragover', this.handleDragOver.bind(this));
+                dropZone.addEventListener('dragleave', this.handleDragLeave.bind(this));
+                dropZone.addEventListener('drop', this.handleDrop.bind(this));
+                dropZone.addEventListener('click', () => fileInput.click());
+
+                // 파일 선택 이벤트
+                fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+
+                // 파일 제거 이벤트
+                fileRemove.addEventListener('click', this.removeFile.bind(this));
+            },
+
+            handleDragOver(e) {
+                e.preventDefault();
+                document.getElementById('fileDropZone').classList.add('drag-over');
+            },
+
+            handleDragLeave(e) {
+                e.preventDefault();
+                document.getElementById('fileDropZone').classList.remove('drag-over');
+            },
+
+            handleDrop(e) {
+                e.preventDefault();
+                document.getElementById('fileDropZone').classList.remove('drag-over');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.processFile(files[0]);
+                }
+            },
+
+            handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    this.processFile(file);
+                }
+            },
+
+            processFile(file) {
+                Utils.hideError('fileError');
+                Utils.hideSuccess('fileSuccess');
+
+                // 파일 타입 검증
+                if (!this.allowedTypes.includes(file.type)) {
+                    Utils.showError('fileError', 'JPG, PNG, PDF 파일만 업로드 가능합니다.');
+                    return;
+                }
+
+                // 파일 크기 검증
+                if (file.size > this.maxSize) {
+                    Utils.showError('fileError', '파일 크기는 10MB 이하만 업로드 가능합니다.');
+                    return;
+                }
+
+                // 파일명 길이 검증
+                const fileName = file.name.split('.')[0];
+                if (fileName.length > 20) {
+                    Utils.showError('fileError', '파일명은 20자 이내로 입력해주세요.');
+                    return;
+                }
+
+                // 파일 업로드 성공 처리
+                this.showFilePreview(file);
+                FormState.fileUploaded = true;
+                Utils.showSuccess('fileSuccess', '파일이 성공적으로 업로드되었습니다.');
+            },
+
+            showFilePreview(file) {
+                const preview = document.getElementById('filePreview');
+                const fileName = document.getElementById('fileName');
+                
+                fileName.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`;
+                preview.style.display = 'block';
+            },
+
+            removeFile() {
+                const fileInput = document.getElementById('upfile');
+                const preview = document.getElementById('filePreview');
+                
+                fileInput.value = '';
+                preview.style.display = 'none';
+                FormState.fileUploaded = false;
+                Utils.hideError('fileError');
+                Utils.hideSuccess('fileSuccess');
+            }
+        };
+
+        // 사업자등록번호 검증
+        const CorpNoValidator = {
+            async validateCorpNo(corpNo) {
+                if (!ValidationRules.corpNo.test(corpNo)) {
+                    Utils.showError('corpNoError', '사업자등록번호는 숫자 10자리로 입력해주세요.');
+                    Utils.showValidationIcon('corpNoValidation', false);
+                    FormState.corpNoVerified = false;
+                    return;
+                }
+
+                Utils.hideError('corpNoError');
+                document.getElementById('corpNoSpinner').style.display = 'inline-block';
+
+                try {
+                    const response = await fetch(`https://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=f2XGVPM83eg%2B2DjAAuAr6wEkvRlk4KwQYLDV1WkrveBZOQ6upT8O2otcjEJEiqqllEIhN%2B2KvRi2EKceHA5fJQ%3D%3D`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            "b_no": [corpNo]
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.data && data.data.length > 0) {
+                        const businessData = data.data[0];
+                        
+                        if (businessData.b_stt_cd === "01") {
+                            document.getElementById('corpNoResult').innerHTML = 
+                                `<span style="color: green;">✓ 인증된 사업자입니다.</span>`;
+                            Utils.showValidationIcon('corpNoValidation', true);
+                            FormState.corpNoVerified = true;
+                        } else {
+                            document.getElementById('corpNoResult').innerHTML = 
+                                `<span style="color: red;">✗ 등록되지 않은 사업자입니다.</span>`;
+                            Utils.showValidationIcon('corpNoValidation', false);
+                            FormState.corpNoVerified = false;
+                        }
+                    } else {
+                        Utils.showError('corpNoError', '사업자등록번호 확인에 실패했습니다.');
+                        Utils.showValidationIcon('corpNoValidation', false);
+                        FormState.corpNoVerified = false;
+                    }
+                } catch (error) {
+                    console.error('사업자등록번호 검증 오류:', error);
+                    Utils.showError('corpNoError', '사업자등록번호 확인 중 오류가 발생했습니다.');
+                    Utils.showValidationIcon('corpNoValidation', false);
+                    FormState.corpNoVerified = false;
+                } finally {
+                    document.getElementById('corpNoSpinner').style.display = 'none';
+                }
+            }
+            
+        };
+
+        // 이메일 인증 관리
+        const EmailVerifier = {
+            startTimer(duration) {
+                let timer = duration;
+                const timerDisplay = document.getElementById('timerText');
+                
+                FormState.emailTimer = setInterval(() => {
+                    const minutes = Math.floor(timer / 60);
+                    const seconds = timer % 60;
+                    timerDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    if (timer <= 0) {
+                        this.stopTimer();
+                        Utils.showError('emailError', '인증시간이 만료되었습니다. 다시 인증요청해주세요.');
+                        document.getElementById('verifyBtn').disabled = true;
+                    }
+                    timer--;
+                }, 1000);
+            },
+
+            stopTimer() {
+                if (FormState.emailTimer) {
+                    clearInterval(FormState.emailTimer);
+                    FormState.emailTimer = null;
+                }
+                document.getElementById('emailTimer').style.display = 'none';
+            },
+
+            async sendVerificationEmail(email) {
+                try {
+                    /*
+                    const response = await fetch('/api/email/send-verification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email: email })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                    */
+
+                    if (1) { // 항상 참
+                        Utils.hideError('emailError');
+                        Utils.showSuccess('emailSuccess', '인증번호가 이메일로 전송되었습니다.');
+                        document.getElementById('emailVerifyForm').style.display = 'flex';
+                        document.getElementById('emailTimer').style.display = 'block';
+                        this.startTimer(300); // 5분
+                        document.getElementById('verifyBtn').disabled = false;
+                    } else {
+                        Utils.showError('emailError', result.message || '인증번호 전송에 실패했습니다.');
+                    }
+
+                } catch (error) {
+                    console.error('이메일 인증 전송 오류:', error);
+                    Utils.showError('emailError', '인증번호 전송 중 오류가 발생했습니다.');
+                }
+            },
+
+            async verifyCode(email, code) {
+                /* try {
+                    const response = await fetch('/api/email/verify-code', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ email: email, code: code })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        Utils.hideError('emailError');
+                        Utils.showSuccess('emailSuccess', '이메일 인증이 완료되었습니다.');
+                        FormState.emailVerified = true;
+                        this.stopTimer();
+                        document.getElementById('emailVerifyForm').style.display = 'none';
+                        document.getElementById('emailVerifyBtn').disabled = true;
+                        document.getElementById('email').readOnly = true;
+                    } else {
+                        Utils.showError('emailError', result.message || '인증번호가 올바르지 않습니다.');
+                    }
+                } catch (error) {
+                    console.error('이메일 인증 확인 오류:', error);
+                    Utils.showError('emailError', '인증번호 확인 중 오류가 발생했습니다.');
+                } */
+                try {
+                    if (code === "123456") {
+                        Utils.hideError('emailError');
+                        Utils.showSuccess('emailSuccess', '이메일 인증이 완료되었습니다.');
+                        FormState.emailVerified = true;
+                        this.stopTimer();
+                        document.getElementById('emailVerifyForm').style.display = 'none';
+                        document.getElementById('emailVerifyBtn').disabled = true;
+                        document.getElementById('email').readOnly = true;
+                    } else {
+                        Utils.showError('emailError', '인증번호가 올바르지 않습니다.');
+                    }
+                } catch (error) {
+                    console.error('이메일 인증 확인 오류:', error);
+                    Utils.showError('emailError', '인증번호 확인 중 오류가 발생했습니다.');
+                }
+            }
+        };
+
+        // 폼 검증 관리
+        const FormValidator = {
+            validateCorpNm(value) {
+                if (!value.trim()) {
+                    Utils.showError('corpNmError', '기업명을 입력해주세요.');
+                    Utils.showValidationIcon('corpNmValidation', false);
+                    return false;
+                }
+                if (value.length < 2 || value.length > 50) {
+                    Utils.showError('corpNmError', '기업명은 2~50자로 입력해주세요.');
+                    Utils.showValidationIcon('corpNmValidation', false);
+                    return false;
+                }
+                Utils.hideError('corpNmError');
+                Utils.showValidationIcon('corpNmValidation', true);
+                return true;
+            },
+
+            validateCorpCeo(value) {
+                if (!value.trim()) {
+                    Utils.showError('corpCeoError', '대표자명을 입력해주세요.');
+                    Utils.showValidationIcon('corpCeoValidation', false);
+                    return false;
+                }
+                if (value.length < 2 || value.length > 50) {
+                    Utils.showError('corpCeoError', '대표자명은 2~50자로 입력해주세요.');
+                    Utils.showValidationIcon('corpCeoValidation', false);
+                    return false;
+                }
+                Utils.hideError('corpCeoError');
+                Utils.showValidationIcon('corpCeoValidation', true);
+                return true;
+            },
+
+            validateAddress() {
+                const zipcode = document.getElementById('zipcode').value;
+                const roadAddress = document.getElementById('roadAddress').value;
+                const detailAddress = document.getElementById('detailAddress').value;
+
+                if (!zipcode || !roadAddress || !detailAddress.trim()) {
+                    Utils.showError('addressError', '주소를 모두 입력해주세요.');
+                    return false;
+                }
+                
+                if (detailAddress.length > 100) {
+                    Utils.showError('addressError', '상세주소는 100자 이내로 입력해주세요.');
+                    return false;
+                }
+                
+                Utils.hideError('addressError');
+                return true;
+            },
+
+            validateIndustry(value) {
+                if (!value) {
+                    Utils.showError('industryError', '업종을 선택해주세요.');
+                    return false;
+                }
+                Utils.hideError('industryError');
+                return true;
+            },
+
+            validateAmount(value, fieldName, errorId) {
+                const numValue = parseInt(value.replace(/[^0-9]/g, ''));
+                
+                if (!numValue || numValue <= 0) {
+                    Utils.showError(errorId, `${fieldName}을(를) 입력해주세요.`);
+                    return false;
+                }
+                
+                if (numValue > 999999999999) {
+                    Utils.showError(errorId, `${fieldName}은(는) 12자리 이내로 입력해주세요.`);
+                    return false;
+                }
+                
+                Utils.hideError(errorId);
+                return true;
+            },
+
+            validateCreatedAt(value) {
+                if (!ValidationRules.corpCreatedAt.test(value)) {
+                    Utils.showError('corpCreatedAtError', '설립년도를 YYYYMMDD 형식으로 입력해주세요.');
+                    return false;
+                }
+                
+                const year = parseInt(value.substring(0, 4));
+                const month = parseInt(value.substring(4, 6));
+                const day = parseInt(value.substring(6, 8));
+                const currentYear = new Date().getFullYear();
+                
+                if (year < 1900 || year > currentYear) {
+                    Utils.showError('corpCreatedAtError', '올바른 설립년도를 입력해주세요.');
+                    return false;
+                }
+                
+                if (month < 1 || month > 12) {
+                    Utils.showError('corpCreatedAtError', '올바른 월을 입력해주세요.');
+                    return false;
+                }
+                
+                if (day < 1 || day > 31) {
+                    Utils.showError('corpCreatedAtError', '올바른 일을 입력해주세요.');
+                    return false;
+                }
+                
+                Utils.hideError('corpCreatedAtError');
+                return true;
+            },
+
+            validateEmail(value) {
+                if (!ValidationRules.email.test(value)) {
+                    Utils.showError('emailError', '올바른 이메일 형식으로 입력해주세요.');
+                    return false;
+                }
+                Utils.hideError('emailError');
+                return true;
+            },
+
+            validatePassword(value) {
+                if (!ValidationRules.password.test(value)) {
+                    Utils.showError('passwordError', '8~16자 영문 대소문자, 숫자, 특수문자를 조합해주세요.');
+                    return false;
+                }
+                Utils.hideError('passwordError');
+                return true;
+            },
+
+            validatePhone(value) {
+                if (!ValidationRules.phone.test(value)) {
+                    Utils.showError('phoneError', '올바른 휴대폰 번호를 입력해주세요.');
+                    return false;
+                }
+                Utils.hideError('phoneError');
+                return true;
+            },
+
+            validateName(value) {
+                if (!ValidationRules.name.test(value)) {
+                    Utils.showError('nameError', '이름은 한글, 영문 2~20자로 입력해주세요.');
+                    return false;
+                }
+                Utils.hideError('nameError');
+                return true;
+            },
+
+            validateTerms() {
+                const requiredTerms = document.querySelectorAll('.required-term');
+                for (let term of requiredTerms) {
+                    if (!term.checked) {
+                        Utils.showError('termsError', '필수 약관에 동의해주세요.');
+                        return false;
+                    }
+                }
+                Utils.hideError('termsError');
+                return true;
+            },
+
+            validateForm() {
+                let isValid = true;
+
+                // 사업자등록번호 검증
+                if (!FormState.corpNoVerified) {
+                    Utils.showError('corpNoError', '사업자등록번호 인증을 완료해주세요.');
+                    isValid = false;
+                }
+
+                // 파일 업로드 검증
+                if (!FormState.fileUploaded) {
+                    Utils.showError('fileError', '기업인증 파일을 업로드해주세요.');
+                    isValid = false;
+                }
+
+                // 각 필드 검증
+                const corpNm = document.getElementById('corpNm').value;
+                if (!this.validateCorpNm(corpNm)) isValid = false;
+
+                const corpCeo = document.getElementById('corpCeo').value;
+                if (!this.validateCorpCeo(corpCeo)) isValid = false;
+
+                if (!this.validateAddress()) isValid = false;
+
+                const industry = document.getElementById('industry').value;
+                if (!this.validateIndustry(industry)) isValid = false;
+
+                const corpAnnualRevenue = document.getElementById('corpAnnualRevenue').value;
+                if (!this.validateAmount(corpAnnualRevenue, '평균매출', 'corpAnnualRevenueError')) isValid = false;
+
+                const corpAvgSal = document.getElementById('corpAvgSal').value;
+                if (!this.validateAmount(corpAvgSal, '평균연봉', 'corpAvgSalError')) isValid = false;
+
+                const corpCreatedAt = document.getElementById('corpCreatedAt').value;
+                if (!this.validateCreatedAt(corpCreatedAt)) isValid = false;
+
+                const corpEmpCnt = document.getElementById('corpEmpCnt').value;
+                if (!this.validateAmount(corpEmpCnt, '사원수', 'corpEmpCntError')) isValid = false;
+
+                // 이메일 인증 검증
+                if (!FormState.emailVerified) {
+                    Utils.showError('emailError', '이메일 인증을 완료해주세요.');
+                    isValid = false;
+                }
+
+                const password = document.getElementById('password').value;
+                if (!this.validatePassword(password)) isValid = false;
+
+                const phone = document.getElementById('phone').value;
+                if (!this.validatePhone(phone)) isValid = false;
+
+                const name = document.getElementById('name').value;
+                if (!this.validateName(name)) isValid = false;
+
+                if (!this.validateTerms()) isValid = false;
+
+                return isValid;
+            }
+        };
+
+        // 이벤트 리스너 등록
+        document.addEventListener('DOMContentLoaded', function() {
+            // 파일 매니저 초기화
+            FileManager.init();
+
+            // 사업자등록번호 입력 이벤트
+            document.getElementById('corpNo').addEventListener('input', function() {
+                const value = Utils.extractNumbers(this.value);
+                this.value = value;
+                
+                if (value.length === 10) {
+                    CorpNoValidator.validateCorpNo(value);
+                } else {
+                    FormState.corpNoVerified = false;
+                    Utils.showValidationIcon('corpNoValidation', false);
+                    document.getElementById('corpNoResult').innerHTML = '';
+                }
+            });
+
+            // 금액 입력 필드 포맷팅
+            document.querySelectorAll('.amount').forEach(input => {
+                input.addEventListener('input', function() {
+                    const value = Utils.extractNumbers(this.value);
+                    this.value = Utils.addCommas(value);
+                });
+            });
+
+            // 전화번호 포맷팅
+            document.getElementById('phone').addEventListener('input', function() {
+                this.value = Utils.formatPhoneNumber(this.value);
+            });
+
+            // 설립년도 숫자만 입력
+            document.getElementById('corpCreatedAt').addEventListener('input', function() {
+                this.value = Utils.extractNumbers(this.value);
+            });
+
+            // 카카오 우편번호 찾기
+            document.getElementById('openKakaoMap').addEventListener('click', function() {
+                new daum.Postcode({
+                    oncomplete: function(data) {
+                        document.getElementById('zipcode').value = data.zonecode;
+                        document.getElementById('roadAddress').value = data.roadAddress;
+                        document.getElementById('detailAddress').focus();
+                    }
+                }).open();
+            });
+
+            // 이메일 인증 요청
+            document.getElementById('emailVerifyBtn').addEventListener('click', function() {
+                const email = document.getElementById('email').value;
+                if (FormValidator.validateEmail(email)) {
+                    EmailVerifier.sendVerificationEmail(email);
+                }
+            });
+
+            // 이메일 인증번호 확인
+            document.getElementById('verifyBtn').addEventListener('click', function() {
+                const email = document.getElementById('email').value;
+                const code = document.getElementById('verifyCode').value;
+                
+                if (code.length === 6) {
+                    EmailVerifier.verifyCode(email, code);
+                } else {
+                    Utils.showError('emailError', '인증번호 6자리를 입력해주세요.');
+                }
+            });
+
+            // 인증번호 입력 시 버튼 활성화
+            document.getElementById('verifyCode').addEventListener('input', function() {
+                const verifyBtn = document.getElementById('verifyBtn');
+                verifyBtn.disabled = this.value.length !== 6;
+            });
+
+            // 실시간 검증 이벤트
+            document.getElementById('corpNm').addEventListener('blur', function() {
+                FormValidator.validateCorpNm(this.value);
+            });
+
+            document.getElementById('corpCeo').addEventListener('blur', function() {
+                FormValidator.validateCorpCeo(this.value);
+            });
+
+            document.getElementById('detailAddress').addEventListener('blur', function() {
+                FormValidator.validateAddress();
+            });
+
+            document.getElementById('industry').addEventListener('change', function() {
+                FormValidator.validateIndustry(this.value);
+            });
+
+            document.getElementById('corpAnnualRevenue').addEventListener('blur', function() {
+                FormValidator.validateAmount(this.value, '평균매출', 'corpAnnualRevenueError');
+            });
+
+            document.getElementById('corpAvgSal').addEventListener('blur', function() {
+                FormValidator.validateAmount(this.value, '평균연봉', 'corpAvgSalError');
+            });
+
+            document.getElementById('corpCreatedAt').addEventListener('blur', function() {
+                FormValidator.validateCreatedAt(this.value);
+            });
+
+            document.getElementById('corpEmpCnt').addEventListener('blur', function() {
+                FormValidator.validateAmount(this.value, '사원수', 'corpEmpCntError');
+            });
+
+            document.getElementById('password').addEventListener('blur', function() {
+                FormValidator.validatePassword(this.value);
+            });
+
+            document.getElementById('phone').addEventListener('blur', function() {
+                FormValidator.validatePhone(this.value);
+            });
+
+            document.getElementById('name').addEventListener('blur', function() {
+                FormValidator.validateName(this.value);
+            });
+
+            // 전체 동의 체크박스
+            document.getElementById('allAgree').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.checkbox-input:not(#allAgree)');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+
+            // 개별 체크박스 이벤트
+            document.querySelectorAll('.checkbox-input:not(#allAgree)').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const allCheckboxes = document.querySelectorAll('.checkbox-input:not(#allAgree)');
+                    const checkedCount = document.querySelectorAll('.checkbox-input:not(#allAgree):checked').length;
+                    document.getElementById('allAgree').checked = checkedCount === allCheckboxes.length;
+                });
+            });
+
+            // 약관 보기 버튼
+            document.querySelectorAll('.term-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const termType = this.dataset.term;
+                    
+                    // 모든 약관 내용 숨기기
+                    document.querySelectorAll('.term-content').forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    
+                    // 선택한 약관 내용 표시
+                    const targetContent = document.getElementById(termType + 'Content');
+                    if (targetContent) {
+                        targetContent.style.display = 'block';
+                    }
+                });
+            });
+
+            // 폼 제출 이벤트
+            document.getElementById('corpJoinForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                if (FormValidator.validateForm()) {
+                    // 금액 필드에서 콤마 제거
+                    document.querySelectorAll('.amount').forEach(input => {
+                        input.value = Utils.extractNumbers(input.value);
+                    });
+                    
+                    // 제출 버튼 비활성화
+                    document.getElementById('submitBtn').disabled = true;
+                    document.getElementById('submitBtn').textContent = '가입 처리 중...';
+                    
+                    // 실제 폼 제출
+                    this.submit();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

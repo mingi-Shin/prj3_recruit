@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>인재 관리</title>
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" th:href="@{/corp/applicant/applicant.css}">
+<script th:src="@{/corp/applicant/applicant.js}"></script>
+<style>
+
+</style>
+</head>
+<body>
+	<header>
+		<th:block th:replace="~{fragments/corpHeader :: corpHeader}"></th:block>
+	</header>
+	<main>
+		<div class="container clearfix">
+			<div class="main-content">
+				<div class="search-section">
+					<div class="search-row">
+						<select name="postingStatus">
+							<option value="">전체 공고</option>
+							<option value="progress"
+								th:selected="${search.postingStatus == 'progress'}">진행중인
+								공고</option>
+							<option value="closed"
+								th:selected="${search.postingStatus == 'closed'}">마감된
+								공고</option>
+						</select> <select name="postingTitle">
+						</select> 
+						<select name="applicationStatus">
+							<option value="3" th:selected="${search.applicationStatus == 3}">전체
+								지원상태</option>
+							<option value="0" th:selected="${search.applicationStatus == 0}">미열람</option>
+							<option value="1" th:selected="${search.applicationStatus == 1}">열람</option>
+							<option value="2" th:selected="${search.applicationStatus == 2}">지원
+								취소</option>
+						</select> <select name="passStage">
+							<option value="4" th:selected="${search.passStage == 4}">전체
+								합격 상태</option>
+							<option value="0" th:selected="${search.passStage == 0}">신규지원</option>
+							<option value="1" th:selected="${search.passStage == 1}">서류통과</option>
+							<option value="2" th:selected="${search.passStage == 2}">최종합격</option>
+							<option value="3" th:selected="${search.passStage == 3}">불합격</option>
+						</select> <input type="text" id="keyword" th:value="${search.keyword}" name="keyword" placeholder="지원자명, 이력서명 검색">
+						<button type="submit" id="search" class="search-btn">검색</button>
+						<button class="search-btn" id="reset">초기화</button>
+					</div>
+				</div>
+
+				<div class="table-container">
+					<div class="table-header">
+						<div class="header-left">
+							검색 결과: <span th:text="${search.searchCnt}"></span>명 (총 <span
+								th:text="${search.totalCnt}"></span>명 중)
+						</div>
+						<div class="header-right">
+							<div class="sort-controls">
+								<label for="sortBy">정렬기준:</label> <select id="sortBy"
+									name="sortBy">
+									<option value="new" th:selected="${search.sortBy == 'new'}">최신순</option>
+									<option value="old" th:selected="${search.sortBy == 'old'}">오래된순</option>
+									<option value="nameUp" th:selected="${search.sortBy == 'nameUp'}">이름순 ↑ </option>
+									<option value="nameDown" th:selected="${search.sortBy == 'nameDown'}">이름순 ↓</option>
+								</select>
+							</div>
+							<select id="itemsPerPage" name="itemsPerPage">
+								<option value="10" th:selected="${search.size == 10}">10개</option>
+								<option value="25" th:selected="${search.size == 25}">25개</option>
+								<option value="50" th:selected="${search.size == 50}">50개</option>
+								<option value="100" th:selected="${search.size == 100}">100개</option>
+							</select>
+						</div>
+					</div>
+
+					<div class="table-columns">
+						<div class="col-name">지원자명</div>
+						<div class="col-period">경력</div>
+						<div class="col-position">지원 공고</div>
+						<div class="col-company">지원상태</div>
+						<div class="col-resume">이력서</div>
+						<div class="col-date">지원날짜</div>
+						<div class="col-status">합격상태</div>
+					</div>
+
+					<!-- 테이블 행들 -->
+					<th:block th:each="applicant : ${applicants}">
+						<div class="table-row">
+							<div class="col-name" th:text="${applicant.name}"></div>
+							<div class="col-period" th:text="${applicant.careerType}"></div>
+							<div class="col-position" th:text="${applicant.postingTitle}"></div>
+							<div class="col-company" th:text="${applicant.statusName}"></div>
+							<div class="col-resume active"
+								th:attr="data-resume=${applicant.resumeSeq}, data-posting=${applicant.jobPostingSeq}, data-seq=${applicant.jobApplicationSeq}"
+								th:text="${applicant.title}"></div>
+							<div class="col-date" th:text="${applicant.applicationDate}"></div>
+							<div class="col-status">
+								<span class="status-badge status-applying"
+									th:text="${applicant.stageName}"
+									th:classappend="${applicant.stageName == '신규지원' ? ' status-applying' : (applicant.stageName == '서류통과' ? ' status-reviewing' : (applicant.stageName == '최종합격' ? ' status-pending' : (applicant.stageName == '불합격' ? ' status-rejected' : '')))}"></span>
+							</div>
+						</div>
+					</th:block>
+
+					<th:block th:if="${search.searchCnt} == 0">
+						<div class="no-results">지원자 정보가 없습니다.</div>
+					</th:block>
+				</div>
+				<!-- 페이지네이션 -->
+				<div class="pagination-container">
+					<div class="pagination">
+						<button th:classappend="${search.prev == false}?'invisible-btn'"
+							class="page-btn prev">
+							<i class="fas fa-chevron-left"></i>
+						</button>
+
+						<th:block th:if="${search.searchCnt > 0}"
+							th:each="num : ${#numbers.sequence(search.startPage, search.endPage)}">
+							<button class="page-btn" th:text="${num}"
+								th:classappend="${num == search.page} ? ' active'"
+								th:attr="data-page=${num}"></button>
+						</th:block>
+
+						<button th:classappend="${search.next == false}?'invisible-btn'"
+							class="page-btn next">
+							<i class="fas fa-chevron-right"></i>
+						</button>
+
+						<input type="hidden" th:value="${search.page}" id="currentPage">
+						<input type="hidden" th:value="${search.startPage}" id="startPage">
+						<input type="hidden" th:value="${search.endPage}" id="endPage">
+						<input type="hidden" th:value="${search.totalPage}" id="totalPage">
+						<input type="hidden" th:value="${search.displayPageNum}"
+							id="displayPageNum">
+					</div>
+					
+					<div class="export-buttons">
+						<button class="export-btn" id="excelExport">
+							<i class="fas fa-file-excel"></i>
+							엑셀 출력
+						</button>
+						<button class="export-btn" id="pdfExport">
+							<i class="fas fa-file-pdf"></i>
+							PDF 출력
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+	<footer>
+		<th:block th:replace="~{fragments/corpFooter :: corpFooter}"></th:block>
+	</footer>
+</body>
+</html>

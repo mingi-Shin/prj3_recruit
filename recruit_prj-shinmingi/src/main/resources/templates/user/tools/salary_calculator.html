@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기 인력</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/user/tools/css/tools_header.css}"/>
+<link rel="stylesheet" th:href="@{/user/tools/css/salary_calculator.css}"/>
+<style type="text/css">
+</style>
+<script type="text/javascript">
+$(document).ready(function() {
+    // 숫자 포맷팅 함수
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+
+    // 숫자에서 콤마 제거
+    function removeCommas(str) {
+        return str.replace(/,/g, '');
+    }
+
+    // 소득세 누진세율표 (2025년 기준)
+    const taxBrackets = [
+        { min: 0, max: 14000000, rate: 0.06 },
+        { min: 14000000, max: 50000000, rate: 0.15 },
+        { min: 50000000, max: 88000000, rate: 0.24 },
+        { min: 88000000, max: 150000000, rate: 0.35 },
+        { min: 150000000, max: 300000000, rate: 0.38 },
+        { min: 300000000, max: 500000000, rate: 0.40 },
+        { min: 500000000, max: 1000000000, rate: 0.42 },
+        { min: 1000000000, max: Infinity, rate: 0.45 }
+    ];
+
+    // 누진세 계산 함수
+    function calculateProgressiveTax(income) {
+        let tax = 0;
+        let remainingIncome = income;
+
+        for (let bracket of taxBrackets) {
+            if (remainingIncome <= 0) break;
+
+            const taxableInThisBracket = Math.min(remainingIncome, bracket.max - bracket.min);
+            tax += taxableInThisBracket * bracket.rate;
+            remainingIncome -= taxableInThisBracket;
+        }
+
+        return Math.floor(tax);
+    }
+
+    // 기본공제 계산
+    function calculateBasicDeduction(familyCount) {
+        // 본인 기본공제 150만원 + 부양가족 1명당 150만원
+        return 1500000 + (Math.max(0, familyCount - 1) * 1500000);
+    }
+
+    // 자녀세액공제 계산
+    function calculateChildTaxCredit(childrenCount) {
+        let credit = 0;
+        for (let i = 0; i < childrenCount; i++) {
+            if (i < 2) {
+                credit += 150000; // 1~2명: 15만원씩
+            } else {
+                credit += 300000; // 3명부터: 30만원씩
+            }
+        }
+        return credit;
+    }
+
+    // 근로소득공제 계산 (2025년 기준 단순화)
+    function calculateStandardDeduction(annualSalary) {
+        if (annualSalary <= 8000000) {
+            return annualSalary * 0.7;
+        } else if (annualSalary <= 70000000) {
+            return 5600000 + (annualSalary - 8000000) * 0.4;
+        } else if (annualSalary <= 120000000) {
+            return 19400000 + (annualSalary - 70000000) * 0.15;
+        } else if (annualSalary <= 300000000) {
+            return 26900000 + (annualSalary - 120000000) * 0.05;
+        } else {
+            return 35900000;
+        }
+    }
+
+    // 급여 계산 함수 (월급/연봉 구분, 근로소득공제 반영)
+    function calculateSalary() {
+    	 // 급여 타입 체크 (monthly / annual)
+        let salaryType = $('input[name="salary-type"]:checked').attr('id');
+        
+        // 퇴직금 포함 여부 체크
+        let severanceIncluded = $('input[name="severance"]:checked').attr('id') === 'severance-no';
+
+        let annualSalary = 0;
+        if (salaryType === 'monthly') {
+            annualSalary = parseInt(removeCommas($('#salary-input').val())) * (severanceIncluded ? 13 : 12);
+        } else {
+            annualSalary = parseInt(removeCommas($('#salary-input').val()));
+        }
+        annualSalary = annualSalary || 0;
+
+        const divisor = severanceIncluded ? 13 : 12;  // 월 계산 나누기
+        const monthlySalary = Math.floor(annualSalary / divisor);
+
+
+        const nonTaxable = parseInt(removeCommas($('#non-taxable').val())) || 0;
+        const familyCount = parseInt($('#family-count').val()) || 1;
+        const childrenCount = parseInt($('#children-count').val()) || 0;
+
+        // 4대 보험료 계산
+        const nationalPension = Math.floor(Math.min(monthlySalary, 5530000) * 0.045);
+        const healthInsurance = Math.floor(monthlySalary * 0.03545);
+        const longTermCare = Math.floor(healthInsurance * 0.1295);
+        const employmentInsurance = Math.floor(monthlySalary * 0.009);
+
+        // 연간 기준 소득세 계산
+        const annualTaxableIncome = annualSalary - (nonTaxable * 12);
+        const basicDeduction = calculateBasicDeduction(familyCount);
+        const standardDeduction = calculateStandardDeduction(annualSalary);
+
+        // 과세표준 계산
+        const taxableIncome = Math.max(0, annualTaxableIncome - basicDeduction - standardDeduction);
+
+        // 콘솔 디버깅용 출력
+        console.log("annualSalary:", annualSalary);
+        console.log("annualTaxableIncome:", annualTaxableIncome);
+        console.log("basicDeduction:", basicDeduction);
+        console.log("standardDeduction:", standardDeduction);
+        console.log("taxableIncome:", taxableIncome);
+
+        // 연간 소득세 계산 (누진세율 적용)
+        const annualIncomeTax = calculateProgressiveTax(taxableIncome);
+
+        // 자녀세액공제 적용
+        const childTaxCredit = calculateChildTaxCredit(childrenCount);
+        const finalAnnualIncomeTax = Math.max(0, annualIncomeTax - childTaxCredit);
+
+        // 월간 소득세 및 지방소득세
+        const monthlyIncomeTax = Math.floor(finalAnnualIncomeTax / 12);
+        const localTax = Math.floor(monthlyIncomeTax * 0.1);
+
+        const totalDeduction = nationalPension + healthInsurance + longTermCare + employmentInsurance + monthlyIncomeTax + localTax;
+        const netSalary = monthlySalary - totalDeduction;
+
+        // 결과 업데이트
+        $('.total-amount').text(formatNumber(Math.max(0, netSalary)) + '원');
+
+        const breakdownAmounts = $('.breakdown-amount');
+        breakdownAmounts.eq(0).text(formatNumber(nationalPension) + '원');
+        breakdownAmounts.eq(1).text(formatNumber(healthInsurance) + '원');
+        breakdownAmounts.eq(2).text(formatNumber(longTermCare) + '원');
+        breakdownAmounts.eq(3).text(formatNumber(employmentInsurance) + '원');
+        breakdownAmounts.eq(4).text(formatNumber(monthlyIncomeTax) + '원');
+        breakdownAmounts.eq(5).text(formatNumber(localTax) + '원');
+        breakdownAmounts.eq(6).text(formatNumber(totalDeduction) + '원');
+
+        // 세금 계산 상세 정보 업데이트
+        updateTaxDetail(taxableIncome, basicDeduction, childTaxCredit, annualIncomeTax, finalAnnualIncomeTax);
+    }
+
+    // 세금 계산 상세 정보 표시
+    function updateTaxDetail(taxableIncome, basicDeduction, childTaxCredit, beforeCredit, afterCredit) {
+        const detailHtml = `
+            <div class="tax-detail-item">
+                <span>연간 과세표준:</span>
+                <span>${formatNumber(taxableIncome)}원</span>
+            </div>
+            <div class="tax-detail-item">
+                <span>기본공제:</span>
+                <span>${formatNumber(basicDeduction)}원</span>
+            </div>
+            <div class="tax-detail-item">
+                <span>자녀세액공제:</span>
+                <span>${formatNumber(childTaxCredit)}원</span>
+            </div>
+            <div class="tax-detail-item">
+                <span>공제 전 연간소득세:</span>
+                <span>${formatNumber(beforeCredit)}원</span>
+            </div>
+            <div class="tax-detail-item">
+                <span>공제 후 연간소득세:</span>
+                <span>${formatNumber(afterCredit)}원</span>
+            </div>
+        `;
+
+        if ($('.tax-detail').length === 0) {
+            $('.right-panel').append('<div class="tax-detail"></div>');
+        }
+        $('.tax-detail').html('<div style="font-weight: 600; margin-bottom: 10px;">세금 계산 상세</div>' + detailHtml);
+    }
+
+    // 퀵 버튼 이벤트
+    $('.quick-btn').on('click', function() {
+        const amount = parseInt($(this).data('amount')) * 10000;
+        const currentValue = parseInt(removeCommas($('#salary-input').val())) || 0;
+        const newValue = currentValue + amount;
+        $('#salary-input').val(formatNumber(newValue));
+        calculateSalary();
+    });
+
+    // 카운터 버튼 이벤트
+    $('.counter-btn').on('click', function() {
+        const target = $('#' + $(this).data('target'));
+        const action = $(this).data('action');
+        let currentValue = parseInt(target.val()) || 0;
+
+        if (action === 'decrease' && currentValue > 0) {
+            currentValue--;
+        } else if (action === 'increase') {
+            currentValue++;
+        }
+
+        target.val(currentValue);
+        calculateSalary();
+    });
+
+    // 입력 필드 이벤트
+    $('#salary-input').on('input', function() {
+        let value = removeCommas($(this).val());
+        if (value && !isNaN(value)) {
+            $(this).val(formatNumber(parseInt(value)));
+        }
+        calculateSalary();
+    });
+
+    $('#non-taxable').on('input', function() {
+        let value = removeCommas($(this).val());
+        if (value && !isNaN(value)) {
+            $(this).val(formatNumber(parseInt(value)));
+        }
+        calculateSalary();
+    });
+
+    // 초기화 버튼
+    $('.btn-secondary').on('click', function() {
+        $('#salary-input').val('0');
+        $('#family-count').val('1');
+        $('#children-count').val('0');
+        $('#non-taxable').val('200,000');
+        calculateSalary();
+    });
+
+    // 결과 복사 버튼
+    $('.btn-primary').on('click', function() {
+        const totalAmount = $('.total-amount').text();
+        const text = `월 예상 실수령액: ${totalAmount}`;
+        navigator.clipboard.writeText(text).then(() => {
+            alert('결과가 복사되었습니다.');
+        });
+    });
+    
+ 	// 급여 기준 라디오 버튼 변경 시 계산 실행
+    $('input[name="salary-type"]').on('change', function() {
+    	 const selected = $('input[name="salary-type"]:checked').attr('id');
+    	    if (selected === 'annual') {
+    	        $('label[for="salary-input"]').text('연봉');
+    	    } else {
+    	        $('label[for="salary-input"]').text('월급');
+    	    }
+        calculateSalary();
+    });
+
+    // 퇴직금 포함 여부 라디오 버튼 변경 시 계산 실행
+    $('input[name="severance"]').on('change', function() {
+        calculateSalary();
+    });
+
+    // 초기 계산
+    calculateSalary();
+});
+</script>
+
+</head>
+<body>
+<header>
+<div th:replace="~{fragments/header :: header}"></div>
+</header>
+<main>
+<div th:replace="~{user/tools/tools_header :: tools-header}"></div>
+
+<div class="salary-calculator">
+    <div class="left-panel">
+        <div class="section-title">월급 입력</div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">급여 기준</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" id="annual" name="salary-type" checked>
+                        <label for="annual">연봉</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="monthly" name="salary-type">
+                        <label for="monthly">월급</label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">퇴직금</label>
+                <div class="radio-group">
+                    <div class="radio-item">
+                        <input type="radio" id="severance-yes" name="severance" checked>
+                        <label for="severance-yes">별도</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="severance-no" name="severance">
+                        <label for="severance-no">포함</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="salary-input">연봉</label>
+            <div class="input-container">
+                <input type="text" class="form-input" value="0" id="salary-input">
+                <span class="currency-unit">원</span>
+            </div>
+            <div class="quick-buttons">
+                <button class="quick-btn" data-amount="1000">+1000만</button>
+                <button class="quick-btn" data-amount="100">+100만</button>
+                <button class="quick-btn" data-amount="10">+10만</button>
+            </div>
+        </div>
+
+        <div class="section-title">상세 입력</div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">
+                    부양 가족 수 (본인포함)
+                </label>
+                <div class="counter-group">
+                    <button class="counter-btn" data-target="family-count" data-action="decrease">−</button>
+                    <input type="text" class="counter-input" value="1" id="family-count">
+                    <span class="counter-unit">명</span>
+                    <button class="counter-btn" data-target="family-count" data-action="increase">+</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">
+                    20세 이하 자녀수
+                </label>
+                <div class="counter-group">
+                    <button class="counter-btn" data-target="children-count" data-action="decrease">−</button>
+                    <input type="text" class="counter-input" value="0" id="children-count">
+                    <span class="counter-unit">명</span>
+                    <button class="counter-btn" data-target="children-count" data-action="increase">+</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">
+                비과세액
+            </label>
+            <div class="input-container">
+                <input type="text" class="form-input" value="200,000" id="non-taxable">
+                <span class="currency-unit">원</span>
+            </div>
+        </div>
+
+        <div class="note">
+            본 연봉계산기는 2025년 세율표를 기준으로 정확한 누진세율을 적용하여 계산합니다.<br>
+            부양가족 기본공제(150만원/명)와 자녀세액공제가 정확히 반영됩니다.<br>
+            연봉 지급 조건과 상황에 따라 약간의 오차가 발생할 수 있으니 참고용으로 활용하시기 바랍니다.<br>
+            실 수령액 산정 기준 : <a href="#">국세청 간이세액표 보기</a>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="section-title">월 예상 실수령액</div>
+        <div class="total-amount">0원</div>
+
+        <div class="breakdown-title">한 달 기준 공제액</div>
+        
+        <div class="breakdown-item">
+            <div class="breakdown-label">
+                국민연금
+            </div>
+            <div class="breakdown-amount">0원</div>
+        </div>
+        
+        <div class="breakdown-item">
+            <div class="breakdown-label">
+                건강보험 
+            </div>
+            <div class="breakdown-amount">0원</div>
+        </div>
+        
+        <div class="breakdown-item">
+            <div class="breakdown-label">
+                장기요양 
+            </div>
+            <div class="breakdown-amount">0원</div>
+        </div>
+        
+        <div class="breakdown-item">
+            <div class="breakdown-label">
+                고용보험
+            </div>
+            <div class="breakdown-amount">0원</div>
+        </div>
+        
+        <div class="breakdown-item">
+            <div class="breakdown-label">
+                소득세 
+            </div>
+            <div class="breakdown-amount">0원</div>
+        </div>
+        
+        <div class="breakdown-item">
+            <div class="breakdown-label">
+                지방소득세 
+            </div>
+            <div class="breakdown-amount">0원</div>
+        </div>
+        
+        <div class="breakdown-item">
+            <div class="breakdown-label">공제액 합계</div>
+            <div class="breakdown-amount">0원</div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-primary">
+                결과 복사
+            </button>
+            <button class="btn btn-secondary">
+                ↻ 초기화
+            </button>
+        </div>
+    </div>
+</div>
+</main>
+<footer>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+</body>
+</html>

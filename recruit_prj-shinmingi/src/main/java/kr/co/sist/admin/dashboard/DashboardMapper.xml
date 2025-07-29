@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!--  @Mapper와 패키지명, 인터페이스명 같아야함  -->
+<mapper namespace="kr.co.sist.admin.dashboard.DashboardMapper">
+	<select id="selectUserCnt" resultType="map">
+	<!-- 
+		SELECT TO_CHAR(TO_DATE(reg_dt, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') AS
+		regDate,
+		COUNT(*) AS count
+		FROM member
+		GROUP BY TO_CHAR(TO_DATE(reg_dt, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+		ORDER BY TO_CHAR(TO_DATE(reg_dt, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+		-->
+		<!-- 일별 회원수(누적)
+		SELECT
+		regDate,
+		SUM(daily_count) OVER (ORDER BY regDate) AS count
+	FROM (
+		SELECT
+			TO_CHAR(TO_DATE(reg_dt, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD') AS regDate,
+			COUNT(*) AS daily_count
+		FROM member
+		GROUP BY TO_CHAR(TO_DATE(reg_dt, 'YYYY-MM-DD HH24:MI:SS'), 'YYYY-MM-DD')
+	)
+	ORDER BY regDate
+	-->
+	<!-- 일별 공고 등록 수(누적)
+	select pt, sum(daily_count) over(order by pt) as cnt
+	from(
+		select posting_start_dt as pt,
+		count(*) as daily_count
+		from job_posting
+		group by posting_start_dt
+	)
+	order by pt
+	-->
+	select pt, daily_count as cnt
+	from(
+		select posting_start_dt as pt,
+		count(*) as daily_count
+		from job_posting
+		group by posting_start_dt
+	)
+	order by pt
+	</select>
+	
+	<select id="selectCorpCnt" resultType="map">
+	select rownum, industry, cnt
+	from(
+		select c.industry, count(c.industry) as cnt
+		from company c
+		join job_posting j
+		on c.corp_no=j.corp_no
+		group by c.industry
+		order by count(c.industry) desc
+		)
+	where <![CDATA[rownum<=4]]>
+	
+	union all
+
+SELECT 5 AS rn, '기타' AS industry, SUM(cnt) AS cnt
+FROM (
+    SELECT rn, industry, cnt
+    FROM (
+        SELECT ROWNUM AS rn, industry, cnt
+        FROM (
+            SELECT c.industry, COUNT(*) AS cnt
+            FROM company c
+            JOIN job_posting j ON c.corp_no = j.corp_no
+            GROUP BY c.industry
+            ORDER BY cnt DESC
+        )
+    )
+    WHERE <![CDATA[rn > 4]]>
+)
+	</select>
+	
+	<select id="selectIndCnt" resultType="map">
+		select rownum, industry, count
+	from(
+		select c.industry, count(c.industry) as count
+		from company c
+		join job_posting j
+		on c.corp_no=j.corp_no
+		group by c.industry
+		order by count(c.industry) desc
+		)
+	where <![CDATA[rownum<=4]]>
+	
+	union all
+
+SELECT 5 AS rn, '기타' AS industry, SUM(count) AS count
+FROM (
+    SELECT rn, industry, count
+    FROM (
+        SELECT ROWNUM AS rn, industry, count
+        FROM (
+            SELECT c.industry, COUNT(*) AS count
+            FROM company c
+            JOIN job_posting j ON c.corp_no = j.corp_no
+            GROUP BY c.industry
+            ORDER BY count DESC
+        )
+    )
+    WHERE <![CDATA[rn > 4]]>
+)
+	
+	</select>
+	
+	<select id="selectAsk" resultType="kr.co.sist.user.entity.InquiryEntity">
+	select ask_seq,title,answer_stat 
+	from ask 
+	where answer_stat='N' and <![CDATA[ ROWNUM <= 5 ]]>
+	</select>
+</mapper>

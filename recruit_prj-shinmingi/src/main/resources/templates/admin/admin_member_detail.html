@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="shortcut icon" href="http://localhost/images/favicon.png"/>
+
+  <style>
+  body {
+    background-color: #f0f2f5;
+    font-family: 'Malgun Gothic', 'Segoe UI', sans-serif;
+    margin: 0;
+  }
+
+  .container {
+    width: 90%;
+    margin-top:30px;
+    margin-left: 250px;
+    margin-right:50px;
+    height:90vh;
+    background: #fff;
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  }
+
+  table {
+  margin-top:10px;
+    width: 100%;
+    height:85%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+  }
+
+  table, th, td {
+    border: 1px solid #dee2e6;
+  }
+
+  th, td {
+    padding: 14px 16px;
+    text-align: left;
+    font-size: 15px;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f9fafb;
+  }
+
+  td:first-child, td:nth-child(3) {
+    font-weight: bold;
+    width: 140px;
+    background-color: #f1f3f5;
+  }
+
+  input[type="button"], input[type="submit"] {
+    padding: 10px 24px;
+    margin-right: 10px;
+    background-color: #0d6efd;
+    color: white;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  input[type="button"]:hover, input[type="submit"]:hover {
+    background-color: #0b5ed7;
+  }
+
+  a input[type="button"] {
+    background-color: #6c757d;
+  }
+
+  a input[type="button"]:hover {
+    background-color: #5c636a;
+  }
+
+  form {
+    display: inline;
+  }
+
+  @media (max-width: 768px) {
+    .container {
+      padding: 20px;
+    }
+
+    table, th, td {
+      font-size: 13px;
+    }
+
+    input[type="button"], input[type="submit"] {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+  }
+</style>
+
+</head>
+<body>
+<th:block th:replace="fragments/adminHeader :: adminHeader"></th:block>
+
+<div class="container">
+<h2>회원 상세정보</h2>
+<table border="1">
+<tbody>
+<tr>
+<td>성명</td>
+<td th:text="${member.name}"></td>
+<td>이메일</td>
+<td th:text="${member.email}"></td>
+</tr>
+<tr>
+<td>역활</td>
+<td>
+<span th:if="${member.role == 'ROLE_CORP'}">기업</span>
+<span th:if="${member.role == 'ROLE_USER'}">유저</span>
+</td>
+<td>활동상태</td>
+<td th:text="${member.activeStatus == 0 ? '활동중' : (member.activeStatus == 1 ? '회원제재' : (member.activeStatus == 2 ? '회원탈퇴' : '알 수 없음'))}"></td>
+</tr>
+<tr>
+<td>가입일자</td>
+<td th:text="${member.regDt}"></td>
+<td>생일</td>
+<td th:text="${member.birth}"></td>
+</tr>
+<tr>
+<td>전화번호</td>
+<td th:text="${member.phone}"></td>
+<td>성별</td>
+<td>
+<span th:if="${member.gender == 'M'}">남자</span>
+<span th:if="${member.gender == 'F'}">여자</span>
+</td>
+</tr>
+
+<tr>
+<td>주소</td>
+<td colspan="3" th:text="${member.road_address}+' '+${member.detail_address}"></td>
+</tr>
+</tbody>
+</table>
+
+<span th:if="${member.activeStatus==0}">
+<form action="/admin/admin_sanction">
+<input type="hidden" name="email" th:value="${member.email}"/>
+<input type="button" value="제재하기" onclick="submit();"/>
+</form>
+</span>
+<span th:if="${member.activeStatus==1}">
+<form action="/admin/admin_sanction_cancel">
+<input type="hidden" name="email" th:value="${member.email}"/>
+<input type="button" value="제재 취소하기" onclick="submit();"/>
+</form>
+</span>
+<a href="/admin/admin_member">
+  <input type="button" value="뒤로가기" />
+</a>
+
+</div>
+<!-- jquery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script type="text/javascript">
+$(function(){
+	$("btn").click(function(){
+		alert("제재 취소?");
+	})
+});
+
+</script>
+</body>
+</html>

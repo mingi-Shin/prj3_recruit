@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.user.mapper.JobPostingMapper">
+	
+	<select id="selectSearchPosting" parameterType="map" resultType="kr.co.sist.corp.dto.JobPostingDTO">
+  SELECT *
+  FROM job_posting
+  <where>
+    <if test="exp_level != null and exp_level != '전체'">
+	  AND exp_level LIKE '%' || #{exp_level} || '%'
+	</if>
+	<if test="employ_type != null and employ_type != '전체'">
+	  AND employ_type LIKE '%' || #{employ_type} || '%'
+	</if>
+	<if test="edu_level != null and edu_level != '전체'">
+	  AND edu_level LIKE '%' || #{edu_level} || '%'
+	</if>
+
+
+    <if test="keyword != null and keyword != ''">
+      AND
+      <choose>
+        <when test="type == 'posting_detail'">
+          posting_detail LIKE '%' || #{keyword} || '%'
+        </when>
+        <when test="type == 'posting_title'">
+          posting_title LIKE '%' || #{keyword} || '%'
+        </when>
+        <when test="type == 'corp_no'">
+          corp_no LIKE '%' || #{keyword} || '%'
+        </when>
+        <otherwise>
+          (posting_detail LIKE '%' || #{keyword} || '%'
+           OR posting_title LIKE '%' || #{keyword} || '%'
+           OR corp_no LIKE '%' || #{keyword} || '%')
+        </otherwise>
+      </choose>
+    </if>
+  </where>
+
+  <if test="order == 'start_desc'">
+    ORDER BY cont_start_dt DESC
+  </if>
+  <if test="order == 'start_asc'">
+    ORDER BY cont_start_dt ASC
+  </if>
+  <if test="order == 'end_desc'">
+    ORDER BY cont_end_dt DESC
+  </if>
+  <if test="order == 'end_asc'">
+    ORDER BY cont_end_dt ASC
+  </if>
+	
+  OFFSET #{start} ROWS FETCH NEXT #{perPage} ROWS ONLY
+</select>
+
+
+<select id="countSearch" parameterType="Map" resultType="int">
+    SELECT count(*)
+    FROM job_posting
+    <where>
+           <if test="exp_level != null and exp_level != '전체'">
+			  AND exp_level LIKE '%' || #{exp_level} || '%'
+			</if>
+			<if test="employ_type != null and employ_type != '전체'">
+			  AND employ_type LIKE '%' || #{employ_type} || '%'
+			</if>
+			<if test="edu_level != null and edu_level != '전체'">
+			  AND edu_level LIKE '%' || #{edu_level} || '%'
+			</if>
+        <if test="keyword != null and keyword != ''">
+            AND
+            <choose>
+                <when test="type == 'posting_detail'">
+                    posting_detail LIKE '%' || #{keyword} || '%'
+                </when>
+                <when test="type == 'posting_title'">
+                    posting_title LIKE '%' || #{keyword} || '%'
+                </when>
+                <when test="type == 'corp_no'">
+                    corp_no LIKE '%' || #{keyword} || '%'
+                </when>
+                <otherwise>
+                    (posting_detail LIKE '%' || #{keyword} || '%'
+                     OR posting_title LIKE '%' || #{keyword} || '%'
+                     OR corp_no LIKE '%' || #{keyword} || '%')
+                </otherwise>
+            </choose>
+        </if>
+    </where>
+</select>
+
+
+<delete id="deletePosting" parameterType="Map">
+	delete from job_posting
+	where job_posting_seq in
+	<foreach item="id" collection="jobPostingSeq" open="(" separator="," close=")">
+	TO_NUMBER(#{id})
+	</foreach>
+</delete>
+
+
+</mapper>

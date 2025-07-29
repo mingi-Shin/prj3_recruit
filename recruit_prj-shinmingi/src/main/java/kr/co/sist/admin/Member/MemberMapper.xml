@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @Mapper와 패키지명, 인터페이스명 같아야함 -->
+<mapper namespace="kr.co.sist.admin.Member.MemberMapper">
+
+	<select id="selectMember" resultType="kr.co.sist.admin.Member.MemberEntity">
+	select * from member
+	</select>
+	
+	<select id="searchMember" parameterType="map" resultType="kr.co.sist.admin.Member.MemberEntity">
+  select * from member
+  <where>
+    <if test="email != null and email != ''">
+      and email LIKE '%' || #{email} || '%'
+    </if>
+    
+    <if test="name != null and name != ''">
+      and name LIKE '%' || #{name} || '%'
+    </if>
+
+    <if test="gender != null and gender != ''">
+      AND gender = #{gender}
+    </if>
+    
+      <if test="type != null and type != ''">
+      AND role = #{type}
+    </if>
+
+     <if test="status != null">
+      and active_status = #{status}
+    </if>
+    </where>
+    </select>
+    
+    <select id="sanctionMember" parameterType="String">
+    update member set active_status=1 where email=#{email} 
+    </select>
+    
+    <select id="sanctionCancel" parameterType="String">
+    update member set active_status=0 where email=#{email}
+    </select>
+</mapper>

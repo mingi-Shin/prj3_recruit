@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @Mapper와 패키지명, 인터페이스명 같아야함 -->
+<mapper namespace="kr.co.sist.login.mapper.loginMapper">
+	
+	<select id="selectUserLogin" resultType="kr.co.sist.user.dto.UserDTO" parameterType="String">
+		SELECT password, name, phone, email
+		FORM member
+		WHERE id = ${id}
+	</select>
+	
+	
+	
+
+</mapper>

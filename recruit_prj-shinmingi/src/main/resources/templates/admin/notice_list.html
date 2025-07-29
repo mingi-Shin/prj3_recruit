@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기인력 - 공지사항 관리</title>
+<link rel="stylesheet" th:href="@{/admin/css/admin_board.css}"/>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<style>
+/* 모달 스타일 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 3% auto;
+    padding: 0;
+    border: none;
+    width: 90%;
+    max-width: 900px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+.modal-body {
+    padding: 30px 40px;
+}
+
+.modal-form table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+.modal-form th {
+    width: 120px;
+    text-align: left;
+    vertical-align: top;
+    padding: 12px 10px 12px 0;
+    font-weight: 600;
+    color: #555;
+}
+
+.modal-form td {
+    padding: 8px 0;
+}
+
+.modal-form input[type="text"], 
+.modal-form textarea {
+    width: 100%;
+    font-size: 16px;
+    padding: 10px 12px;
+    border: 1.5px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.modal-form input[type="text"]:focus, 
+.modal-form textarea:focus {
+    border-color: #4caf50;
+    outline: none;
+}
+
+.modal-btn-group {
+    text-align: center;
+    padding: 20px 0;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 20px;
+}
+
+.modal-btn {
+    font-size: 16px;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0 10px;
+    color: white;
+    font-weight: 600;
+    min-width: 120px;
+    transition: background-color 0.3s ease;
+}
+
+.modal-btn.save-btn {
+    background-color: #4caf50;
+}
+
+.modal-btn.save-btn:hover {
+    background-color: #43a047;
+}
+
+.modal-btn.cancel-btn {
+    background-color: #9e9e9e;
+}
+
+.modal-btn.cancel-btn:hover {
+    background-color: #757575;
+}
+</style>
+<script type="text/javascript">
+$(function() {
+    // 공지사항 목록 불러오기
+    function loadNoticeList(searchType = '전체', keyword = '') {
+        $.ajax({
+            url: '/admin/api/notice_list',
+            method: 'GET',
+            data: {
+                searchType: searchType,
+                keyword: keyword
+            },
+            success: function(data) {
+                const tbody = $('#noticeTable tbody');
+                tbody.empty();
+
+                if (!data || data.length === 0) {
+                    tbody.append('<tr><td colspan="4">등록된 공지사항이 없습니다.</td></tr>');
+                    return;
+                }
+
+                data.forEach(function(notice, index) {
+                    const num = data.length - index;
+                    const row = `
+                    <tr>
+                        <td><input type="checkbox" class="chk" value="${notice.noticeSeq}"></td>
+                        <td>${num}</td>
+                        <td><a href="#" class="edit-notice" data-seq="${notice.noticeSeq}">${notice.title}</a></td>
+                        <td>${notice.regsDate}</td>
+                    </tr>
+                    `;
+                    tbody.append(row);
+                });
+            },
+            error: function() {
+                alert('공지사항 목록을 불러오는 데 실패했습니다.');
+            }
+        });
+    }
+
+    // 검색 버튼 클릭
+    $('#searchBtn').on('click', function() {
+        const searchType = $('#searchType').val();
+        const keyword = $('#searchKeyword').val();
+        loadNoticeList(searchType, keyword);
+    });
+
+    // 검색어 입력 후 엔터키 처리
+    $('#searchKeyword').on('keypress', function(e) {
+        if (e.which === 13) {
+            $('#searchBtn').click();
+        }
+    });
+
+    // 전체 선택/해제 기능
+    $('#selectAll').change(function() {
+        $('.chk').prop('checked', this.checked);
+    });
+
+    // 개별 체크박스 변경시 전체선택 체크박스 상태 변경
+    $(document).on('change', '.chk', function() {
+        const totalCheckboxes = $('.chk').length;
+        const checkedCheckboxes = $('.chk:checked').length;
+        
+        if (totalCheckboxes === checkedCheckboxes) {
+            $('#selectAll').prop('checked', true);
+        } else {
+            $('#selectAll').prop('checked', false);
+        }
+    });
+
+    // 작성 버튼 클릭 - 모달 열기
+    $('#createBtn').on('click', function() {
+        openNoticeModal(0); // 새 글 작성
+    });
+
+    // 제목 클릭시 수정 모달 열기
+    $(document).on('click', '.edit-notice', function(e) {
+        e.preventDefault();
+        const noticeSeq = $(this).data('seq');
+        openNoticeModal(noticeSeq);
+    });
+
+    // 모달 열기 함수
+    function openNoticeModal(noticeSeq) {
+        if (noticeSeq === 0) {
+            // 새 글 작성
+            $('#modalTitle').text('공지사항 작성');
+            $('#noticeForm')[0].reset();
+            $('#noticeSeq').val(0);
+            $('#saveBtn').text('작성하기');
+        } else {
+            // 기존 글 수정
+            $.ajax({
+                url: `/admin/api/notice/${noticeSeq}`,
+                method: 'GET',
+                success: function(notice) {
+                    $('#modalTitle').text('공지사항 수정');
+                    $('#noticeSeq').val(notice.noticeSeq);
+                    $('#title').val(notice.title);
+                    $('#content').val(notice.content);
+                    $('#saveBtn').text('수정하기');
+                },
+                error: function() {
+                    alert('공지사항 정보를 불러오는 데 실패했습니다.');
+                    return;
+                }
+            });
+        }
+        $('#noticeModal').show();
+    }
+
+    // 모달 닫기
+    $('.close, .cancel-btn').on('click', function() {
+        $('#noticeModal').hide();
+    });
+
+    // 모달 외부 클릭시 닫기
+    $(window).on('click', function(event) {
+        if (event.target.id === 'noticeModal') {
+            $('#noticeModal').hide();
+        }
+    });
+
+    // 폼 제출
+    $('#noticeForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const noticeSeq = $('#noticeSeq').val();
+        const isUpdate = noticeSeq != 0;
+        
+        if (isUpdate && !confirm('정말 수정하시겠습니까?')) {
+            return;
+        }
+
+        $.ajax({
+            url: '/admin/notice_save',
+            method: 'POST',
+            data: $(this).serialize(),
+            success: function(response) {
+                alert(isUpdate ? '공지사항이 수정되었습니다.' : '공지사항이 작성되었습니다.');
+                $('#noticeModal').hide();
+                loadNoticeList();
+            },
+            error: function() {
+                alert('저장 중 오류가 발생했습니다.');
+            }
+        });
+    });
+
+    // 선택 삭제 기능
+    $('#btnDelete').click(function() {
+        const checkedItems = $('.chk:checked');
+        
+        if (checkedItems.length === 0) {
+            alert('삭제할 공지사항을 선택해주세요.');
+            return;
+        }
+
+        if (!confirm(checkedItems.length + '개의 공지사항을 삭제하시겠습니까?')) {
+            return;
+        }
+
+        const noticeSeqs = [];
+        checkedItems.each(function() {
+            noticeSeqs.push($(this).val());
+        });
+
+        $.ajax({
+            url: '/admin/notice_delete',
+            method: 'POST',
+            data: {
+                noticeSeqs: noticeSeqs
+            },
+            traditional: true,
+            success: function(response) {
+                alert('선택한 공지사항이 삭제되었습니다.');
+                loadNoticeList();
+                $('#selectAll').prop('checked', false);
+            },
+            error: function() {
+                alert('삭제 처리 중 오류가 발생했습니다.');
+            }
+        });
+    });
+
+    // 페이지 로드시 목록 불러오기
+    loadNoticeList();
+});
+</script>
+</head>
+<body>
+
+<!-- 사이드바 포함 -->
+<th:block th:replace="~{fragments/adminHeader :: adminHeader}"></th:block>
+
+<!-- 콘텐츠 영역 -->
+<div class="admin-container">
+<section class="review-wrapper">
+<h2 class="review-title">공지사항 목록</h2>
+
+<!-- 검색 영역 -->
+<div class="search-area">
+<div class="search-group">
+<input type="hidden" name="searchType" value="제목" />
+<label>제목</label>
+</div>
+<div class="search-group">
+<input type="text" id="searchKeyword" placeholder="검색어 입력" aria-label="검색어 입력"/>
+</div>
+<button id="searchBtn" class="search-btn" type="button">검색</button>
+</div>
+
+<!-- 테이블 -->
+<div class="review-table-wrapper">
+<table id="noticeTable" class="admin-table" summary="공지사항 목록 테이블">
+<thead>
+<tr>
+<th><input type="checkbox" id="selectAll" /></th>
+<th>번호</th>
+<th>제목</th>
+<th>작성일</th>
+</tr>
+</thead>
+<tbody>
+<!-- AJAX로 공지사항 목록 동적 생성 -->
+</tbody>
+</table>
+</div>
+
+<!-- 하단 버튼 -->
+<div class="admin-action-buttons">
+  <button id="createBtn" class="delete-btn" type="button" style="background-color: green">작성</button>
+  <span sec:authorize="hasRole('팀장') or hasRole('SUPER')">
+  <button id="btnDelete" class="delete-btn" type="button">삭제</button>
+  </span>
+</div>
+
+</section>
+</div>
+
+<!-- 공지사항 작성/수정 모달 -->
+<div id="noticeModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">공지사항 작성</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="noticeForm" class="modal-form">
+                <input type="hidden" id="noticeSeq" name="noticeSeq" value="0" />
+                <table>
+                    <tr>
+                        <th>제목</th>
+                        <td><input type="text" id="title" name="title" required /></td>
+                    </tr>
+                    <tr>
+                        <th>내용</th>
+                        <td><textarea id="content" name="content" rows="12" required></textarea></td>
+                    </tr>
+                </table>
+                <div class="modal-btn-group">
+                <span sec:authorize="hasRole('대리') or hasRole('과장') or hasRole('팀장') or hasRole('SUPER')">
+                    <button type="submit" id="saveBtn" class="modal-btn save-btn">작성하기</button>
+                    </span>
+                    <button type="button" class="modal-btn cancel-btn">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

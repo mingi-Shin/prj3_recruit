@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+  <mapper namespace="kr.co.sist.user.mapper.RecentViewPostingMapper">  
+  
+  <select id="selectRecentView" resultType="kr.co.sist.user.dto.RecentViewPostingDTO">
+  select  
+  		recent_view_posting_seq AS recentViewPostingSeq,
+		email,
+		job_posting_seq AS jobPostingSeq,
+		opened_at as openedAt
+		FROM RECENT_VIEW_POSTING 
+        WHERE email = #{email} AND job_posting_seq = #{jobPostingSeq}
+		
+  </select>
+  
+  <insert id="insertRecentView">
+   		  INSERT INTO RECENT_VIEW_POSTING (email, job_posting_seq, opened_at)
+   		 VALUES (#{email}, #{jobPostingSeq}, #{openedAt})
+  
+  </insert>
+  
+   <update id="updateRecentViewTime">
+        UPDATE RECENT_VIEW_POSTING
+	    SET opened_at = #{openedAt}
+	    WHERE recent_view_posting_seq = #{recentViewPostingSeq}
+    </update>
+  
+   <delete id="deleteOldRecentViews">
+        DELETE FROM RECENT_VIEW_POSTING 
+        WHERE recent_view_posting_seq IN (
+            SELECT recent_view_posting_seq 
+            FROM (
+                SELECT recent_view_posting_seq,
+                       ROW_NUMBER() OVER (ORDER BY opened_at DESC) as rn
+                FROM RECENT_VIEW_POSTING 
+                WHERE email = #{email}
+            ) 
+            WHERE rn > #{maxRecords}
+        )
+    </delete>
+  
+  </mapper>

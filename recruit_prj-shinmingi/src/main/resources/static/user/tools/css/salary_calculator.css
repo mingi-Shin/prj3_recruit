@@ -1,0 +1,268 @@
+main {
+  margin-top: 60px;
+}
+.salary-calculator {
+    max-width: 1000px;
+    margin: 20px auto;
+    margin-top: 40px;
+    display: flex;
+    gap: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.left-panel {
+    flex: 1;
+    padding: 30px;
+    background: white;
+}
+
+.right-panel {
+    width: 300px;
+    background: #6b7190;
+    color: white;
+    padding: 30px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-row .form-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #555;
+}
+
+.radio-group {
+    display: flex;
+    gap: 10px;
+}
+
+.radio-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.radio-item input[type="radio"] {
+    margin: 0;
+}
+
+.radio-item label {
+    margin: 0;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.input-container {
+    position: relative;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #6b73a3;
+}
+
+.currency-unit {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #888;
+    font-size: 14px;
+}
+
+.quick-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.quick-btn {
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #666;
+    transition: all 0.3s;
+}
+
+.quick-btn:hover {
+    background: #e9ecef;
+    border-color: #6b73a3;
+}
+
+.counter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.counter-btn {
+    width: 40px;
+    height: 40px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #666;
+    transition: all 0.3s;
+}
+
+.counter-btn:hover {
+    border-color: #6b73a3;
+    color: #6b73a3;
+}
+
+.counter-input {
+    width: 80px;
+    text-align: center;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.counter-unit {
+    font-size: 14px;
+    color: #666;
+}
+
+.right-panel .section-title {
+    color: white;
+    margin-bottom: 10px;
+}
+
+.total-amount {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 30px;
+}
+
+.breakdown-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    margin-top: 30px;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 14px;
+}
+
+.breakdown-label {
+    display: flex;
+    align-items: center;
+}
+
+.breakdown-amount {
+    font-weight: 500;
+}
+
+.action-buttons {
+    margin-top: 40px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: #4a5568;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2d3748;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.note {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    margin-top: 20px;
+}
+
+.note a {
+    color: #6b73a3;
+    text-decoration: none;
+}
+
+.note a:hover {
+    text-decoration: underline;
+}
+
+.tax-detail {
+    background: rgba(255,255,255,0.1);
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 20px;
+    font-size: 12px;
+}
+
+.tax-detail-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}

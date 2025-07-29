@@ -1,0 +1,186 @@
+main {
+	margin-top: 60px;
+}
+
+.calculator-container {
+	max-width: 1000px;
+	margin: 0 auto;
+	margin-top: 40px;
+	display: flex;
+	gap: 0;
+	background: white;
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.left-panel {
+	flex: 1;
+	padding: 30px;
+	background: white;
+}
+
+.right-panel {
+	width: 300px;
+	background: #6b7190;
+	color: white;
+	padding: 30px;
+}
+
+.section-title {
+	font-size: 18px;
+	font-weight: bold;
+	margin-bottom: 20px;
+	color: #333;
+}
+
+.form-group {
+	margin-bottom: 25px;
+}
+
+.form-row {
+	display: flex;
+	gap: 20px;
+	margin-bottom: 15px;
+}
+
+.form-field {
+	flex: 1;
+}
+
+label {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 14px;
+	color: #555;
+}
+
+input[type="date"], input[type="number"], select {
+	width: 100%;
+	padding: 10px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 14px;
+	box-sizing: border-box;
+}
+
+input[type="date"]:focus, input[type="number"]:focus {
+	outline: none;
+	border-color: #6b6d8a;
+}
+
+.checkbox-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+	width: auto;
+}
+
+.salary-input-group {
+	position: relative;
+}
+
+.salary-input {
+	text-align: right;
+	padding-right: 30px;
+}
+
+.unit {
+	position: absolute;
+	right: 10px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: #999;
+	font-size: 14px;
+}
+
+.button-group {
+	display: flex;
+	gap: 10px;
+	margin-top: 10px;
+}
+
+.quick-btn {
+	padding: 5px 10px;
+	background: #f8f9fa;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-size: 12px;
+	cursor: pointer;
+	color: #6b6d8a;
+}
+
+.quick-btn:hover {
+	background: #e9ecef;
+}
+
+.result-panel h2 {
+	font-size: 18px;
+	margin-bottom: 20px;
+	text-align: center;
+}
+
+.result-amount {
+	font-size: 32px;
+	font-weight: bold;
+	text-align: center;
+	margin-bottom: 30px;
+}
+
+.result-detail {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 10px;
+	font-size: 14px;
+}
+
+.action-buttons {
+	display: flex;
+	gap: 10px;
+	margin-top: 250px;
+}
+
+.btn {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-primary {
+    background: #4a5568;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2d3748;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid rgba(255,255,255,0.3);
+}
+
+.btn-secondary:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.notice {
+	font-size: 12px;
+	color: #666;
+	line-height: 1.4;
+	margin-top: 20px;
+}
+
+.notice p {
+	margin: 5px 0;
+}

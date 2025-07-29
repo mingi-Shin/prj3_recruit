@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+
+/* 메인 콘텐츠 여백 */
+.main {
+    padding: 30px;
+    margin-left: 250px; /* 사이드바가 고정되어 있다고 가정 */
+    background-color: #f9f9f9;
+    width:100%;
+    min-height: 100vh;
+}
+
+/* 검색 테이블 */
+form .table {
+	margin-bottom: 20px;
+    background-color: white;
+    margin-bottom: 20px;
+}
+
+/* 입력 필드 스타일 */
+form input[type="text"] {
+    padding: 6px 10px;margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 체크박스 라벨 그룹 */
+form td {
+    vertical-align: middle;
+}
+
+form td > label.btn {
+    margin: 2px;
+}
+
+/* 검색 버튼 */
+form input[type="submit"] {
+    margin-top: 10px;
+    padding: 6px 16px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 4px;
+    transition: 0.3s;
+}
+form input[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* 기업 목록 테이블 */
+#memberTable {
+    background-color: white;
+}
+#memberTable th {
+    background-color: #343a40;
+    color: white;
+    text-align: center;
+}
+#memberTable td {
+    text-align: center;
+    vertical-align: middle;
+}
+#corpTable td.num-cell {
+	min-width: 100px;
+    max-width: 100px;      /* 원하는 최대 너비 */
+    white-space: nowrap;   /* 줄바꿈 금지 */
+    overflow: hidden;      /* 넘치는 텍스트 숨김 */
+    text-overflow: ellipsis; /* ...으로 표시 */
+}
+#corpTable td.info-cell {
+	min-width: 350px;
+    max-width: 350px;      /* 원하는 최대 너비 */
+    white-space: nowrap;   /* 줄바꿈 금지 */
+    overflow: hidden;      /* 넘치는 텍스트 숨김 */
+    text-overflow: ellipsis; /* ...으로 표시 */
+}
+#corpTable td.name-cell {
+	min-width: 150px;
+    max-width: 150px;      /* 원하는 최대 너비 */
+    white-space: nowrap;   /* 줄바꿈 금지 */
+    overflow: hidden;      /* 넘치는 텍스트 숨김 */
+    text-overflow: ellipsis; /* ...으로 표시 */
+}
+
+#corpTable td.industry-cell {
+	min-width: 150px;
+    max-width: 150px;      /* 원하는 최대 너비 */
+    white-space: nowrap;   /* 줄바꿈 금지 */
+    overflow: hidden;      /* 넘치는 텍스트 숨김 */
+    text-overflow: ellipsis; /* ...으로 표시 */
+}
+#corpTable td.url-cell {
+	min-width: 250px;
+    max-width: 250px;      /* 원하는 최대 너비 */
+    white-space: nowrap;   /* 줄바꿈 금지 */
+    overflow: hidden;      /* 넘치는 텍스트 숨김 */
+    text-overflow: ellipsis; /* ...으로 표시 */
+}
+
+/* 페이지네이션 영역 */
+#pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+</style>
+</head>
+<body>
+
+<th:block th:replace="fragments/adminHeader :: adminHeader"></th:block>
+<div class="main">
+<form action="/admin/admin_corp_search">
+<span>사업번호<input type="text" id="corpNo" name="corpNo"/></span>
+<span>이름</span>
+<span><input type="text" id="name" name="name"/></span><br>
+<span>업종</span>
+<span th:each="c:${corpInd}">
+<input type="checkbox"  th:id="'ind_' + ${c}" name="industry" th:value="${c}" class="btn-check" autocomplete="off">
+<label class="btn btn-outline-primary"  th:for="'ind_' + ${c}" th:text="${c}"></label>
+</span><br>
+<span><input type="submit" value="검색"/></span>
+</form>
+
+<table class="table table-bordered" id="corpTable">
+<thead>
+<tr>
+<th>사업번호</th>
+<th>이름</th>
+<th>정보</th>
+<th>업종</th>
+<th>url 주소</th>
+</tr>
+</thead>
+
+<tbody>
+<tr th:each="c:${corp}">
+<td class="num-cell">
+  <form id="detail" action="/admin/admin_corp_detail" >
+    <input type="hidden" name="corpNo" th:value="${c.corpNo}" />
+  <a href="#" onclick="document.getElementById('detail').submit();" th:text="${c.corpNo}"></a>
+  </form>
+</td>
+<td th:text="${c.corpNm}" class="name-cell"></td>
+<td th:text="${c.corpInfo}" class="info-cell"></td>
+<td th:text="${c.industry}" class="industry-cell"></td>
+<td th:text="${c.corpUrl}" class="url-cell"></td>
+</tr>
+</tbody>
+</table>
+<div id="pagination"></div>
+</div>
+
+
+<!-- jquery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function () {
+	  const rowsPerPage = 10;
+	  const rows = $('#corpTable tbody tr');
+	  const totalRows = rows.length;
+	  const totalPages = Math.ceil(totalRows / rowsPerPage);
+	  let currentPage = 1;
+
+	  function showPage(page) {
+	    rows.hide();
+	    const start = (page - 1) * rowsPerPage;
+	    const end = start + rowsPerPage;
+	    rows.slice(start, end).show();
+	    renderPagination();
+	  }
+
+	  function renderPagination() {
+	    let html = '';
+	    if (currentPage > 1) {
+	      html += `<button class="btn btn-sm btn-outline-secondary me-2" id="prevPage">이전</button>`;
+	    }
+	    if (currentPage < totalPages) {
+	      html += `<button class="btn btn-sm btn-outline-secondary" id="nextPage">다음</button>`;
+	    }
+	    $('#pagination').html(html);
+
+	    $('#prevPage').click(() => {
+	      if (currentPage > 1) {
+	        currentPage--;
+	        showPage(currentPage);
+	      }
+	    });
+
+	    $('#nextPage').click(() => {
+	      if (currentPage < totalPages) {
+	        currentPage++;
+	        showPage(currentPage);
+	      }
+	    });
+	  }
+
+	  // 최초 실행
+	  showPage(currentPage);
+	});
+
+</script>
+
+</body>
+</html>

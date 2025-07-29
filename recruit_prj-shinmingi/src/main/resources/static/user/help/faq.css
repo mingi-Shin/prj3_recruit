@@ -1,0 +1,97 @@
+/* FAQ 관련 스타일 */
+.faq-list {
+    margin-top: 20px;
+}
+
+.faq-item {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.faq-question {
+    background-color: #f8f9fa;
+    padding: 15px 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: relative;
+}
+
+.faq-question:hover {
+    background-color: #e9ecef;
+}
+
+.faq-question::after {
+    content: '+';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 20px;
+    font-weight: bold;
+    transition: transform 0.2s;
+}
+
+.faq-item.active .faq-question::after {
+    transform: translateY(-50%) rotate(45deg);
+}
+
+.faq-answer {
+    padding: 0 20px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    background-color: white;
+}
+
+.faq-item.active .faq-answer {
+    max-height: 200px;
+    padding: 15px 20px;
+}
+
+.empty-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+    font-size: 16px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+}
+
+@keyframes spin {
+    0% { 
+        transform: rotate(0deg); 
+    }
+    100% { 
+        transform: rotate(360deg); 
+    }
+}
+
+.faq-category {
+    margin-bottom: 20px;
+}
+
+.faq-category-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #007bff;
+}

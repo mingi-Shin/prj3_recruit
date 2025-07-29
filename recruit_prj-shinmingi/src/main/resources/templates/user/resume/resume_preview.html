@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이력서</title>
+<link rel="stylesheet" th:href="@{/user/resume/css/resume_preview.css}" />
+</head>
+<body>
+	<div class="container">
+		<div class="section">
+			<div class="section-title">기본정보</div>
+			<div class="basic-info">
+				<div class="profile-image">
+					<img th:if="${resume.image != null}" th:src="@{/images/profileImg/{img}(img=${resume.image})}" alt="프로필 사진">
+				</div>
+				<div class="info-details">
+					<div class="name" th:text="${user.name}"></div>
+					<div class="contact-info">
+						<div class="contact-item" th:text="${user.email}"></div>
+						<div class="phone-birth">
+							<span th:text="|${user.phone}|">01091205456</span> <span
+								th:text="|📅${user.birth}년생|"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<br>
+			<div>
+				<div class="intro-question" th:if="${resume.introduction}"
+					th:text="${resume.introduction}"></div>
+				<div class="skills-interests" th:if="${!#lists.isEmpty(positions)}">
+					<div class="skill-item">
+						<h4>개발 직무</h4>
+						<th:block th:each="position : ${positions}">
+							<span class="tag" th:text="${position.positionName}"></span>
+						</th:block>
+					</div>
+				</div>
+				<br>
+				<div class="skills-interests">
+					<div class="skill-item" th:if="${!#lists.isEmpty(skills)}">
+						<h4>기술 스택</h4>
+						<th:block th:each="skill : ${skills}">
+							<span class="tag" th:text="${skill.stackName}"></span>
+						</th:block>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="section" th:if="${!#lists.isEmpty(educations)}">
+			<div class="section-title">학력</div>
+			<div class="timeline-item" th:each="education : ${educations}">
+				<div class="timeline-date" th:text="|${education.graduateDate} 졸업|">2022.10
+					졸업</div>
+				<div class="timeline-content">
+					<h4 th:text="${education.schoolName}"></h4>
+					<p>
+						<span th:text="${education.educationType}"></span> | <span
+							th:text="${education.department}"></span>
+					</p>
+					<p class="sub-info" th:if="${education.grade} != 0">
+						<span th:text="${education.grade}">3.3</span> / <span
+							th:text="${education.standardGrade}">4.5</span>
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="section" th:if="${!#lists.isEmpty(careers)}">
+			<div class="section-title">경력(업무경험)</div>
+			<div class="timeline-item" th:each="career : ${careers}">
+				<div class="timeline-date"
+					th:text="|${career.startDate} - ${career.endDate}|"></div>
+				<div class="timeline-content">
+					<h4 th:text="${career.companyName}"></h4>
+					<p th:text="${career.position}"></p>
+					<p th:text="${career.careerDescription}"></p>
+				</div>
+			</div>
+		</div>
+
+		<div class="section" th:if="${!#lists.isEmpty(projects)}">
+			<div class="section-title">프로젝트</div>
+			<div class="timeline-item" th:each="project : ${projects}">
+				<div class="timeline-date"
+					th:text="|${project.startDate} - ${project.endDate}|"></div>
+				<div class="timeline-content">
+					<h4 th:text="${project.projectName}">영화예매</h4>
+					<div class="project-details">
+						<p>
+						<th:block th:each="skills : ${project.projectSkills}">
+							<span class="tag" th:text="${skills.stackName}"></span>
+						</th:block>
+						</p>
+						<h5>상세내용</h5>
+						<p th:text="${project.projectContent}">재밌는 프로젝트였습니다.</p>
+						<h5>저장소 링크</h5>
+						<p><a th:href="${project.repositoryLink}" th:text="${project.repositoryLink}">https://abcd</a></p>
+						<h5 th:if="${project.releaseStatus == 'Y'}">배포 완료</h5>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="section" th:if="${!#lists.isEmpty(additionals)}">
+			<div class="section-title">기타사항</div>
+			<div class="timeline-item" th:each="additional : ${additionals}">
+				<div class="timeline-date" th:text="${additional.endDate}"></div>
+				<div class="timeline-content">
+					<h4 th:text="${additional.activityName}"></h4>
+					<p>
+						<span th:text="${additional.recordType}"></span> | <span
+							th:text="${additional.relatedAgency}"></span>
+					</p>
+					<h4>상세 내용</h4>
+					<p th:text="${additional.detailContent}"></p>
+				</div>
+			</div>
+		</div>
+
+		<div class="section" th:if="${!#lists.isEmpty(introductions)}">
+			<div class="section-title">자기소개서</div>
+			<div class="timeline-item" th:each="intro : ${introductions}">
+				<div class="timeline-date" th:text="${intro.title}"></div>
+				<br>
+				<div th:text="${intro.content}"></div>
+			</div>
+		</div>
+
+		<div class="section"
+			th:if="${links != null and (
+              (links.githubUrl != null and links.githubUrl != '') or
+              (links.notionUrl != null and links.notionUrl != '') or
+              (links.blogUrl != null and links.blogUrl != '')
+          )}">
+			<div class="section-title">링크</div>
+			<div class="links-section">
+				<div style="margin-bottom: 20px;">
+					<strong>Github</strong> <a th:href="${links.githubUrl}" th:text="${links.githubUrl}"
+						style="margin-left: 50px;">https://abcd</a>
+				</div>
+				<div style="margin-bottom: 20px;">
+					<strong>Notion</strong> <a th:href="${links.notionUrl}" th:text="${links.notionUrl}"
+						style="margin-left: 50px;">https://abcd</a>
+				</div>
+				<div>
+					<strong>BLOG</strong> <a th:href="${links.blogUrl}" th:text="${links.blogUrl}"
+						style="margin-left: 60px;">https://abcd</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

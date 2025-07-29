@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @Mapper와 패키지명, 인터페이스명 같아야함 -->
+<mapper namespace="kr.co.sist.user.mapper.MessageMapper">
+
+<!-- 메시지 보내기 위해 회사명 가져오기... -->
+<select id="selectPostTitle" parameterType="int" resultType="kr.co.sist.user.dto.JobPostDTO">
+select posting_title
+from job_posting
+where job_posting_seq = #{jobPostingSeq}
+</select>
+
+<!-- 해당 유저의 모든 메시지 가져오기 -->
+<select id="selectMyAllMessage" parameterType="String" resultType="userMessageDTO">
+select m.MESSAGE_SEQ, m.CORP_NO, m.EMAIL, m.MESSAGE_TITLE, m.MESSAGE_CONTENT, m.CREATED_AT, m.IS_READ, m.READED_AT, m.IS_OFFERED, c.corp_nm
+from message m
+join company c on c.corp_no = m.corp_no
+where email = #{email}
+ORDER BY m.created_at DESC
+</select>
+
+<!-- 해당 유저의 메시지(페이징 및 정렬처리) -->
+<select id="selectMyMessage" parameterType="userMessageSearchDTO" resultType="userMessageDTO">
+select m.MESSAGE_SEQ, m.CORP_NO, m.EMAIL, m.MESSAGE_TITLE, m.MESSAGE_CONTENT, m.CREATED_AT, m.IS_READ, m.READED_AT, m.IS_OFFERED, c.corp_nm
+from message m
+join company c on c.corp_no = m.corp_no
+where email = #{email}
+<choose>
+<when test="type == 'read'">
+and m.is_read = 'Y'
+</when>
+<when test="type == 'unread'">
+and m.is_read != 'Y'
+</when>
+<when test="type == 'offered'">
+and m.is_offered = 'Y'
+</when>
+<otherwise></otherwise>
+</choose>
+<if test="keyword != null and keyword.trim() != ''">
+and (
+m.message_title LIKE '%' || #{keyword} || '%' or
+c.corp_nm LIKE '%' || #{keyword} || '%'
+)
+</if>
+ORDER BY m.created_at DESC
+offset #{offSet} ROWS FETCH NEXT #{size} ROWS only
+</select>
+
+
+
+<!-- 해당 유저의 모든 메시지의 수 -->
+<select id="cntMyAllMessage" parameterType="String" resultType="int">
+select count(*)
+from message m
+join company c on c.corp_no = m.corp_no
+where email = #{email}
+</select>
+
+<!-- 검색된 해당 유저의 모든 메시지 수 -->
+<select id="cntMyMessage" parameterType="userMessageSearchDTO" resultType="int">
+select count(*)
+from message m
+join company c on c.corp_no = m.corp_no
+where email = #{email}
+<choose>
+<when test="type == 'read'">
+and m.is_read = 'Y'
+</when>
+<when test="type == 'unread'">
+and m.is_read != 'Y'
+</when>
+<when test="type == 'offered'">
+and m.is_offered = 'Y'
+</when>
+<otherwise></otherwise>
+</choose>
+<if test="keyword != null and keyword.trim() != ''">
+and (
+m.message_title LIKE '%' || #{keyword} || '%' or
+c.corp_nm LIKE '%' || #{keyword} || '%'
+)
+</if>
+</select>
+
+<!-- messageSeq로 해당 메시지 반환 -->
+<select id="selectOneMessage" parameterType="int" resultType="userMessageDTO">
+select MESSAGE_SEQ, CORP_NO, EMAIL, MESSAGE_TITLE, MESSAGE_CONTENT, CREATED_AT, IS_READ, READED_AT, IS_OFFERED
+from message
+where message_seq = #{messageSeq}
+</select>
+
+<!-- 해당 메시지 삭제 -->
+<delete id="deleteOneMessage" parameterType="int">
+delete message
+where message_seq = #{messageSeq}
+</delete>
+
+</mapper>

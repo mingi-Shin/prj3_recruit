@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기 인력</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/user/tools/css/tools_header.css}" />
+<link rel="stylesheet" th:href="@{/user/tools/css/image_adjustment.css}" />
+<style type="text/css">
+
+</style>
+<script type="text/javascript">
+$(document).ready(function() {
+    let originalImage = null;
+    let canvas = $('#previewCanvas')[0];
+    let ctx = canvas.getContext('2d');
+    
+    // 파일 입력 변경 이벤트
+    $('#fileInput').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            handleFile(file);
+        }
+    });
+    
+    // 드래그 앤 드롭 이벤트
+    $('#uploadArea').on('dragover', function(e) {
+        e.preventDefault();
+        $(this).addClass('dragover');
+    });
+    
+    $('#uploadArea').on('dragleave', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+    });
+    
+    $('#uploadArea').on('drop', function(e) {
+        e.preventDefault();
+        $(this).removeClass('dragover');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/gif' || file.type === 'image/png') {
+                handleFile(file);
+            } else {
+                alert('JPG, PNG, GIF 형식만 업로드 가능합니다.');
+            }
+        }
+    });
+    
+    // 크기 입력 변경 이벤트
+    $('#widthInput, #heightInput').on('input', function() {
+        if (originalImage) {
+            updatePreview();
+        }
+    });
+    
+    // 다운로드 버튼 클릭 이벤트
+    $('#downloadBtn').on('click', function() {
+        downloadImage();
+    });
+    
+    function handleFile(file) {
+        // 파일 타입 검사
+        if (!file.type.match(/image\/(jpeg|jpg|gif|png)/)) {
+            alert('JPG, PNG, GIF 형식만 업로드 가능합니다.');
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                originalImage = img;
+                
+                // 원본 이미지 표시
+                $('#originalImage').attr('src', e.target.result);
+                $('#originalImageContainer').show();
+                $('#uploadArea').hide();
+                
+                // 이미지 정보 표시
+                const fileSize = (file.size / 1024).toFixed(1);
+                $('#imageInfo').html(`
+                    <strong>파일명:</strong> ${file.name}<br>
+                    <strong>크기:</strong> ${img.width} x ${img.height}px<br>
+                    <strong>용량:</strong> ${fileSize}KB
+                `);
+                
+                // 미리보기 업데이트
+                updatePreview();
+                $('#downloadBtn').prop('disabled', false);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function updatePreview() {
+        if (!originalImage) return;
+        
+        const targetWidth = parseInt($('#widthInput').val()) || 100;
+        const targetHeight = parseInt($('#heightInput').val()) || 140;
+        
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        
+        // 이미지를 캔버스에 그리기 (비율 유지하면서 fit)
+        const imgRatio = originalImage.width / originalImage.height;
+        const canvasRatio = targetWidth / targetHeight;
+        
+        let drawWidth, drawHeight, offsetX, offsetY;
+        
+        if (imgRatio > canvasRatio) {
+            // 이미지가 더 넓음 - 높이를 기준으로 맞춤
+            drawHeight = targetHeight;
+            drawWidth = drawHeight * imgRatio;
+            offsetX = (targetWidth - drawWidth) / 2;
+            offsetY = 0;
+        } else {
+            // 이미지가 더 높음 - 너비를 기준으로 맞춤
+            drawWidth = targetWidth;
+            drawHeight = drawWidth / imgRatio;
+            offsetX = 0;
+            offsetY = (targetHeight - drawHeight) / 2;
+        }
+        
+        // 캔버스 초기화
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, targetWidth, targetHeight);
+        
+        // 이미지 그리기
+        ctx.drawImage(originalImage, offsetX, offsetY, drawWidth, drawHeight);
+    }
+    
+    function downloadImage() {
+        if (!canvas) return;
+        
+        // 캔버스를 blob으로 변환하여 다운로드
+        canvas.toBlob(function(blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'resized_image.jpg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 'image/jpeg', 0.9);
+    }
+});
+</script>
+</head>
+<body>
+	<header>
+		<div th:replace="~{fragments/header :: header}"></div>
+	</header>
+	<main>
+		<div th:replace="~{user/tools/tools_header :: tools-header}"></div>
+		<div class="resize-container">
+			<div class="resize-header">이미지</div>
+
+			<div class="resize-content">
+				<div class="left-panel">
+					<div class="upload-area" id="uploadArea">
+						<div class="upload-text">편집할 사진을 선택해주세요.</div>
+						<div class="file-info">(JPG, GIF 형식만 업로드 가능합니다.)</div>
+						<br>
+						<button class="upload-btn" onclick="$('#fileInput').click()">파일
+							추가</button>
+						<input type="file" id="fileInput"
+							accept="image/jpeg,image/jpg,image/gif,image/png">
+					</div>
+
+					<div id="originalImageContainer"
+						style="display: none; width: 100%; text-align: center;">
+						<img id="originalImage" class="original-image">
+						<div id="imageInfo" class="image-info"></div>
+					</div>
+				</div>
+
+				<div class="right-panel">
+					<div class="controls-section">
+						<div class="controls-title">이력서용</div>
+						<div class="size-controls">
+							<span>가로</span> <span>x</span> <span>세로</span> <input
+								type="number" id="widthInput" class="size-input" value="100">
+							<span>x</span> <input type="number" id="heightInput"
+								class="size-input" value="140">
+						</div>
+					</div>
+
+					<div class="preview-area" id="previewArea">
+						<canvas id="previewCanvas"
+							style="max-width: 100%; max-height: 100%;"></canvas>
+					</div>
+
+					<button class="download-btn" id="downloadBtn" disabled>
+						<span>⬇</span> <span>사진 저장</span>
+					</button>
+				</div>
+			</div>
+		</div>
+
+	</main>
+	<footer>
+		<div th:replace="~{fragments/footer :: footer}"></div>
+	</footer>
+</body>
+</html>
+

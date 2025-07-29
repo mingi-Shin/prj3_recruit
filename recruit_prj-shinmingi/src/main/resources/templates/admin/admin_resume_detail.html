@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+/* 이력서 페이지 전용 스타일 - 헤더 스타일과 충돌 방지 */
+.resume-page {
+	font-family: "Malgun Gothic", "맑은 고딕", Arial, sans-serif;
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 20px;
+	background-color: #f5f5f5;
+	line-height: 1.6;
+}
+
+.resume-page .container {
+	background-color: white;
+	padding: 40px;
+	border-radius: 8px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.resume-page .section {
+	margin-bottom: 40px;
+}
+
+.resume-page .section-title {
+	font-size: 18px;
+	font-weight: bold;
+	color: #333;
+	margin-bottom: 20px;
+	border-bottom: 2px solid #333;
+	padding-bottom: 8px;
+}
+
+.resume-page .basic-info {
+	display: flex;
+	align-items: flex-start;
+	gap: 30px;
+}
+
+.resume-page .profile-image {
+	width: 120px;
+	height: 150px;
+	border: 3px solid #333;
+	border-radius: 15px;
+	background-color: #f8f8f8;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	overflow: hidden;
+}
+
+.resume-page .profile-image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.resume-page .dice-dots {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+
+.resume-page .dot {
+	width: 12px;
+	height: 12px;
+	background-color: #333;
+	border-radius: 50%;
+	position: absolute;
+}
+
+.resume-page .dot:nth-child(1) {
+	top: 20px;
+	left: 20px;
+}
+
+.resume-page .dot:nth-child(2) {
+	bottom: 20px;
+	right: 20px;
+}
+
+.resume-page .info-details {
+	flex: 1;
+}
+
+.resume-page .name {
+	font-size: 32px;
+	font-weight: bold;
+	color: #333;
+}
+
+.resume-page .contact-info {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 20px;
+}
+
+.resume-page .contact-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: #666;
+}
+
+.resume-page .contact-item::before {
+	content: "";
+	width: 16px;
+	height: 16px;
+	background-color: #666;
+	display: inline-block;
+}
+
+.resume-page .contact-item:first-child::before {
+	content: "✉";
+	background: none;
+	font-size: 14px;
+}
+
+.resume-page .phone-birth {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: #666;
+}
+
+.resume-page .phone-birth::before {
+	content: "📞";
+	background: none;
+	font-size: 14px;
+}
+
+.resume-page .intro-question {
+	font-size: 16px;
+	color: #333;
+	margin-bottom: 15px;
+}
+
+.resume-page .skills-interests {
+	display: flex;
+	gap: 40px;
+}
+
+.resume-page .skill-item, 
+.resume-page .interest-item {
+	flex: 1;
+}
+
+.resume-page .skill-item h4, 
+.resume-page .interest-item h4 {
+	margin: 0 0 8px 0;
+	color: #333;
+	font-size: 14px;
+}
+
+.resume-page .skill-item p, 
+.resume-page .interest-item p {
+	margin: 0;
+	color: #666;
+	font-size: 14px;
+}
+
+.resume-page .timeline-item {
+	margin-bottom: 30px;
+	display: flex;
+	gap: 20px;
+}
+
+.resume-page .timeline-date {
+	min-width: 120px;
+	font-size: 14px;
+	color: #666;
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.resume-page .timeline-date::before {
+	content: "○";
+	color: #333;
+	font-weight: bold;
+}
+
+.resume-page .timeline-content {
+	flex: 1;
+}
+
+.resume-page .timeline-content h4 {
+	margin: 0 0 5px 0;
+	font-size: 16px;
+	color: #333;
+}
+
+.resume-page .timeline-content p {
+	margin: 0 0 3px 0;
+	color: #666;
+	font-size: 14px;
+}
+
+.resume-page .timeline-content .sub-info {
+	color: #999;
+	font-size: 12px;
+}
+
+.resume-page .career-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.resume-page .career-period {
+	color: #666;
+	font-size: 14px;
+}
+
+.resume-page .project-details {
+	margin-left: 20px;
+}
+
+.resume-page .project-details h5 {
+	margin: 10px 0 5px 0;
+	color: #333;
+	font-size: 14px;
+}
+
+.resume-page .project-details p {
+	margin: 0 0 5px 0;
+	color: #666;
+	font-size: 14px;
+}
+
+.resume-page .project-details .project-link {
+	color: #0066cc;
+	text-decoration: none;
+	font-size: 14px;
+}
+
+.resume-page .project-details .project-link:hover {
+	text-decoration: underline;
+}
+
+.resume-page .red-dot {
+	color: red;
+	font-size: 20px;
+	margin-left: 5px;
+}
+
+.resume-page .links-section .timeline-content p {
+	margin-bottom: 8px;
+}
+
+.resume-page .links-section .timeline-content p:last-child {
+	margin-bottom: 0;
+}
+
+.resume-page .tag {
+	display: inline-block;
+	padding: 6px 14px;
+	border-radius: 24px;
+	margin: 4px 6px 4px 0;
+	font-size: 14px;
+	font-weight: 500;
+	color: #333;
+	background-color: #fff;
+	border: 1px solid #ccc;
+}
+
+/* 링크 섹션 스타일 수정 */
+.resume-page .links-section > div {
+	margin-bottom: 20px;
+}
+
+.resume-page .links-section > div:last-child {
+	margin-bottom: 0;
+}
+
+/* 반응형 처리 */
+@media (max-width: 768px) {
+	.resume-page {
+		padding: 15px;
+	}
+	
+	.resume-page .container {
+		padding: 20px;
+	}
+	
+	.resume-page .basic-info {
+		flex-direction: column;
+		gap: 20px;
+	}
+	
+	.resume-page .skills-interests {
+		flex-direction: column;
+		gap: 20px;
+	}
+	
+	.resume-page .timeline-item {
+		flex-direction: column;
+		gap: 10px;
+	}
+	
+	.resume-page .timeline-date {
+		min-width: auto;
+	}
+}
+</style>
+</head>
+<body>
+<th:block th:replace="fragments/adminHeader :: adminHeader"></th:block>
+
+<div class="resume-page">
+	<div class="container">
+		<div class="section">
+			<div class="section-title">기본정보</div>
+			<div class="basic-info">
+				<div class="profile-image">
+					<img th:if="${resume.image != null}" th:src="@{/images/profileImg/{img}(img=${resume.image})}" alt="프로필 사진">
+				</div>
+				<div class="info-details">
+					<div class="name" th:text="${user.name}"></div>
+					<div class="contact-info">
+						<div class="contact-item" th:text="${user.email}"></div>
+						<div class="phone-birth">
+							<span th:text="|${user.phone}|">01091205456</span> <span
+								th:text="|📅${user.birth}년생|"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+			<br>
+			<div>
+				<div class="intro-question" th:if="${resume.introduction}"
+					th:text="${resume.introduction}"></div>
+				<div class="skills-interests" th:if="${!#lists.isEmpty(positions)}">
+					<div class="skill-item">
+						<h4>개발 직무</h4>
+						<th:block th:each="position : ${positions}">
+							<span class="tag" th:text="${position.positionName}"></span>
+						</th:block>
+					</div>
+				</div>
+				<br>
+				<div class="skills-interests">
+					<div class="skill-item" th:if="${!#lists.isEmpty(skills)}">
+						<h4>기술 스택</h4>
+						<th:block th:each="skill : ${skills}">
+							<span class="tag" th:text="${skill.stackName}"></span>
+						</th:block>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="section" th:if="${!#lists.isEmpty(educations)}">
+			<div class="section-title">학력</div>
+			<div class="timeline-item" th:each="education : ${educations}">
+				<div class="timeline-date" th:text="|${education.graduateDate} 졸업|">2022.10
+					졸업</div>
+				<div class="timeline-content">
+					<h4 th:text="${education.schoolName}"></h4>
+					<p>
+						<span th:text="${education.educationType}"></span> | <span
+							th:text="${education.department}"></span>
+					</p>
+					<p class="sub-info" th:if="${education.grade} != 0">
+						<span th:text="${education.grade}">3.3</span> / <span
+							th:text="${education.standardGrade}">4.5</span>
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="section" th:if="${!#lists.isEmpty(careers)}">
+			<div class="section-title">경력(업무경험)</div>
+			<div class="timeline-item" th:each="career : ${careers}">
+				<div class="timeline-date"
+					th:text="|${career.startDate} - ${career.endDate}|"></div>
+				<div class="timeline-content">
+					<h4 th:text="${career.companyName}"></h4>
+					<p th:text="${career.position}"></p>
+					<p th:text="${career.careerDescription}"></p>
+				</div>
+			</div>
+		</div>
+
+		<div class="section" th:if="${!#lists.isEmpty(projects)}">
+			<div class="section-title">프로젝트</div>
+			<div class="timeline-item" th:each="project : ${projects}">
+				<div class="timeline-date"
+					th:text="|${project.startDate} - ${project.endDate}|"></div>
+				<div class="timeline-content">
+					<h4 th:text="${project.projectName}">영화예매</h4>
+					<div class="project-details">
+						<p>
+						<th:block th:each="skills : ${project.projectSkills}">
+							<span class="tag" th:text="${skills.stackName}"></span>
+						</th:block>
+						</p>
+						<h5>상세내용</h5>
+						<p th:text="${project.projectContent}">재밌는 프로젝트였습니다.</p>
+						<h5>저장소 링크</h5>
+						<p th:text="${project.repositoryLink}">https://abcd</p>
+						<h5 th:if="${project.releaseStatus == 'Y'}">배포 완료</h5>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="section" th:if="${!#lists.isEmpty(additionals)}">
+			<div class="section-title">기타사항</div>
+			<div class="timeline-item" th:each="additional : ${additionals}">
+				<div class="timeline-date" th:text="${additional.endDate}"></div>
+				<div class="timeline-content">
+					<h4 th:text="${additional.activityName}"></h4>
+					<p>
+						<span th:text="${additional.recordType}"></span> | <span
+							th:text="${additional.relatedAgency}"></span>
+					</p>
+					<h4>상세 내용</h4>
+					<p th:text="${additional.detailContent}"></p>
+				</div>
+			</div>
+		</div>
+
+		<div class="section" th:if="${!#lists.isEmpty(introductions)}">
+			<div class="section-title">자기소개서</div>
+			<div class="timeline-item" th:each="intro : ${introductions}">
+				<div class="timeline-date" th:text="${intro.title}"></div>
+				<br>
+				<div th:text="${intro.content}"></div>
+			</div>
+		</div>
+
+		<div class="section"
+			th:if="${links != null and (
+              (links.githubUrl != null and links.githubUrl != '') or
+              (links.notionUrl != null and links.notionUrl != '') or
+              (links.blogUrl != null and links.blogUrl != '')
+          )}">
+			<div class="section-title">링크</div>
+			<div class="links-section">
+				<div style="margin-bottom: 20px;">
+					<strong>Github</strong> <span th:text="${links.githubUrl}"
+						style="margin-left: 50px;">https://abcd</span>
+				</div>
+				<div style="margin-bottom: 20px;">
+					<strong>Notion</strong> <span th:text="${links.notionUrl}"
+						style="margin-left: 50px;">https://abcd</span>
+				</div>
+				<div>
+					<strong>BLOG</strong> <span th:text="${links.blogUrl}"
+						style="margin-left: 60px;">https://abcd</span>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+</html>

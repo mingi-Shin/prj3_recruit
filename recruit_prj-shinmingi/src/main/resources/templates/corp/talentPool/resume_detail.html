@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이력서 상세보기</title>
+        <th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+        <link rel="stylesheet" th:href="@{/corp/talentPool/resume_detail.css}"/>
+        <link rel="stylesheet" th:href="@{/corp/talentPool/interviewOffer.css}"/>
+    <style>
+    </style>
+</head>
+<body>
+    <th:block th:replace="~{fragments/corpHeader :: corpHeader}"></th:block>
+    <div class="container">
+        <!-- 좌측 이력서 내용 영역 -->
+		<div class="resume-section">
+		    <div class="resume-placeholder" th:if="${resume == null}">
+		        이력서가 없습니다.
+		    </div>
+		    	
+		    	<div th:if="${resume != null}">
+              	<div class="section">
+				<div class="section-title">기본정보</div>
+				<div class="basic-info">
+					<div class="profile-image">
+						<img th:if="${resume.image !=null }" th:src="@{/images/profileImg/{img}(img=${resume.image})}" onerror="this.style.display='none'"  >
+ 					</div>
+					<div class="info-details">
+						<div class="name" th:text="${resumeUser.name}"></div>
+						<div class="contact-info">
+							<div class="contact-item" th:text="|✉ ${resumeUser.email}|"></div>
+							<div class="phone-birth">
+								<span th:text="|📞 ${resumeUser.phone}|"></span> 
+								<span th:text="|📅 ${resumeUser.birth}|"></span>
+							</div>
+						</div>
+					</div>
+				</div>
+				<br>
+				<div>
+					<div class="intro-question" th:if="${resume.introduction}" th:text="${resume.introduction}"></div>
+					<div class="skills-interests" th:if="${!#lists.isEmpty(positions)}">
+						<div class="skill-item">
+							<h4>개발 직무</h4>
+							<th:block th:each="position : ${positions}">
+								<span class="tag" th:text="${position.positionName}"></span>
+							</th:block>
+						</div>
+					</div>
+					<br>
+					<div class="skills-interests">
+						<div class="skill-item" th:if="${!#lists.isEmpty(skills)}">
+							<h4>기술 스택</h4>
+							<th:block th:each="skill : ${skills}">
+								<span class="tag" th:text="${skill.stackName}"></span>
+							</th:block>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="section" th:if="${!#lists.isEmpty(educations)}">
+				<div class="section-title">학력</div>
+				<div class="timeline-item" th:each="education : ${educations}">
+					<div class="timeline-date" th:text="|${education.graduateDate} 졸업|"></div>
+					<div class="timeline-content">
+						<h4 th:text="${education.schoolName}"></h4>
+						<p>
+							<span th:text="${education.educationType}"></span> | <span th:text="${education.department}"></span>
+						</p>
+						<p class="sub-info">
+							<span th:text="${education.grade}"></span> / <span th:text="${education.standardGrade}"></span>
+						</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="section" th:if="${!#lists.isEmpty(careers)}">
+				<div class="section-title">경력(업무경험)</div>
+				<div class="timeline-item" th:each="career : ${careers}">
+					<div class="timeline-date" th:text="|${career.startDate} - ${career.endDate}|"></div>
+					<div class="timeline-content">
+						<h4 th:text="${career.companyName}"></h4>
+						<p th:text="${career.position}"></p>
+						<p th:text="${career.careerDescription}"></p>
+					</div>
+				</div>
+			</div>
+
+			<div class="section" th:if="${!#lists.isEmpty(projects)}">
+				<div class="section-title">프로젝트</div>
+				<div class="timeline-item" th:each="project : ${projects}">
+					<div class="timeline-date" th:text="|${project.startDate} - ${project.endDate}|"></div>
+					<div class="timeline-content">
+						<h4 th:text="${project.projectName}"></h4>
+						<div class="project-details">
+							<p>
+							<th:block th:each="skills : ${project.projectSkills}">
+								<span class="tag" th:text="${skills.stackName}"></span>
+							</th:block>
+							</p>
+							<h5>상세내용</h5>
+							<p th:text="${project.projectContent}"></p>
+							<h5>저장소 링크</h5>
+							<p th:text="${project.repositoryLink}"></p>
+							<h5 th:if="${project.releaseStatus == 'Y'}">배포 완료</h5>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="section" th:if="${!#lists.isEmpty(additionals)}">
+				<div class="section-title">기타사항</div>
+				<div class="timeline-item" th:each="additional : ${additionals}">
+					<div class="timeline-date" th:text="${additional.endDate}"></div>
+					<div class="timeline-content">
+						<h4 th:text="${additional.activityName}"></h4>
+						<p>
+							<span th:text="${additional.recordType}"></span> | <span th:text="${additional.relatedAgency}"></span>
+						</p>
+						<h4>상세 내용</h4>
+						<p th:text="${additional.detailContent}"></p>
+					</div>
+				</div>
+			</div>
+
+			<div class="section" th:if="${!#lists.isEmpty(introductions)}">
+				<div class="section-title">자기소개서</div>
+				<div class="timeline-item" th:each="intro : ${introductions}">
+					<div class="timeline-date" th:text="${intro.title}"></div>
+					<br>
+					<div th:text="${intro.content}"></div>
+				</div>
+			</div>
+
+			<div class="section" th:if="${links != null and ((links.githubUrl != null and links.githubUrl != '') or (links.notionUrl != null and links.notionUrl != '') or (links.blogUrl != null and links.blogUrl != ''))}">
+				<div class="section-title">링크</div>
+				<div class="links-section">
+					<div th:if="${links.githubUrl != null and links.githubUrl != ''}" style="margin-bottom: 20px;">
+						<strong>Github</strong> <span th:text="${links.githubUrl}" style="margin-left: 50px;"></span>
+					</div>
+					<div th:if="${links.notionUrl != null and links.notionUrl != ''}" style="margin-bottom: 20px;">
+						<strong>Notion</strong> <span th:text="${links.notionUrl}" style="margin-left: 50px;"></span>
+					</div>
+					<div th:if="${links.blogUrl != null and links.blogUrl != ''}" style="margin-bottom: 20px;">
+						<strong>BLOG</strong> <span th:text="${links.blogUrl}" style="margin-left: 50px;"></span>
+					</div>
+				</div>
+			</div>
+            </div>
+        </div>
+
+        <!-- 오른쪽: 고정 사이드바 -->
+        <div class="sidebar">
+            <div class="sidebar-buttons">
+                <button class="sidebar-btn position-btn openInterviewModalBtn">
+                    <span class="btn-icon">💼</span>
+                    <span class="btn-text">면접 제안</span>
+                </button>
+                
+                <button class="sidebar-btn bookmark-btn" onclick="handleBookmark()">
+                    <span class="btn-icon" th:text="${resume.isScrapped == 'Y'} ? '★' : '☆'"></span>
+                    <span class="btn-text">스크랩</span>
+                </button>
+                
+                <button class="sidebar-btn list-btn" onclick="handleGoBack()">
+                    <span class="btn-icon">📋</span>
+                    <span class="btn-text">목록으로</span>
+                </button>
+            </div>
+        </div>
+    </div>
+   			<div class="modal" id="interviewModal" style="display:none;"></div>
+<script th:inline="javascript">
+	const resumeSeq = /*[[${resume.resumeSeq}]]*/ 0;
+	const corpNo = /*[[${corpInfo.corpNo}]]*/ 0;
+	const isScrapped = /*[[${resume.isScrapped eq 'Y'}]]*/ false;
+    const scrapBtn = document.querySelector('.bookmark-btn');
+
+    if (isScrapped) {
+        scrapBtn.classList.add('scrapped');
+        scrapBtn.querySelector('.btn-icon').textContent = '⭐';
+    }
+
+    function handleBookmark() {
+        fetch('/corp/talentPool/scrap', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resumeSeq })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'scrap_success') {
+                scrapBtn.classList.add('scrapped');
+                scrapBtn.querySelector('.btn-icon').textContent = '⭐';
+            } else if (data.status === 'scrap_cancel') {
+                scrapBtn.classList.remove('scrapped');
+                scrapBtn.querySelector('.btn-icon').textContent = '☆';
+            } else {
+                alert('스크랩 처리 실패');
+            }
+        })
+        .catch(() => alert('스크랩 요청 실패'));
+    }
+
+    function handleGoBack() {
+        window.history.back();
+    }
+
+    function closeModal() {
+        const modalEl = document.getElementById('interviewModal');
+        modalEl.style.display = 'none';
+        modalEl.innerHTML = '';
+        document.body.style.overflow = 'auto';
+    }
+
+    document.querySelector('.openInterviewModalBtn').addEventListener('click', () => {
+    	  const modalEl = document.getElementById('interviewModal');
+    	  if (!modalEl) {
+    	    alert('모달 요소를 찾을 수 없습니다.');
+    	    return;
+    	  }
+
+    	  fetch(`/corp/talentPool/interviewOffer`)
+    	    .then(res => {
+    	      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    	      return res.text();
+    	    })
+    	    .then(html => {
+    	      console.log("서버에서 받은 HTML fragment:", html);
+
+    	      modalEl.innerHTML = html;
+    	      modalEl.style.display = 'block';
+    	      document.body.style.overflow = 'hidden';
+
+    	      const form = modalEl.querySelector('form');
+    	      if (!form) {
+    	        alert("모달 내 form 요소를 찾을 수 없습니다.");
+    	        return;
+    	      }
+
+    	      const resumeInput = form.querySelector('input[name="resumeSeq"]');
+    	      const corpInput = form.querySelector('input[name="corpNo"]');
+
+    	      if (!resumeInput || !corpInput) {
+    	        alert("폼 내 필수 히든 input이 없습니다.");
+    	        console.warn("resumeSeq input:", resumeInput);
+    	        console.warn("corpNo input:", corpInput);
+    	        return;
+    	      }
+
+    	      resumeInput.value = resumeSeq;
+    	      corpInput.value = corpNo;
+
+    	      form.onsubmit = e => {
+    	        e.preventDefault();
+    	        const formData = new FormData(form);
+    	        const data = Object.fromEntries(formData.entries());
+
+    	        fetch('/corp/talentPool/interviewOffer/send', {
+    	          method: 'POST',
+    	          headers: { 'Content-Type': 'application/json' },
+    	          body: JSON.stringify(data)
+    	        })
+    	          .then(res => res.json())
+    	          .then(result => {
+    	            if (result.status === 'success') {
+    	              alert('면접 제안이 전송되었습니다.');
+    	              closeModal();
+    	            } else {
+    	              alert('전송 실패: ' + result.message);
+    	            }
+    	          })
+    	          .catch(() => alert('전송 실패'));
+    	      };
+
+    	      modalEl.querySelector('.modal-close')?.addEventListener('click', closeModal);
+    	    })
+    	    .catch(err => {
+    	      console.error("모달 로딩 중 오류 발생:", err);
+    	      alert("면접 제안 모달 로딩 실패");
+    	    });
+    	});
+
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeModal();
+        }
+    });
+</script>
+
+
+    	<th:block th:replace="~{fragments/corpFooter :: corpFooter}"></th:block>
+</body>
+</html>

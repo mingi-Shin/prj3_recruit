@@ -1,0 +1,458 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header-tabs {
+    display: flex;
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 20px;
+}
+
+.tab {
+    padding: 12px 24px;
+    background-color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 24px;
+    font-weight: bold;
+    margin-right: 2px;
+    text-decoration: none;    /* a 태그 밑줄 없애기 */
+    color: inherit;           /* 글씨색 유지 */
+    display: flex;
+    align-items: center;
+}
+
+/* .tab이 button일 때 active 스타일 */
+.tab.active {
+    background-color: #dee2e6;
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: -2px;
+}
+
+/* a.tab 요소에 hover 효과 주기 (선택사항) */
+a.tab:hover {
+    background-color: #f8f9fa;
+}
+
+
+/* 선택된 필터 영역 스타일 */
+.selected-filters {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.reset-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.reset-btn:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+.reset-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.filter-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-tag {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #007bff;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 16px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.filter-tag-remove {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.filter-tag-remove:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+
+.search-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+.search-row {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.select-row {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+.search-select {
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    min-width: 120px;
+}
+
+.search-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.search-btn:hover {
+    background: #0056b3;
+}
+
+.search-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.list-totalcount {
+    font-size: 20px;
+    color: #666;
+    font-weight: bold;
+}
+
+.sort-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: #666;
+}
+.sort-btn {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+}
+
+.sort-btn:hover {
+  color: #000000;
+}
+
+.sort-btn.active {
+  color: #000000;
+}
+
+.page-size-select {
+    padding: 10px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 18px;
+    min-width: 100px;
+}
+
+.talent-list {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.talent-item {
+    display: flex;
+    padding: 24px;
+    border-bottom: 1px solid #f1f3f5;
+    align-items: flex-start;
+    transition: background 0.2s ease;
+}
+
+.talent-item:hover {
+    background: #f8f9fa;
+}
+
+.talent-left {
+    width: 180px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-right: 24px;
+    margin-top: 20px;
+}
+
+.talent-profile {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background-color: #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 20px;
+    color: #495057;
+    margin-bottom: 12px;
+}
+
+.talent-info {
+    font-size: 14px;
+    color: #868e96;
+    margin-top: 4px;
+}
+
+/* 오른쪽 상세 정보 */
+.talent-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.spec-grid {
+    display: grid;
+    grid-template-columns: 120px auto;
+    gap: 8px 16px;
+    font-size: 14px;
+    color: #495057;
+}
+
+.spec-title {
+    font-weight: 600;
+    color: #343a40;
+    color: #343a40;
+}
+
+.skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.skill-tag {
+    display: inline-block;
+    background-color: #e9ecef;
+    color: #495057;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.talent-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 120px;
+    align-items: flex-end;
+}
+
+.action-btn {
+    width: 110px; /* 통일된 고정 너비 설정 */
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background: white;
+    font-size: 13px;
+    color: #343a40;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.action-btn:hover {
+    background-color: #f1f3f5;
+}
+
+.bookmark-star {
+    color: gray;
+    font-size: 16px;
+}
+
+.bookmark-star.filled {
+    color: gold;
+}
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            gap: 5px;
+        }
+        .page-numbers {
+		    display: flex;
+		    gap: 6px;
+		    align-items: center;
+		    justify-content: center;
+		    margin: 0 10px;
+		}
+        
+        .page-btn {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .page-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .page-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        @media (max-width: 768px) {
+            .search-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .talent-item {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .talent-actions {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                min-width: auto;
+            }
+
+        .action-btn {
+            width: 100px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            text-align: center;
+            background-color: white;
+            color: #333;
+        }
+        
+        .action-btn:hover {
+            background-color: #f8f9fa;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            text-decoration: none;
+            color: #333;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .page-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .page-btn.active {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: 500;
+            border-radius: 3px;
+            margin-left: 8px;
+        }
+
+        .badge.new {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge.urgent {
+            background: #fd7e14;
+            color: white;
+        }
+	}
+        @media (max-width: 768px) {
+            .search-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }

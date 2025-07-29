@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${subject}">민기인력 회원가입 이메일 인증</title>
+</head>
+<body style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 30px;">
+    <div style="max-width: 600px; margin: auto; background-color: #ffffff; border: 1px solid #e0e0e0; padding: 30px; border-radius: 8px;">
+        <!-- 로고 이미지 -->
+
+        <!-- 인사말 -->
+        <div style="font-size: 16px; color: #333333; margin-bottom: 20px;">
+            <span th:text="${userType}"> 가입 인증메일입니다.</span><br/>
+            아래의 인증번호를 확인해주세요.
+        </div>
+
+        <!-- 본문 메시지 -->
+        <div style="background-color: #f1f1f1; padding: 20px; border-radius: 6px; font-size: 20px; font-weight: bold; color: #2c3e50; text-align: center; letter-spacing: 2px;" 
+             th:text="${message}">
+        </div>
+
+        <!-- 푸터 -->
+        <div style="margin-top: 30px; font-size: 12px; color: #888888; text-align: center;">
+            본 메일은 시스템에 의해 자동 발송되었습니다. 문의사항이 있으시면 고객센터로 연락해주세요.
+        </div>
+    </div>
+</body>
+</html>

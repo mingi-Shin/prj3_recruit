@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기업회원 가입 페이지</title>
+    <th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+    <link rel="stylesheet" th:href="@{/login/joinCorpForm.css}"/>
+    <!-- 카카오지도 -->
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+</head>
+<body>
+    <!-- 메시지 표시 -->
+    <div th:if="${msg}" class="alert alert-info" role="alert">
+        <p th:text="${msg}"></p>
+    </div>
+
+    <div class="header">
+        <div class="header-content">
+            <a th:href="@{/}">
+                <img th:src="@{/images/logo.png}" class="logo" style="width: 100px; height: 50px;" alt="회사 로고">
+            </a>
+            <a th:href="@{/login}" class="login-link">로그인</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="form-title">민기인력 기업회원 가입</h1>
+        
+        <form id="corpJoinForm" th:action="@{/corp/joinProcess}" method="post" enctype="multipart/form-data" novalidate>
+            
+            <!-- 사업자등록번호 -->
+            <div class="form-group">
+                <label class="form-label" for="corpNo">
+                    <span style="font-weight: bold;">사업자등록번호</span>
+                    <span class="required">*</span>
+                </label>
+                <div class="input-group">
+                    <input type="text" id="corpNo" name="corpNo" class="form-input" 
+                           placeholder="사업자 등록번호 입력(숫자 10자리)" maxlength="10" required>
+                    <div class="loading-spinner" id="corpNoSpinner"></div>
+                    <span class="validation-icon" id="corpNoValidation"></span>
+                </div>
+                <div class="api-result" id="corpNoResult"></div>
+                <div class="error-message" id="corpNoError"></div>
+            </div>
+            
+            <!-- 기업인증 파일 업로드 -->
+            <div class="form-group">
+                <label class="form-label">
+                    <span style="font-weight: bold;">기업인증</span>
+                    <span class="required">*</span>
+                </label>
+                <div class="file-drop-zone" id="fileDropZone">
+                    <input type="file" id="upfile" name="upfile" accept=".jpg,.jpeg,.png,.pdf"  >
+                </div>
+                <div class="file-preview" id="filePreview">
+                    <div class="file-info">
+                        <span id="fileName"></span>
+                        <span class="file-remove" id="fileRemove">✕</span>
+                    </div>
+                </div>
+                <div class="error-message" id="fileError"></div>
+                <div class="success-message" id="fileSuccess"></div>
+            </div>
+            
+             기업명
+            <div class="form-group">
+                <label class="form-label" for="corpNm">
+                    기업명 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpNm" name="corpNm" class="form-input" 
+                       placeholder="기업명을 입력해주세요" maxlength="50" required>
+                <span class="validation-icon" id="corpNmValidation"></span>
+                <div class="error-message" id="corpNmError"></div>
+            </div>
+            
+            대표자
+            <div class="form-group">
+                <label class="form-label" for="corpCeo">
+                    대표자 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpCeo" name="corpCeo" class="form-input" 
+                       placeholder="예시: 김라민 외1명 (사업자등록증명원 대표자명)" maxlength="50" required>
+                <span class="validation-icon" id="corpCeoValidation"></span>
+                <div class="error-message" id="corpCeoError"></div>
+            </div>
+            
+           회사주소
+            <div class="form-group">
+                <label class="form-label">
+                    회사주소 <span class="required">*</span>
+                </label>
+                <div class="zipcode-box" style="margin-bottom: 10px;">
+                    <input type="text" id="zipcode" name="zipcode" class="form-input" 
+                           placeholder="우편번호" readonly required>
+                    <button type="button" id="openKakaoMap" class="btn btn-secondary">우편번호 찾기</button>
+                </div>
+                <input type="text" id="roadAddress" name="roadAddress" class="form-input" 
+                       placeholder="주소" style="margin-bottom: 10px;" readonly required>
+                <input type="text" id="detailAddress" name="detailAddress" class="form-input" 
+                       placeholder="상세주소" maxlength="100" required>
+                <div class="error-message" id="addressError"></div>
+            </div>
+            
+            업종
+            <div class="form-group">
+                <label class="form-label" for="industry">
+                    업종 <span class="required">*</span>
+                </label>
+                <select name="industry" id="industry" class="form-select" required>
+                    <option value="">-- 업종 선택 --</option>
+                    <option value="manufacturing">제조업</option>
+                    <option value="construction">건설업</option>
+                    <option value="itCommunications">정보통신업 (IT)</option>
+                    <option value="wholesaleRetail">도소매업</option>
+                    <option value="transportation">운수업</option>
+                    <option value="realEstate">부동산업</option>
+                    <option value="financeInsurance">금융 및 보험업</option>
+                    <option value="education">교육 서비스업</option>
+                    <option value="healthSocial">보건 및 사회복지 서비스업</option>
+                    <option value="hospitalityFood">숙박 및 음식점업</option>
+                    <option value="artsSports_leisure">예술, 스포츠 및 여가관련 서비스업</option>
+                    <option value="agricultureFishing">농업, 임업 및 어업</option>
+                    <option value="utilities">전기, 가스, 증기 및 수도사업</option>
+                    <option value="publicAdminDefense">공공행정 및 국방</option>
+                    <option value="internationalOrgs">국제 및 외국기관</option>
+                </select>
+                <div class="error-message" id="industryError"></div>
+            </div>
+            
+             평균매출
+            <div class="form-group">
+                <label class="form-label" for="corpAnnualRevenue">
+                    평균매출 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpAnnualRevenue" name="corpAnnualRevenue" 
+                       class="form-input amount" placeholder="평균매출 입력" required>
+                <div class="error-message" id="corpAnnualRevenueError"></div>
+            </div>
+            
+             <!-- 평균연봉
+            <div class="form-group">
+                <label class="form-label" for="corpAvgSal">
+                    평균연봉 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpAvgSal" name="corpAvgSal" 
+                       class="form-input amount" placeholder="평균연봉 입력" required>
+                <div class="error-message" id="corpAvgSalError"></div>
+            </div> 
+            
+              설립년도
+            <div class="form-group">
+                <label class="form-label" for="corpCreatedAt">
+                    설립년도 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpCreatedAt" name="corpCreatedAt" class="form-input" 
+                       placeholder="설립년도 입력 (YYYYMMDD)" maxlength="8" required>
+                <div class="error-message" id="corpCreatedAtError"></div>
+            </div>
+            
+            
+         사원수
+            <div class="form-group">
+                <label class="form-label" for="corpEmpCnt">
+                    사원수 <span class="required">*</span>
+                </label>
+                <input type="text" id="corpEmpCnt" name="corpEmpCnt" 
+                       class="form-input amount" placeholder="사원수 입력" required>
+                <div class="error-message" id="corpEmpCntError"></div>
+            </div>
+            
+            관리자 이메일
+            <div class="form-group">
+                <label class="form-label" for="email">
+                    관리자 이메일 <span class="required">*</span>
+                </label>
+                <div class="email-container">
+                    <input type="email" id="email" name="email" class="form-input" 
+                           placeholder="name@mingihire.co.kr" required>
+                    <button type="button" id="emailVerifyBtn" class="btn btn-primary btn-sm">인증요청</button>
+                </div>
+                <div id="emailVerifyForm" class="email-container" style="margin-top: 5px; display: none;">
+                    <input type="text" id="verifyCode" class="form-input" 
+                           placeholder="인증번호 6자리 입력" maxlength="6">
+                    <button type="button" id="verifyBtn" class="btn btn-success btn-sm" disabled>확인</button>
+                </div>
+                <div id="emailTimer" class="timer-display" style="display: none;">
+                    <span style="color: red; font-size: 12px;">남은시간: </span>
+                    <span id="timerText" style="color: red; font-size: 12px;"></span>
+                </div>
+                <div class="error-message" id="emailError"></div>
+                <div class="success-message" id="emailSuccess"></div>
+            </div>
+            -->
+
+         비밀번호
+            <div class="form-group">
+                <label class="form-label" for="password">
+                    비밀번호 <span class="required">*</span>
+                </label>
+                <input type="password" id="password" name="password" class="form-input" 
+                       placeholder="8~16자 (영문 대소문자/숫자/특수문자 조합)" maxlength="16" required>
+                <div class="error-message" id="passwordError"></div>
+            </div>
+            
+            관리자 휴대폰
+            <div class="form-group">
+                <label class="form-label" for="phone">
+                    관리자 휴대폰 <span class="required">*</span>
+                </label>
+                <input type="tel" id="phone" name="phone" class="form-input" 
+                       placeholder="010-1234-5678" maxlength="13" required>
+                <div class="error-message" id="phoneError"></div>
+            </div>
+ 
+  <!--           관리자 이름
+            <div class="form-group">
+                <label class="form-label" for="name">
+                    관리자 이름 <span class="required">*</span>
+                </label>
+                <input type="text" id="name" name="name" class="form-input" 
+                       placeholder="이름 입력" maxlength="20" required>
+                <div class="error-message" id="nameError"></div>
+            </div>
+ -->
+            <button type="submit" id="submitBtn" class="submit-btn">회원가입</button>
+        </form>
+    </div>
+  
+
+</body>
+</html>

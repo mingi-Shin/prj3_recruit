@@ -1,0 +1,100 @@
+.account-resign-container {
+	background-color: white;
+	border: 1px solid #e9ecef;
+	padding: 30px;
+	margin-top: 30px;
+	border-radius: 8px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.account-resign-title {
+	font-size: 24px;
+	font-weight: 600;
+	margin-bottom: 30px;
+	text-align: center;
+	color: #333;
+}
+
+.account-resign-text {
+	color: #333;
+	font-size: 14px;
+	line-height: 1.6;
+	white-space: pre-line;
+}
+
+.warning-section {
+	background-color: #f8f9fa;
+	border: 1px solid #dee2e6;
+	border-radius: 8px;
+	padding: 20px;
+	margin: 15px 0;
+}
+
+.warning-section h4 {
+	color: #333;
+	font-weight: 600;
+	font-size: 16px;
+	margin-bottom: 12px;
+}
+
+.warning-section p {
+	margin: 0;
+	color: #666;
+	font-size: 14px;
+	line-height: 1.6;
+}
+
+.account-resign-buttons {
+	margin-top: 30px;
+	text-align: center;
+	padding: 20px;
+	background-color: #f8f9fa;
+	border-radius: 8px;
+	border: 1px solid #dee2e6;
+}
+
+.agreement-section {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	margin-bottom: 20px;
+}
+
+.agreement-checkbox {
+	width: 16px;
+	height: 16px;
+	cursor: pointer;
+	accent-color: #666;
+}
+
+.agreement-label {
+	font-size: 14px;
+	color: #333;
+	font-weight: 500;
+	cursor: pointer;
+	user-select: none;
+	margin: 0;
+}
+
+#btn {
+	background-color: #666;
+	border: 1px solid #666;
+	padding: 8px 24px;
+	font-size: 14px;
+	font-weight: 500;
+	border-radius: 4px;
+	color: white;
+	cursor: pointer;
+	transition: all 0.2s ease;
+}
+
+#btn:hover {
+	background-color: #555;
+	border-color: #555;
+}
+
+#btn:focus {
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(102, 102, 102, 0.15);
+}

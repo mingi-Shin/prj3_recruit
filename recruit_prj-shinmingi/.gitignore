@@ -1,0 +1,47 @@
+# ---- Elisp ----
+*.elc
+.cask
+*~
+*.~undo-tree
+
+# ---- Maven ----
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+.project
+.classpath
+
+# ---- Java & Spring Boot ----
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# ---- IDE ----
+.idea/
+*.iml
+*.iws
+.vscode/
+out/
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+
+
+
+# ---- 테스트 리포트 ----
+/test-output/
+/surefire-reports/
+
+# ---- 특정 환경 설정 파일 무시 ----
+application-prod.properties

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>민기인력 - 기업 메인</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/corp/mainCss/main_page.css}"/>
+<link rel="stylesheet" th:href="@{/corp/jobPosting/myJobPostingListPage.css}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+<script type="text/javascript" th:src="@{/corp/jobPosting/js/myJobPostingListPage.js}"></script>
+<style type="text/css">
+
+</style>
+<script type="text/javascript">
+
+</script>
+</head>
+<body>
+<th:block th:replace="~{fragments/corpHeader :: corpHeader}"></th:block>
+
+<div class="corp-main-container">
+	<div> <!-- 상단 -->
+		<div class="corp-posting-status"> <!-- 상단의 공고상태와 건수, 오른쪽에 채용공고 등록 버튼  -->
+			<div> <!-- 테이블 -->
+				<table class="table table-bordered"> 
+					<tr>
+						<th id="getIngPosting" class="posting-status selected">진행중 (<span th:text="${postCntMapList[0].ING_POSTING_CNT ?: 0}"></span>)건 </th>
+						<th id="getEndPosting" class="posting-status">마감 (<span th:text="${postCntMapList[0].END_POSTING_CNT ?: 0}"></span>)건 </th>
+						<th id="getAllPosting" class="posting-status">전체 (<span th:text="${postCntMapList[0].TOTAL_POSTING_CNT ?: 0}"></span>)건 </th>
+					</tr>
+				</table>
+			</div>
+			<div>
+				<input id="createPostingBtn" class="create-job-posting-btn" type="button" value="📑채용공고 등록">
+			</div>
+		</div>
+		<hr class="border border-primary border-2 opacity-50 status-bottom-hr">
+		<div class="get-posting-orderby"> <!-- 상단의 정렬 순서 -->
+			<div> 
+				<!-- 전체는 최신 등록순 -->
+				<input type="button" class="posting-subStatus subSelected" value="최신순" id="odbSd" > |
+				<input type="button" class="posting-subStatus" value="마감순" id="odbEd" > |
+				<input type="button" class="posting-subStatus" value="조회순" id="odbVc" >
+			</div>
+		</div>
+	</div> <!-- 상단 끝 -->
+	<div class="bottom-start-container"> <!-- 하단 시작 -->
+		<div class="bottom-select-box"> <!-- 하단에 '일반 채용공고' 글자, 정렬 기준 셀렉션 -->
+			<div>
+				<p>➡️일반 채용공고</p>
+			</div>
+			<div>
+				<select id="selectCnt" th:onchange="selectPostingByCnt()">
+					<option selected>5개씩보기</option>
+					<option>10개씩보기</option>
+					<option>20개씩보기</option>
+				</select>				
+			</div>		
+		</div>
+		<div> <!-- 공고 리스트 테이블 -->
+			<table class="table">
+				<thead class="table-light">
+					<tr>
+						<th>공고 상태</th>
+						<th>모집 내용</th>
+						<th>공고 관리</th>
+						<th>지원자 관리</th>
+						<th style="color: #f53600">AI인재추천</th>
+					</tr>
+				</thead>
+				<tbody id="resultData" >
+					<tr th:if="${#lists.isEmpty(postList) }">
+						<td colspan="5" style="text-align: center;">조회 목록이 존재하지 않습니다. 새로운 공고를 등록해보세요!</td>
+					</tr>
+				
+					<tr th:each="post : ${postList}">
+						<td class="posting-box-need-center" th:text="${post.isEnded == 'N' ? '진행 중' : '공고 마감'}"></td>
+						<td>
+							<a><span th:id="'jobPostingTitle-' + ${post.jobPostingSeq}"  class="detail-posting-link" th:text="${post.postingTitle}" th:onclick="'getDetailPostingInfo('+ ${post.jobPostingSeq} +')'"></span></a>
+							<ul>
+								<li>근무형태 : <span th:text="${post.employType}"></span> </li>
+								<li>포지션 : <span th:text="${post.positionName}"></span> </li>
+								<li>경력 : <span th:text="${post.expLevel}"></span> </li>
+								<li>접수기간 : <span th:text="${post.postingStartDt}"></span> ~ <span th:text="${post.postingEndDt}"></span> </li>
+								<li>조회수 : <span th:text="${post.viewCnt}"></span></span> </li>
+							</ul>
+						</td>
+						<td class="posting-box-need-center" th:if="${post.isEnded == 'N'}">
+							<button type="button" th:onclick="'updatePosting(' + ${post.jobPostingSeq} + ')'">수정 </button>
+							<button type="button" th:onclick="'finishPosting(' + ${post.jobPostingSeq} + ')'">마감 </button>
+						</td>
+						<td class="posting-box-need-center" th:if="${post.isEnded == 'Y'}">
+							<button type="button" readonly>수정 </button>
+							<button type="button" readonly>마감 </button>
+						</td>
+						<td class="posting-box-need-center">
+							<div><a style="cursor: pointer; text-decoration: underline;" th:onclick="openApplicantListModal()"><span th:id="'applicant-cnt-' + ${post.jobPostingSeq}"  th:text="${post.appCnt}"></span> </a></div>
+							<div style="color: black; cursor: pointer;" th:onclick="openApplicantListModal()"> 지원자 관리 <i class="bi bi-file-earmark-ruled"></i></div>
+							<div> <input type="button" value="지원자 통계" class="appl-stats-btn" th:attr="data-appli-stats=${post.jobPostingSeq}"> </div>
+						</td>
+						<td class="posting-box-need-center">
+							<button type="button">확인</button>
+						</td>
+					</tr>
+					
+				</tbody>
+			</table>
+		</div>
+	</div> <!-- 하단 끝 -->
+	
+	<!-- 통계 관련 모달창 : window.open과는 다르다. 간단한 UI를 쓸 때 사용함 -->
+	<div class="modal fade" id="applicant-stats" role="dialog">
+		<div class="modal-dialog modal-lg ">
+			<div class="modal-content">
+				<!-- Modal Header -->
+				<div class="modal-header">
+					<h4 class="modal-title">공고 이름</h4>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+				</div>
+
+					<!-- Modal body -->
+					<div class="modal-body">
+						<div class="total-applicants">총 지원자수: <span id="totalApplicantCount"></span>명</div>
+
+						<table class="status-table">
+							<tr class="section-title">
+								<td colspan="4">경력별 현황</td>
+							</tr>
+							<tr>
+								<th>신입</th>
+								<th >1~3년</th>
+								<th>3~5년</th>
+								<th>5년이상</th>
+							</tr>
+							<tr>
+								<td> <span id="newEmployee"></span> 명</td>
+								<td> <span id="oneYearEmployee"></span> 명</td>
+								<td> <span id="threeYearEmployee"></span> 명</td>
+								<td> <span id="fiveYearEmployee"></span> 명</td>
+							</tr>
+						</table>
+
+						<table class="status-table">
+							<tr class="section-title">
+								<td colspan="4">성별 현황</td>
+							</tr>
+							<tr>
+								<th >구분</th>
+								<th >남성</th>
+								<th>여성</th>
+								<th>합계</th>
+							</tr>
+							<tr>
+								<td>명</td>
+								<td id="maleCount">72</td>
+								<td id="femaleCount">48</td>
+								<td id="malePlusFemaleCount">120</td>
+							</tr>
+							<tr>
+								<td>%</td>
+								<td> <span id="maleRatio"></span>%</td>
+								<td> <span id="femaleRatio"></span>%</td>
+								<td >100%</td>
+							</tr>
+						</table>
+
+						<table class="status-table">
+							<tr class="section-title">
+								<td colspan="5">연령별 현황</td>
+							</tr>
+							<tr>
+								<th >20대</th>
+								<th >30대</th>
+								<th >40대</th>
+								<th >50대</th>
+								<th >60대</th>
+							</tr>
+							<tr>
+								<td> <span id="ageGroup20s"></span>명</td>
+								<td> <span id="ageGroup30s"></span>명</td>
+								<td> <span id="ageGroup40s"></span>명</td>
+								<td> <span id="ageGroup50s"></span>명</td>
+								<td> <span id="ageGroup60s"></span>명</td>
+							</tr>
+						</table>
+
+						<table class="status-table">
+							<tr class="section-title">
+								<td colspan="5">학력별 현황</td>
+							</tr>
+							<tr>
+								<th>고졸이하</th>
+								<th>2~3년제</th>
+								<th>4년제</th>
+								<th>석사</th>
+								<th>박사</th>
+							</tr>
+							<tr>
+								<td> <span id="highSchoolCount"></span>명</td>
+								<td> <span id="associateDegreeCount"></span>명</td>
+								<td> <span id="bachelorDegreeCount"></span>명</td>
+								<td> <span id="masterDegreeCount"></span>명</td>
+								<td> <span id="doctorateDegreeCount"></span>명</td>
+							</tr>
+						</table>
+
+						<table class="status-table">
+							<tr class="section-title">
+								<td colspan="8">어학 자격증 현황</td>
+							</tr>
+							<tr>
+								<th>토익</th>
+								<th>토플</th>
+								<th>텝스</th>
+								<th>토익스피킹</th>
+								<th>오픽</th>
+								<th>JPT</th>
+								<th>HSK</th>
+							</tr>
+							<tr>
+								<td> <span id="hasToeicCount"></span>명</td>
+								<td> <span id="hasToeflCount"></span>명</td>
+								<td> <span id="hasTepsCount"></span>명</td>
+								<td> <span id="hasToeicSpeakingCount"></span>명</td>
+								<td> <span id="hasOpicCount"></span>명</td>
+								<td> <span id="hasJptCount"></span>명</td>
+								<td> <span id="hasHskCount"></span>명</td>
+							</tr>
+						</table>
+
+						<table class="status-table">
+							<tr class="section-title">
+								<td colspan="5">컴퓨터 자격증 현황</td>
+							</tr>
+							<tr>
+								<th>정처기</th>
+								<th>SQLD</th>
+								<th>리눅스마스터</th>
+								<th>OCP</th>
+								<th>ADSP</th>
+							</tr>
+							<tr>
+								<td> <span id="hasJcgCount"></span>명</td>
+								<td> <span id="hasSqldCount"></span>명</td>
+								<td> <span id="hasLinuxCount"></span>명</td>
+								<td> <span id="hasOcpCount"></span>명</td>
+								<td> <span id="hasAdspCount"></span>명</td>
+							</tr>
+						</table>
+
+						<table class="status-table">
+							<tr class="section-title">
+								<td colspan="5">자격증 보유개수</td>
+							</tr>
+							<tr>
+								<th>미보유</th>
+								<th>1개</th>
+								<th>2개</th>
+								<th>3개</th>
+								<th>4개이상</th>
+							</tr>
+							<tr>
+								<td> <span id="has0CertCount"></span>명</td>
+								<td> <span id="has1CertCount"></span>명</td>
+								<td> <span id="has2CertCount"></span>명</td>
+								<td> <span id="has3CertCount"></span>명</td>
+								<td> <span id="has4OrMoreCount"></span>명</td>
+							</tr>
+						</table>
+
+						<table class="status-table">
+							<tr class="section-title">
+								<td colspan="3">포트폴리오 제출 현황</td>
+							</tr>
+							<tr>
+								<th>제출자</th>
+								<th>미제출자</th>
+								<th>제출율</th>
+							</tr>
+							<tr>
+								<td> <span id="sentProjectCount"></span>명</td>
+								<td> <span id="noSentProjectCount"></span>명</td>
+								<td> <span id="sentProjectRatio"></span>%</td>
+							</tr>
+						</table>
+					</div>
+
+					<!-- Modal footer -->
+				<div class="modal-footer">
+					<input type="hidden" class="modal-excel-seq" th:value="${jobPostingSeq}">
+				    <button type="button" id="excel-download-btn" class="btn btn-success" >엑셀 Download</button>
+					<button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+					<div th:if="${downloadMessage}" th:text="${downloadMessage}"></div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+	
+</div>
+ 
+<th:block th:replace="~{fragments/corpFooter :: corpFooter}"></th:block>
+</body>
+</html>

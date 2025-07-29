@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @Mapper와 패키지명, 인터페이스명 같아야함 -->
+<mapper namespace="kr.co.sist.user.mapper.TechStackMapper">
+
+<!-- 이력서 폼에서 검색한 내용을 포함하는 기술스택 리스트를 가져오기 -->
+<select id="selectInputTechStack" parameterType="String" resultType="kr.co.sist.user.dto.TechStackDTO">
+SELECT tech_stack_seq, stack_name
+FROM tech_stack
+WHERE UPPER(stack_name) LIKE '%' || UPPER(#{keyword}) || '%'
+</select>
+
+
+</mapper>

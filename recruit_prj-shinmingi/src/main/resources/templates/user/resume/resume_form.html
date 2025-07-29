@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>이력서 작성</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" th:href="@{/user/resume/css/resume_form.css}" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script th:src="@{/user/resume/js/resume_form.js}"></script>
+</head>
+<body>
+	<header>
+		<div th:replace="~{fragments/header :: header}"></div>
+	</header>
+
+	<main>
+		<input type="hidden" id="resumeSeq" th:value="${resume.resumeSeq}">
+		<div class="main-container">
+			<div class="header-section">
+				<h1>이력서 작성</h1>
+				<p>필요한 정보를 입력하여 이력서를 완성해보세요</p>
+			</div>
+
+			<!-- 이력서 제목 섹션 -->
+			<div class="title-section">
+				<div class="title-input-group">
+					<input type="text" class="title-input" name="title"
+						th:value="${resume.title}" placeholder="이력서 제목을 입력해주세요">
+				</div>
+			</div>
+
+			<div class="content-section">
+				<!-- 기본정보 -->
+				<div class="section-card">
+					<div class="section-title">
+						<i class="fas fa-user"></i> 기본정보
+					</div>
+
+					<div class="photo-upload-section">
+						<div class="photo-upload-container">
+							<div class="photo-upload-box" id="photo-upload-box"
+								th:classappend="${resume.image != null ? 'has-photo' : ''}">
+
+								<th:block th:if="${resume.image != null}">
+									<img th:src="@{/images/profileImg/{img}(img=${resume.image})}"
+										alt="프로필 사진">
+									<button type="button" class="photo-remove-btn"
+										id="photo-remove-btn">×</button>
+								</th:block>
+
+								<th:block th:unless="${resume.image != null}">
+									<div class="photo-upload-text">
+										<i class="fas fa-camera"></i>
+										<div>사진 업로드</div>
+										<small>클릭하여 선택</small>
+									</div>
+									<button type="button" class="photo-remove-btn"
+										id="photo-remove-btn" style="display: none;">×</button>
+								</th:block>
+							</div>
+							<input type="file" id="photo-input" accept="image/*"
+								style="display: none;">
+						</div>
+
+						<div class="contact-info-section">
+							<div class="contact-info">
+								<div class="contact-header">
+									<i class="fas fa-user"></i>
+									<h2 th:text="${user.name}"></h2>
+								</div>
+
+								<div class="contact-details">
+									<!-- 이메일 -->
+									<div class="contact-item">
+										<i class="fas fa-envelope"></i>
+										<div class="contact-item-content">
+											<div class="contact-item-value" th:text="${user.email}"></div>
+										</div>
+									</div>
+
+									<!-- 생년월일과 전화번호, 비공개 토글 -->
+									<div class="contact-row">
+										<div class="contact-item">
+											<i class="fas fa-calendar-alt"></i>
+											<div class="contact-item-content">
+												<div class="contact-item-value" th:text="|${user.birth}년생|">1999년생</div>
+											</div>
+										</div>
+
+										<div class="contact-item">
+											<i class="fas fa-phone"></i>
+											<div class="contact-item-content">
+												<div class="contact-item-value" th:text="${user.phone}"></div>
+											</div>
+										</div>
+
+										<div class="contact-item">
+											<i class="fas fa-briefcase"></i>
+											<div class="contact-item-content">
+												<div class="contact-item-value"
+													th:text="${resume.careerType == 'E'?'경력':'신입' }"></div>
+											</div>
+										</div>
+
+										<div class="privacy-toggle">
+											<label class="toggle-switch"> <input type="checkbox"
+												th:checked="${resume == null or resume.isPublic == 'Y'}">
+												<span class="toggle-slider"></span>
+											</label><span class="privacy-text">이력서 공개</span>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="section-card">
+					<div class="section-title">
+						<i class="fas fa-file-alt"></i> 간단 소개
+					</div>
+					<div class="mb-3">
+						<textarea class="form-control" rows="3" name="introduction"
+							th:text="${resume.introduction}"
+							placeholder="간결하게 요점만 요약해서 3~5줄 내로 읽기 쉬운 내용으로 작성해보세요."></textarea>
+					</div>
+				</div>
+
+				<!-- 희망 직무 -->
+				<div class="section-card">
+					<div class="section-title">
+						<i class="fas fa-briefcase"></i> 희망 직무
+					</div>
+
+					<div class="job-selection">
+						<div id="positions" class="mt-3">
+							<th:block th:each="pos : ${positions}">
+								<span class="tag" th:attr="data-value=${pos.positionSeq}">
+									<span th:text="${pos.positionName}"></span>
+									<button type="button" class="remove-tag">×</button>
+								</span>
+							</th:block>
+						</div>
+						<div class="custom-select" id="positionSelect">
+							<div id="selectedValues">직무를 선택해주세요</div>
+							<ul class="custom-options" id="optionsList">
+								<li th:each="position : ${positionList}"
+									th:attr="data-value=${position.positionSeq}"
+									th:text="${position.positionName}"></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<!-- 기술스택 -->
+				<div class="section-card">
+					<div class="section-title">
+						<i class="fas fa-code"></i> 기술스택
+					</div>
+					<div class="mb-3">
+						<div id="skills" class="mt-3">
+							<th:block th:each="skill : ${skills}">
+								<span class="tag" th:attr="data-value=${skill.techStackSeq}">
+									<span th:text="${skill.stackName}"></span>
+									<button type="button" class="remove-tag">×</button>
+								</span>
+							</th:block>
+						</div>
+						<div class="custom-select" id="skillsSelect">
+							<input type="text" class="form-control" id="skill-input"
+								placeholder="예: JavaScript, React, Node.js">
+							<ul class="custom-options" id="skillsList">
+							</ul>
+						</div>
+						<div class="skill-input-help">기술명을 입력하고 Enter를 누르면 태그가 생성됩니다</div>
+					</div>
+				</div>
+
+				<!-- 링크 -->
+				<div class="section-card links-section">
+					<div class="section-title">
+						<i class="fas fa-link"></i> 링크
+					</div>
+					<div class="section-help-text">포트폴리오나 프로젝트를 확인할 수 있는 링크를
+						입력해주세요</div>
+
+					<div class="input-group">
+						<span class="input-group-text"><i class="fab fa-github"></i></span>
+						<input type="url" class="form-control" th:value=${links.githubUrl}
+							placeholder="https://github.com">
+					</div>
+
+					<div class="input-group">
+						<span class="input-group-text"><i class="fas fa-file-alt"></i></span>
+						<input type="url" class="form-control" th:value=${links.notionUrl}
+							placeholder="https://notion.so">
+					</div>
+
+					<div class="input-group">
+						<span class="input-group-text"><i class="fas fa-blog"></i></span>
+						<input type="url" class="form-control" th:value=${links.blogUrl}
+							placeholder="https://blog.com">
+					</div>
+				</div>
+
+				<!-- 학력 -->
+				<div class="section-card">
+					<div class="section-title">
+						<i class="fas fa-graduation-cap"></i> 학력
+					</div>
+					<div class="section-help-text">최신 순으로 입력해주세요</div>
+					<div class="edu-list">
+						<th:block th:each="education : ${educations}">
+							<div class="item-box">
+								<button type="button" class="item-remove-btn">×</button>
+								<div class="row g-3">
+									<div class="col-md-2">
+										<label class="form-label">입학 날짜</label><input type="text"
+											th:value="${education.admissionDate}" class="form-control"
+											name="admissionDate" placeholder="YYYY.MM">
+									</div>
+									<div class="col-md-2">
+										<label class="form-label">졸업날짜(예정)</label><input type="text"
+											th:value="${education.graduateDate}" class="form-control"
+											name="graduateDate" placeholder="YYYY.MM">
+									</div>
+									<div class="col-md-4">
+										<label class="form-label">학교명</label><input type="text"
+											th:value="${education.schoolName}" class="form-control"
+											name="schoolName" placeholder="○○대학교">
+									</div>
+									<div class="col-md-4">
+										<label class="form-label">학과</label><input type="text"
+											th:value="${education.department}" class="form-control"
+											name="department" placeholder="컴퓨터공학과">
+									</div>
+									<div class="col-md-2">
+										<label class="form-label">학력구분</label> <select
+											class="form-select" name="educationType">
+											<option
+												th:selected="${education.educationType == null or education.educationType == ''}"
+												disabled>선택해주세요</option>
+											<option th:selected="${education.educationType == '고등학교'}"
+												value="고등학교">고등학교</option>
+											<option
+												th:selected="${education.educationType == '대학(2,3년)'}"
+												value="대학(2,3년)">대학(2,3년)</option>
+											<option th:selected="${education.educationType == '대학(4년)'}"
+												value="대학(4년)">대학(4년)</option>
+											<option th:selected="${education.educationType == '대학원(석사)'}"
+												value="대학원(석사)">대학원(석사)</option>
+											<option th:selected="${education.educationType == '대학원(박사)'}"
+												value="대학원(박사)">대학원(박사)</option>
+										</select>
+									</div>
+									<div class="col-md-2">
+										<label class="form-label">학점</label><input type="text"
+											class="form-control"
+											th:value="${education.grade != 0 ? education.grade : ''}"
+											name="grade" placeholder="예: 3.5">
+									</div>
+									<div class="col-md-2">
+										<label class="form-label">기준학점</label> <select
+											class="form-select" name="standardGrade">
+											<option
+												th:selected="${education.standardGrade == null or education.standardGrade == 0}"
+												disabled>선택해주세요</option>
+											<option th:selected="${education.standardGrade == '4.5'}"
+												value="4.5">4.5</option>
+											<option th:selected="${education.standardGrade == '4.3'}"
+												value="4.3">4.3</option>
+											<option th:selected="${education.standardGrade == '4.0'}"
+												value="4.0">4.0</option>
+											<option th:selected="${education.standardGrade == '5.0'}"
+												value="5.0">5.0</option>
+											<option th:selected="${education.standardGrade == '7.0'}"
+												value="7.0">7.0</option>
+											<option th:selected="${education.standardGrade == '100'}"
+												value="100">100</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</th:block>
+					</div>
+
+					<button class="add-btn" id="add-edu">
+						<i class="fas fa-plus"></i> 학력 추가
+					</button>
+				</div>
+
+				<!-- 경력 -->
+				<div class="section-card">
+					<div class="section-title">
+						<i class="fas fa-briefcase"></i> 경력
+					</div>
+					<div class="section-help-text">최신 순으로 입력해주세요</div>
+					<div class="exp-list">
+						<th:block th:each="career : ${careers}">
+							<div class="item-box">
+								<button type="button" class="item-remove-btn">×</button>
+								<div class="row g-3">
+									<div class="col-md-2">
+										<label class="form-label">입사년월</label><input type="text"
+											th:value="${career.startDate}" class="form-control"
+											name="startDate" placeholder="YYYY.MM">
+									</div>
+									<div class="col-md-2">
+										<label class="form-label">퇴사년월</label><input type="text"
+											th:value="${career.endDate}" class="form-control"
+											name="endDate" placeholder="YYYY.MM">
+									</div>
+									<div class="col-md-4">
+										<label class="form-label">회사명</label><input type="text"
+											th:value="${career.companyName}" class="form-control"
+											name="companyName" placeholder="(주)○○회사">
+									</div>
+									<div class="col-md-4">
+										<label class="form-label">직책/직무</label><input type="text"
+											th:value="${career.position}" class="form-control"
+											name="position" placeholder="주임/백엔드 개발자">
+									</div>
+									<div class="col-12">
+										<label class="form-label">담당업무 및 성과</label>
+										<textarea th:text="${career.careerDescription}"
+											class="form-control" rows="3" name="carrerDescription"
+											placeholder="담당했던 업무와 성과를 구체적으로 입력해주세요"></textarea>
+									</div>
+								</div>
+							</div>
+						</th:block>
+					</div>
+					<button class="add-btn" id="add-exp">
+						<i class="fas fa-plus"></i> 경력 추가
+					</button>
+				</div>
+
+				<!-- 프로젝트 -->
+				<div class="section-card">
+					<div class="section-title">
+						<i class="fas fa-project-diagram"></i> 프로젝트
+					</div>
+					<div class="section-help-text">개인 프로젝트나 팀 프로젝트를 입력해주세요</div>
+					<div class="proj-list">
+						<th:block th:each="project : ${projects}">
+							<div class="item-box project-item">
+								<button type="button" class="item-remove-btn">×</button>
+								<div class="row g-3">
+									<div class="col-md-2">
+										<label class="form-label">시작일</label><input type="text"
+											th:value="${project.startDate}" class="form-control"
+											name="startDate" placeholder="YYYY.MM">
+									</div>
+									<div class="col-md-2">
+										<label class="form-label">종료일</label><input type="text"
+											th:value="${project.endDate}" class="form-control"
+											name="endDate" placeholder="YYYY.MM">
+									</div>
+									<div class="col-md-6">
+										<label class="form-label">프로젝트명</label><input type="text"
+											th:value="${project.projectName}" class="form-control"
+											name="projectName" placeholder="쇼핑몰 웹사이트 개발">
+									</div>
+									<div class="project-skills mt-3">
+										<th:block th:each="pSkill : ${project.projectSkills}">
+											<span class="tag" th:attr="data-value=${pSkill.techStackSeq}">
+												<span th:text="${pSkill.stackName}"></span>
+												<button type="button" class="remove-tag">×</button>
+											</span>
+										</th:block>
+									</div>
+									<div class="custom-select project-select">
+										<input type="text" class="form-control project-input"
+											placeholder="프로젝트에서 사용한 기술스택을 입력해주세요.">
+										<ul class="custom-options project-list"></ul>
+									</div>
+									<div class="col-12">
+										<label class="form-label">상세 내용</label>
+										<textarea class="form-control" rows="4"
+											th:text="${project.projectContent}" name="projectContent"
+											placeholder="프로젝트에서 담당한 역할과 구현한 기능을 상세히 설명해주세요"></textarea>
+									</div>
+									<div class="col-md-6">
+										<div class="form-check mt-3">
+											<input class="form-check-input"
+												th:checked="${project.releaseStatus == 'Y'}"
+												name="releaseStatus" type="checkbox"><label
+												class="form-check-label">배포/출시 완료</label>
+										</div>
+									</div>
+									<div class="col-md-6">
+										<label class="form-label">저장소 링크</label><input type="url"
+											th:value="${project.repositoryLink}" class="form-control"
+											name="repositoryLink"
+											placeholder="https://github.com/username/project">
+									</div>
+								</div>
+							</div>
+						</th:block>
+					</div>
+					<button class="add-btn" id="add-proj">
+						<i class="fas fa-plus"></i> 프로젝트 추가
+					</button>
+				</div>
+
+				<!-- 기타사항 -->
+				<div class="section-card">
+					<div class="section-title">
+						<i class="fas fa-star"></i> 기타사항
+					</div>
+					<div class="section-help-text">자격증, 수상경력, 대외활동 등을 입력해주세요</div>
+					<div class="etc-list">
+						<th:block th:each="additional : ${additionals}">
+							<div class="item-box">
+								<button type="button" class="item-remove-btn">×</button>
+								<div class="row g-3">
+									<div class="col-md-2">
+										<label class="form-label">취득일/종료일</label><input type="text"
+											th:value="${additional.endDate}" class="form-control"
+											name="endDate" placeholder="YYYY.MM">
+									</div>
+									<div class="col-md-4">
+										<label class="form-label">활동명/자격증명</label><input type="text"
+											th:value="${additional.activityName}" class="form-control"
+											name="activityName" placeholder="정보처리기사">
+									</div>
+									<div class="col-md-2">
+										<label class="form-label">이력 구분</label> <select
+											class="form-select" name="recordType">
+											<option
+												th:selected="${additional.recordType == null or additional.recordType == ''}"
+												disabled>선택해주세요</option>
+											<option th:selected="${additional.recordType == '자격증'}"
+												value="자격증">자격증</option>
+											<option th:selected="${additional.recordType == '수상이력'}"
+												value="수상이력">수상이력</option>
+											<option th:selected="${additional.recordType == '대외활동'}"
+												value="대외활동">대외활동</option>
+											<option th:selected="${additional.recordType == '어학'}"
+												value="어학">어학</option>
+										</select>
+									</div>
+									<div class="col-md-4">
+										<label class="form-label">관련 기관</label><input type="text"
+											th:value="${additional.relatedAgency}" class="form-control"
+											name="relatedAgency" placeholder="한국산업인력공단">
+									</div>
+									<div class="col-12">
+										<label class="form-label">상세 내용</label>
+										<textarea class="form-control"
+											th:text="${additional.detailContent}" rows="3"
+											name="detailContent" placeholder="자세한 내용이나 성과를 입력해주세요"></textarea>
+									</div>
+								</div>
+							</div>
+						</th:block>
+					</div>
+					<button class="add-btn" id="add-etc">
+						<i class="fas fa-plus"></i> 기타사항 추가
+					</button>
+				</div>
+
+				<!-- 자기소개서 -->
+				<div class="section-card">
+					<div class="section-title">
+						<i class="fas fa-pen-fancy"></i> 자기소개서
+					</div>
+					<div class="section-help-text">자신을 소개하는 글을 입력해주세요</div>
+					<div class="intro-list">
+						<th:block th:each="intro : ${introductions}">
+							<div class="item-box">
+								<button type="button" class="item-remove-btn">×</button>
+								<div class="mb-3">
+									<label class="form-label">제목</label> <input type="text"
+										th:value="${intro.title}" class="form-control" name="title"
+										placeholder="자기소개서 제목을 입력해주세요">
+								</div>
+								<div class="mb-3">
+									<label class="form-label">내용</label>
+									<textarea class="form-control" th:text="${intro.content}"
+										rows="8" name="content" placeholder="자기소개 내용을 입력해주세요"></textarea>
+								</div>
+							</div>
+						</th:block>
+					</div>
+					<button class="add-btn" id="add-intro">
+						<i class="fas fa-plus"></i> 자기소개서 추가
+					</button>
+				</div>
+
+				<!-- 새로운 버튼 그룹 -->
+				<div class="button-group">
+					<button type="button" class="action-btn download-btn">
+						<i class="fas fa-download"></i>
+					</button>
+					<button type="button" class="action-btn preview-btn">미리보기</button>
+					<button type="button" class="action-btn save-btn">저장하기</button>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<footer>
+		<div th:replace="~{fragments/footer :: footer}"></div>
+	</footer>
+</body>
+</html>

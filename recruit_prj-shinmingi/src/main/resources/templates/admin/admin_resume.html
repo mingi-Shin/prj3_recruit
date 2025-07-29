@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+/* 전체 영역 여백 */
+.main {
+    padding: 30px;
+    margin-left: 250px; /* 사이드바가 고정되어 있다고 가정 */
+    background-color: #f9f9f9;
+    width:100%;
+    min-height: 100vh;
+}
+
+
+/* 테이블 스타일 */
+.table {
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* 테이블 헤더 강조 */
+.table thead th {
+  background-color: #343a40;
+  color: white;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* 테이블 셀 정렬 */
+.table td {
+  vertical-align: middle;
+}
+
+/* 폼 요소 간격 */
+input[type="text"] {
+  margin-bottom:20px;
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+}
+
+/* 체크박스 버튼 스타일 조정 */
+.btn-check + .btn-outline-primary {
+  margin: 3px 5px;
+}
+
+/* 검색 버튼 */
+input[type="submit"] {
+  margin-top: 10px;
+  padding: 8px 20px;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+/* 페이징 영역 여백 */
+#pagination {
+  margin-top: 20px;
+  text-align: center;
+}
+</style>
+
+</head>
+<body>
+
+<th:block th:replace="fragments/adminHeader :: adminHeader"></th:block>
+<div class="main">
+<form action="/admin/admin_resume_search">
+<span>이력서번호</span>
+<span><input type="text" id="resume_seq" name="resume_seq"/></span>
+<span>이름</span>
+<span><input type="text" id="name" name="name"/></span>
+
+<input type="submit" value="검색"/>
+</form>
+
+<table class="table table-bordered" id="resumeTable">
+<thead>
+<tr>
+<th>이력서번호</th>
+<th>이름</th>
+<th>이메일</th>
+<th>제목</th>
+</tr>
+</thead>
+
+<tbody>
+<tr th:each="r:${resume}">
+<td th:text="${r['RESUME_SEQ']}"></td>
+    <td th:text="${r['NAME']}"></td>
+    <td th:text="${r['EMAIL']}"></td>
+    <td>
+      <a th:href="@{/admin/admin_resume/detail(resume_seq=${r['RESUME_SEQ']})}" 
+           th:text="${r['TITLE']}"></a>
+    </td>
+</tr>
+</tbody>
+</table>
+<div id="pagination"></div>
+</div>
+
+
+<!-- jquery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function () {
+	  const rowsPerPage = 10;
+	  const rows = $('#resumeTable tbody tr');
+	  const totalRows = rows.length;
+	  const totalPages = Math.ceil(totalRows / rowsPerPage);
+	  let currentPage = 1;
+
+	  function showPage(page) {
+	    rows.hide();
+	    const start = (page - 1) * rowsPerPage;
+	    const end = start + rowsPerPage;
+	    rows.slice(start, end).show();
+	    renderPagination();
+	  }
+
+	  function renderPagination() {
+	    let html = '';
+	    if (currentPage > 1) {
+	      html += `<button class="btn btn-sm btn-outline-secondary me-2" id="prevPage">이전</button>`;
+	    }
+	    if (currentPage < totalPages) {
+	      html += `<button class="btn btn-sm btn-outline-secondary" id="nextPage">다음</button>`;
+	    }
+	    $('#pagination').html(html);
+
+	    $('#prevPage').click(() => {
+	      if (currentPage > 1) {
+	        currentPage--;
+	        showPage(currentPage);
+	      }
+	    });
+
+	    $('#nextPage').click(() => {
+	      if (currentPage < totalPages) {
+	        currentPage++;
+	        showPage(currentPage);
+	      }
+	    });
+	  }
+
+	  // 최초 실행
+	  showPage(currentPage);
+	});
+
+</script>
+</body>
+</html>
