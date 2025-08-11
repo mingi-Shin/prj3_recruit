@@ -510,14 +510,15 @@ function chkCorpNum(){
 		}
 		
 	  document.getElementById("corpNo").value = formatted;
-	  
+	
+		//let apiKey = "IW%2F6HsjpITD4rl1ej0zNklfDW0bLITVvjm2rYs3QyB4oeHwTNSKib1evwUSkgS97uxzWEWl%2FNN5GeMeSRyqk6w%3D%3D";	   
 		if (raw.length == 10){
 			var data = {
 				    "b_no": [raw] // 사업자번호 "xxxxxxx" 로 조회 시,
 				   }; 
-			let apiKey = "f2XGVPM83eg%2B2DjAAuAr6wEkvRlk4KwQYLDV1WkrveBZOQ6upT8O2otcjEJEiqqllEIhN%2B2KvRi2EKceHA5fJQ%3D%3D";	   
 				$.ajax({
-				  url: "https://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=" + apiKey,  // serviceKey 값을 입력
+				  //url: "https://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=" + apiKey,  // serviceKey 값을 입력
+				  url: "/api/business-status",
 				  type: "POST",
 				  data: JSON.stringify(data), // json 을 string으로 변환하여 전송
 				  dataType: "JSON",
@@ -622,48 +623,58 @@ function modifyAmountInput(){
 		})
 	});
 }
-
+//이메일 중복 체크 이벤트 리스너 (Debounce 추가)
+let debounceTimer;
 function ckEmailDupl(){
 	document.getElementById("email").addEventListener("input",function(){
-		const isEmailDupl ="이미 등록된 이메일입니다.";
-		let emailText = document.getElementById("email").value;
+		clearTimeout(debounceTimer); //이전 타이머 취소
 		
-		$.ajax({
-			url : "/ckEmailDupl",
-			type : "GET",
-			dataType: "json",
-			//type : "POST",  									-> 컨트롤러에서 @RequestBody EmailDTO dto로 받아야함
-			//contentType: "application/json", 	-> 컨트롤러에서 @RequestBody EmailDTO dto로 받아야함
-			//data: JSON.stringfy(jsonObj), -> POST, PUT, PATCH 같은 본문을 사용하는 요청에서 쓰기 
-			data : {
-				email : emailText
-			},
-			success : function(reponse){
-				if(reponse.duplicate){ //중복됨
-					document.getElementById("emailDuple").textContent=reponse.message;
-					document.getElementById("emailDuple").style.display="block";
-					document.getElementById("codeBtn").disabled=true;
-				} else { //중복안됨
-					document.getElementById("emailDuple").textContent=reponse.message;
-					document.getElementById("emailDuple").style.display="none";
-					document.getElementById("codeBtn").disabled=false;
-				}
-			},
-			error : function(xhr, status, error){
-				console.error("이메일 중복 체크 실패:");
-				console.error("status: ", status);
-				console.error("HTTP 상태코드: ", xhr.status);
-				console.error("에러 메시지: ", error);
-				console.error("응답 본문: ", xhr.responseText);
-
-				alert("서버 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-			}
-		});
-		
-		
-		
+		debounceTimer = setTimeout(() => {
+			const isEmailDupl ="이미 등록된 이메일입니다.";
+			let emailValue = document.getElementById("email").value;
+			checkEmailDuplicate(emailValue);
+		}, 500); //500ms 동안 추가 입력이 없다면 실행 
 	});
 }
+function checkEmailDuplicate(emailValue){
+	
+	if(!emailValue){
+		return;
+	}
+	
+	$.ajax({
+		url : "/ckEmailDupl",
+		type : "GET",
+		dataType: "json",
+		//type : "POST",  									-> 컨트롤러에서 @RequestBody EmailDTO dto로 받아야함
+		//contentType: "application/json", 	-> 컨트롤러에서 @RequestBody EmailDTO dto로 받아야함
+		//data: JSON.stringfy(jsonObj), -> POST, PUT, PATCH 같은 본문을 사용하는 요청에서 쓰기 
+		data : {
+			email : emailText
+		},
+		success : function(reponse){
+			if(reponse.duplicate){ //중복됨
+				document.getElementById("emailDuple").textContent=reponse.message;
+				document.getElementById("emailDuple").style.display="block";
+				document.getElementById("codeBtn").disabled=true;
+			} else { //중복안됨
+				document.getElementById("emailDuple").textContent=reponse.message;
+				document.getElementById("emailDuple").style.display="none";
+				document.getElementById("codeBtn").disabled=false;
+			}
+		},
+		error : function(xhr, status, error){
+			console.error("이메일 중복 체크 실패:");
+			console.error("status: ", status);
+			console.error("HTTP 상태코드: ", xhr.status);
+			console.error("에러 메시지: ", error);
+			console.error("응답 본문: ", xhr.responseText);
+
+			alert("서버 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+		}
+	});
+}
+
 
 //올바른 비밀번호 확인 여부(편의성)
 function isRightPassword(){

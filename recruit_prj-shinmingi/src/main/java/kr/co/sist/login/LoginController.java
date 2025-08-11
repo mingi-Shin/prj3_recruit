@@ -1,28 +1,27 @@
 package kr.co.sist.login;
 import kr.co.sist.corp.mapper.JobPostingCorpMapper;
-import kr.co.sist.jwt.CustomUser;
 import kr.co.sist.jwt.JWTUtil;
 import kr.co.sist.user.dto.ResumeRequestDTO;
-import kr.co.sist.user.dto.ResumeResponseDTO;
 import kr.co.sist.user.dto.UserDTO;
 import kr.co.sist.user.entity.UserEntity;
 import kr.co.sist.user.service.AttachmentService;
 import kr.co.sist.user.service.PositionCodeService;
 import kr.co.sist.user.service.ResumeService;
-import kr.co.sist.util.CipherUtil;
 import lombok.RequiredArgsConstructor;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -32,20 +31,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.Part;
 
 @RequiredArgsConstructor //-> 생성자주입방식 생성자 코드 대신 어노테이션
 @Controller
 public class LoginController {
 
-    private final CipherUtil cipherUtil;
+  @Value("${spring.sendgrid.api-key}")
+  private String apiKey;  
 
 	private final LoginJoinService ljs; 
 	private final JWTUtil jwtUtil;
@@ -241,7 +240,31 @@ public class LoginController {
     return "login/joinCorpFormOnlyHTML";
   }
   
-  
+  /**
+   * 사업자등록번호 실시간 조회 메서드 (apiKey)
+   */
+  @PostMapping("/api/business-status")
+  @ResponseBody
+  public  ResponseEntity<String> checkBusiness (@RequestBody Map<String, Object> payload){
+  	
+  	//System.out.println(payload);  //{b_no=[4178112848]}
+  	RestTemplate restTemplate = new RestTemplate();
+  	String url = "https://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=" + apiKey;
+  	
+  	System.out.println(url);
+  	
+    //HTTP 요청 헤더에 JSON 타입 명시
+  	HttpHeaders headers = new HttpHeaders();
+  	headers.setContentType(MediaType.APPLICATION_JSON);
+  	//System.out.println(headers); //[Content-Type:"application/json"]
+  	
+  	//클라이언트가 보낸 데이터(payload)를 담아서 HTTP 요청 준비
+  	HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+  	//System.out.println(entity); //<{b_no=[1208800767]},[Content-Type:"application/json"]>
+  	
+  	// RestTemplate을 이용해서 외부 API에 POST 요청을 보내고, 응답을 받음
+  	return restTemplate.postForEntity(url, entity, String.class);
+  }
   
   
   /**

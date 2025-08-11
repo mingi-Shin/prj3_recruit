@@ -117,14 +117,8 @@ public class LoginJoinService {
             ue.setProfileImage(null);
             ue.setActiveStatus(0);
             
-            // 저장 전 검증
-           // System.out.println("저장 전 UserEntity: " + ue);
-            //System.out.println("UserRepository 존재 여부: " + (ur != null));
-            
             // DB 저장 시도
-            //System.out.println("저장 시도 시작...");
             UserEntity savedEntity = ur.save(ue);
-            //System.out.println("저장 완료!");
             
             if (savedEntity != null) {
                 //System.out.println("저장 후 UserEntity: " + savedEntity);

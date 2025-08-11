@@ -1,0 +1,16 @@
+<!-- error/error.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Error</title>
+</head>
+<body>
+    <h1>죄송합니다. 오류가 발생했습니다.</h1>
+    <p th:text="${timestamp}">에러 발생 시각</p>
+    <p th:text="${status}">HTTP 상태 코드</p>
+    <p th:text="${error}">에러</p>
+    <p th:text="${message}">에러 메시지</p>
+    <p th:text="${path}">요청 경로</p>
+</body>
+</html>

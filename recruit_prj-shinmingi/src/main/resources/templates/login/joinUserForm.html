@@ -115,15 +115,15 @@ $(function(){
 			
 		//휴대폰
 		const phone = document.getElementById("phone").value;
-	   	const phonePattern = /^010-\d{4}-\d{4}$/;
-	    if (!phonePattern.test(phone)) {
-	      alert("핸드폰 번호는 010-1234-5678 형식으로 입력해주세요.");
-	      isEverythingOk = false;
-	      return false;
-	  	}
+   	const phonePattern = /^010-\d{4}-\d{4}$/;
+    if (!phonePattern.test(phone)) {
+      alert("핸드폰 번호는 010-1234-5678 형식으로 입력해주세요.");
+      isEverythingOk = false;
+      return false;
+  	}
 		
 		//이름
-    	const name = document.getElementById('name').value.trim();
+    const name = document.getElementById('name').value.trim();
 		const namePattern = /^[가-힣a-zA-Z]{2,20}$/;
 		if (!namePattern.test(name)) {
 	  	alert("이름은 2~20자의 한글 또는 영문만 입력 가능합니다.");
@@ -217,13 +217,13 @@ $(function(){
 				return response.text();
 			})
 			.then(result => {
-		        alert(result); 
+				alert(result); 
 		        // 이후 UI 처리...
-		    })
+	    })
 			.catch(error => {
-		        alert("오류 발생: " + error.message);
-		        return false;
-		    });
+				alert("오류 발생: " + error.message);
+				return false;
+	    });
 		
 		
 		
@@ -414,44 +414,57 @@ function openKakaoMap(){
 	}).open();
 }
 
-//이메일 중복 체크 ajax
+
+//이메일 중복 체크 이벤트 리스너 (Debounce 추가)
+let debounceTimer;
 function ckEmailDupl(){
 	document.getElementById("email").addEventListener("input",function(){
-		const isEmailDupl ="이미 등록된 이메일입니다.";
-		let emailText = document.getElementById("email").value;
+		clearTimeout(debounceTimer); //이전 타이머 취소
 		
-		$.ajax({
-			url : "/ckEmailDupl",
-			type : "GET",
-			dataType: "json",
-			//type : "POST",  									-> 컨트롤러에서 @RequestBody EmailDTO dto로 받아야함
-			//contentType: "application/json", 	-> 컨트롤러에서 @RequestBody EmailDTO dto로 받아야함
-			//data: JSON.stringfy(jsonObj), -> POST, PUT, PATCH 같은 본문을 사용하는 요청에서 쓰기 
-			data : {
-				email : emailText
-			},
-			success : function(reponse){
-				if(reponse.duplicate){ //중복됨
-					document.getElementById("emailDuple").textContent=reponse.message;
-					document.getElementById("emailDuple").style.display="block";
-					document.getElementById("codeBtn").disabled=true;
-				} else { //중복안됨
-					document.getElementById("emailDuple").textContent=reponse.message;
-					document.getElementById("emailDuple").style.display="none";
-					document.getElementById("codeBtn").disabled=false;
-				}
-			},
-			error : function(xhr, status, error){
-				console.error("이메일 중복 체크 실패:");
-				console.error("status: ", status);
-				console.error("HTTP 상태코드: ", xhr.status);
-				console.error("에러 메시지: ", error);
-				console.error("응답 본문: ", xhr.responseText);
-
-				alert("서버 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+		debounceTimer = setTimeout(() => {
+			const isEmailDupl ="이미 등록된 이메일입니다.";
+			let emailValue = document.getElementById("email").value;
+			checkEmailDuplicate(emailValue);
+		}, 500); //500ms 동안 추가 입력이 없을 때 실행
+	});
+}
+//이메일 중복 체크 비동기 통신 함수
+function checkEmailDuplicate(emailValue){
+	
+	if(!emailValue){
+		return;
+	}
+	
+	$.ajax({
+		url : "/ckEmailDupl",
+		type : "GET",
+		dataType: "json",
+		//type : "POST",  									-> 컨트롤러에서 @RequestBody EmailDTO dto로 받아야함
+		//contentType: "application/json", 	-> 컨트롤러에서 @RequestBody EmailDTO dto로 받아야함
+		//data: JSON.stringfy(jsonObj), -> POST, PUT, PATCH 같은 본문을 사용하는 요청에서 쓰기 
+		data : {
+			email : emailValue
+		},
+		success : function(reponse){
+			if(reponse.duplicate){ //중복됨 (duplicate이 boolean값임)
+				document.getElementById("emailDuple").textContent=reponse.message;
+				document.getElementById("emailDuple").style.display="block";
+				document.getElementById("codeBtn").disabled=true;
+			} else { //중복안됨
+				document.getElementById("emailDuple").textContent=reponse.message;
+				document.getElementById("emailDuple").style.display="none";
+				document.getElementById("codeBtn").disabled=false;
 			}
-		});
-		
+		},
+		error : function(xhr, status, error){
+			console.error("이메일 중복 체크 실패:");
+			console.error("status: ", status);
+			console.error("HTTP 상태코드: ", xhr.status);
+			console.error("에러 메시지: ", error);
+			console.error("응답 본문: ", xhr.responseText);
+
+			alert("서버 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+		}
 	});
 }
 
@@ -538,7 +551,7 @@ function addTenThousandUsers(){
 	const familyName = ["김", "신", "이", "주", "유", "박", "서", "한", "하"];
 	const lastName1 = ["가", "나", "다", "라", "마", "바", "사", "아", "자", "차", "카", "타", "파", "하"];
 	const lastName2 = ["고", "노", "도", "로", "모", "보", "소", "오", "조", "초", "코", "토", "포", "호"];
-	const digits = [1,2,3,4,5,6,7,8,9];
+	const digits = [0,1,2,3,4,5,6,7,8,9];
 
 	for(let i = 1; i <= 1000; i++){
 		// 이름 생성
@@ -813,7 +826,7 @@ function addTenThousandResumes(){
                 <label class="form-label">이메일</label>
                 <div class="email-container">
 	                <input type="email" id="email" name="email" class="form-input" placeholder="name@mingihire.co.kr">
-	                <button type="button" id="codeBtn" class="btn btn-primary btn-sm" >인증요청</button>
+	                <button type="button" id="codeBtn" class="btn btn-primary btn-sm" disabled>인증요청</button>
                 </div>
                 <div id="confirmNumberFrm" class="email-container" style="margin-top: 5px; display: none; gap: 8px;">
 	                <input type="text" id="confirmNumber" class="form-input" placeholder="인증번호를 입력해주세요." style="flex: 8;" >
@@ -940,8 +953,8 @@ function addTenThousandResumes(){
         </form>
         <hr>
         <!-- 랜덤 유저, 이력서 생성하기 버튼  -->
-        <button type="button" id="createRandomUsers" style="display: none">랜덤유저 생성</button>
-        <button type="button" id="createRandomResume" style="display: none">유저 랜덤 이력서 생성</button>
+        <button type="button" id="createRandomUsers" style="display: block">랜덤유저 생성</button>
+        <button type="button" id="createRandomResume" style="display: block">유저 랜덤 이력서 생성</button>
     </div>
     
     <!-- Vertically centered scrollable modal -->

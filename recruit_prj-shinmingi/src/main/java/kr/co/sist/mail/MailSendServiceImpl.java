@@ -12,6 +12,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
 import org.thymeleaf.TemplateEngine;
@@ -38,6 +39,7 @@ public class MailSendServiceImpl implements MailSendService {
     /**
      * 인증 이메일 전송 로직임 
      */
+    @Async("mailTaskExecutor") //설정한 쓰레드 풀 사용 
     public void sendVerificationEmail(MailHtmlSendDTO mailHtmlSendDTO, String clientIp) {
         // 인증 이메일로 기존 객체 확인
         List<MailVerificationEntity> entities = mailRepository.findAllByEmail(mailHtmlSendDTO.getEmailAddr());
