@@ -6,11 +6,21 @@
 <!-- @Mapper와 패키지명, 인터페이스명 같아야함 -->
 <mapper namespace="kr.co.sist.corp.mapper.JobPostingTechStackMapper">    
 
-<!-- 새로운 공고 등록 -->
+<!-- 공고등록 : 중간테이블 등록 -->
 <insert id="insertjobPostingTechStack">
 INSERT INTO JOB_POSTING_TECH_STACK (tech_stack_seq, job_posting_seq) 
 VALUES (#{techStackSeq}, #{jobPostingSeq})
 </insert>
+
+<!-- 공고등록 : 중간테이블 등록 Batch -->
+<insert id="insertjobPostingTechStackBatch" parameterType="list">
+  INSERT INTO JOB_POSTING_TECH_STACK (tech_stack_seq, job_posting_seq)
+  VALUES
+  <foreach collection="list" item="stackVo" separator=",">
+    (#{stackVo.techStackSeq}, #{stackVo.jobPostingSeq})
+  </foreach>
+</insert>
+
 
 <!-- 공고 수정 1. 기존의 기술스택 데이터 삭제 -->
 <delete id="deleteJobPostingTechStack" parameterType="int">

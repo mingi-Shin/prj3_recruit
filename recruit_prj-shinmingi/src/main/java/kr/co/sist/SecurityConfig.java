@@ -86,27 +86,28 @@ public class SecurityConfig {
 
     @Bean
     @Order(2)
+ // SecurityFilterChain 설정 - 사용자 요청에 따른 접근 제어 및 인증/인가 처리
     public SecurityFilterChain userFilterChain(HttpSecurity http) throws Exception {
         http.securityMatcher("/**")
             .authorizeHttpRequests(auth -> auth
-            		//맵핑 제어
+                // 인증 없이 접근 허용하는 경로
                 .requestMatchers("/login", "/register", "/images/**", "/reissue", "/corp/main").permitAll()
                 //정적자료 제어 (static 아래) 혹은 anyRequest()로 퉁치거나 
                 //.requestMatchers("/**/*.css", "/**/*.js", "/**/*.jpg", "/**/*.jpeg", "/**/*.gif", "/**/*.svg", "/**/*.png", "/**/*.ttf", "/**/*.svg").permitAll()
+                // USER 권한 필요 경로
                 .requestMatchers("/user/resume/**", "/user/mypage", "/apply").hasRole("USER")
+                // CORP 권한 필요 경로
                 .requestMatchers("/corp/applicant", "/corp/jobPostingForm", "/corp/myJobPostingListPage", "/corp/talentPool/**", "/corp/image/**", "/corp/info/**").hasRole("CORP")
-                .anyRequest().permitAll()
+                .anyRequest().permitAll() // 그 외는 모두 허용
             )
-            //로그인 Ok, but 권한이 없을 때 (403 Forbidden)
-            .exceptionHandling(ex ->
-            		ex.accessDeniedHandler(accessDeniedHandler) //AccessDeniedHandler는 인증은 되었지만 권한이 없는 경우에만 동작
-            )
-            .csrf(csrf -> csrf.disable())
-            .userDetailsService(userDetailsServiceImpl)  // 🔥 직접 설정
+            // 권한 부족 시 커스텀 핸들러 작동
+            .exceptionHandling(ex -> ex.accessDeniedHandler(accessDeniedHandler))
+            .csrf(csrf -> csrf.disable()) // CSRF 비활성화 (API 용도 등)
+            .userDetailsService(userDetailsServiceImpl) // 사용자 인증 서비스 직접 등록
             .formLogin(auth -> auth
                 .loginPage("/login")
                 .loginProcessingUrl("/loginProcess")
-                .usernameParameter("email") //안하면 기본값 username
+                .usernameParameter("email")
                 .passwordParameter("password")
                 .failureHandler(new CustomLoginFailureHandler())
                 .successHandler(new CustomLoginSuccessHandler(jwtUtil))
@@ -116,10 +117,10 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/")
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID", "access", "refresh", "Authorization") 
+                .deleteCookies("JSESSIONID", "access", "refresh", "Authorization")
             )
             .addFilterAfter(new JWTFIlter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
-        
+
         return http.build();
     }
 }

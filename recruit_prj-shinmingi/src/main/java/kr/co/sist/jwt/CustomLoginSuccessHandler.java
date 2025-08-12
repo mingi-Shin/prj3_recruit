@@ -47,7 +47,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 	    //.maxAge(Duration.ofHours(24)) //refresh 쿠키는 24시간 유지 
 	    .build();
 
-    response.setHeader("Set-Cookie", cookie.toString()); // "Set-Cookie"는 서버 → 클라이언트로 쿠키를 보내기 위한 공식 HTTP 응답 헤더
+    response.setHeader("Set-Cookie", cookie.toString()); // "Set-Cookie"는 서버 → 클라이언트로 쿠키를 보내기 위한 고정된 HTTP 응답 헤더
     
     response.setStatus(HttpStatus.OK.value());
     

@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.session.SqlSession;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -29,6 +30,7 @@ import kr.co.sist.corp.dto.CorpEntity;
 import kr.co.sist.corp.dto.JobPostingApplicantStatsDTO;
 import kr.co.sist.corp.dto.JobPostingDTO;
 import kr.co.sist.corp.dto.JobPostingEntity;
+import kr.co.sist.corp.dto.JobPostingTechStackDTO;
 import kr.co.sist.corp.mapper.JobPostingCorpMapper;
 import kr.co.sist.corp.mapper.JobPostingTechStackMapper;
 import kr.co.sist.corp.repository.JobPostingRepository;
@@ -50,6 +52,8 @@ public class JobPostingCorpService {
   private final CorpRepository cRepository;
   private final JobPostingRepository jRepository;
   
+  private final SqlSession sqlSession; // 직접 주입받음
+  
   /**
    * 공고 새로 등록하기 
    * 연속적인 insert는 항상 서비스단에서 묶어서 처리하고, @Transactional을 걸어야 안전빵
@@ -62,7 +66,13 @@ public class JobPostingCorpService {
   	try {
   		//1. 공고등록
       jpm.insertJobPost(jpDTO);
+      System.out.println("부모 insert 완료, PK=" + jpDTO.getJobPostingSeq());
       
+      //아… 자바에서 PK 보인다고 DB에 있는 게 아니구나
+      sqlSession.flushStatements(); // MyBatis 강제 flush
+      System.out.println("flush 완료");
+      
+
       /**
        * jpDTO.getJobPostingSeq() 왜 돼?
        * jpDTO는 참조변수
@@ -71,12 +81,14 @@ public class JobPostingCorpService {
        * 나는 그 참조변수를다시 가져와서 보는 것이니 매개변수때와 그 값이 다르다. 
        * 따라서 selectKey를 안쓰면 못가져와 
        */
-      int jobPostingSeq = jpDTO.getJobPostingSeq();  
-  		
       //2. 기술 스택등록(중간테이블)
+      // for문 db호출(n회) -> 배치(일괄 입력) 
+      int jobPostingSeq = jpDTO.getJobPostingSeq();  
+      List<JobPostingTechStackDTO> jptsList = new ArrayList<>();
       for(Integer techStackSeq : jpDTO.getTechStackSeqList()) {
-      	jptm.insertjobPostingTechStack(jobPostingSeq, techStackSeq);
+          jptsList.add(new JobPostingTechStackDTO(jobPostingSeq, techStackSeq));
       }
+      jptm.insertjobPostingTechStackBatch(jptsList);
       
 		} catch (Exception e) {
 			//로그출력 

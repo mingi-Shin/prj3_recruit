@@ -34,8 +34,8 @@ public class JWTUtil {
 	//application.properties에서 시크릿 키를 주입받아
 	public JWTUtil(@Value("${spring.jwt.mysecret}") String secret, CipherUtil cipherUtil, Environment environment) {
 	   
-	  // 문자열 형태의 시크릿 키를 바이트 배열로 변환하고,
-	  // HMAC SHA-256 알고리즘을 사용하는 SecretKey 객체로 생성
+	  // 문자열 형태의 시크릿 키를 바이트 배열로 변환하고 [JWT 서명 알고리즘에서는 byte[] 키를 사용해야 하기 때문],
+	  // HMAC SHA-256 [대칭키 방식] 알고리즘을 사용하는 SecretKey 객체로 생성
 	  secretKey = new SecretKeySpec(
        secret.getBytes(StandardCharsets.UTF_8),
        Jwts.SIG.HS256.key().build().getAlgorithm()
