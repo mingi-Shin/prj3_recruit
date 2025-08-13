@@ -10,12 +10,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
@@ -52,7 +55,7 @@ public class JobPostingCorpService {
   private final CorpRepository cRepository;
   private final JobPostingRepository jRepository;
   
-  private final SqlSession sqlSession; // 직접 주입받음
+  private final SqlSessionFactory sqlSessionFactory;
   
   /**
    * 공고 새로 등록하기 
@@ -62,41 +65,32 @@ public class JobPostingCorpService {
    */
   @Transactional 
   public void uploadJobPost(JobPostingDTO jpDTO) {
-  	
-  	try {
-  		//1. 공고등록
+    try {
+      // 1. 부모 공고등록
       jpm.insertJobPost(jpDTO);
       System.out.println("부모 insert 완료, PK=" + jpDTO.getJobPostingSeq());
       
-      //아… 자바에서 PK 보인다고 DB에 있는 게 아니구나
-      sqlSession.flushStatements(); // MyBatis 강제 flush
-      System.out.println("flush 완료");
+      int jobPostingSeq = jpDTO.getJobPostingSeq();
       
-
-      /**
-       * jpDTO.getJobPostingSeq() 왜 돼?
-       * jpDTO는 참조변수
-       * mapper내부에서 setter(.setJobPostingSeq(123)) 이런 setter를 호출했꼬, 
-       *  (keyProperty="jobPostingSeq" => DTO의 해당 필드에 자동 주입)
-       * 나는 그 참조변수를다시 가져와서 보는 것이니 매개변수때와 그 값이 다르다. 
-       * 따라서 selectKey를 안쓰면 못가져와 
-       */
-      //2. 기술 스택등록(중간테이블)
-      // for문 db호출(n회) -> 배치(일괄 입력) 
-      int jobPostingSeq = jpDTO.getJobPostingSeq();  
+      // 2. SqlSessionTemplate을 BATCH 모드로 설정 (새로운 트랜잭션 생성은 @Transactional에 의한 롤백동작을 방해)
+      //SqlSessionTemplate batchTemplate = new SqlSessionTemplate(sqlSessionFactory, ExecutorType.BATCH);
+      //SqlSession batchSession = sqlSessionFactory.openSession(ExecutorType.BATCH)
+      
+      // 2. 자식 테이블 등록을 위한 VO 리스트 생성
       List<JobPostingTechStackDTO> jptsList = new ArrayList<>();
-      for(Integer techStackSeq : jpDTO.getTechStackSeqList()) {
-          jptsList.add(new JobPostingTechStackDTO(jobPostingSeq, techStackSeq));
+      for(int techStackSeq : jpDTO.getTechStackSeqList()) {
+      	jptsList.add(new JobPostingTechStackDTO(jobPostingSeq, techStackSeq));
       }
-      jptm.insertjobPostingTechStackBatch(jptsList);
       
-		} catch (Exception e) {
-			//로그출력 
-			e.printStackTrace();
-			//트랜잭션 롤백 유도 : RuntimeException 안던지면 롤백안됨 
-			throw new RuntimeException("공고등록 중 예외 발생", e); 
-		}
-  } //end uploadJobPost()
+      // 3. Mapper의 batch insert 호출 (INSERT ALL 사용)
+      jptm.insertJobPostingTechStackBatch(jptsList);
+      System.out.println("자식 Batch insert 완료");
+      
+	  } catch (Exception e) {
+	      e.printStackTrace();
+	      throw new RuntimeException("공고등록 중 예외 발생", e);
+	  }
+  } 
   
   /**
    * 공고 수정하기 (공고수정 -> 기존 기술스택 리스트 삭제 -> 기술스택 새로 등록)
@@ -110,7 +104,7 @@ public class JobPostingCorpService {
   		jptm.deleteJobPostingTechStack(jpDTO.getJobPostingSeq()); //기존 기술스택 데이터 모두 삭제 
   		
       for(Integer techStackSeq : jpDTO.getTechStackSeqList()) {
-      	jptm.insertjobPostingTechStack(jpDTO.getJobPostingSeq(), techStackSeq); //기술스택 새로 등록 
+      	jptm.insertJobPostingTechStack(jpDTO.getJobPostingSeq(), techStackSeq); //기술스택 새로 등록 
       }
 			
 		} catch (Exception e) {

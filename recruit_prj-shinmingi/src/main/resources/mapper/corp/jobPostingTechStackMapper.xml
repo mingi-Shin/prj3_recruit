@@ -7,19 +7,29 @@
 <mapper namespace="kr.co.sist.corp.mapper.JobPostingTechStackMapper">    
 
 <!-- 공고등록 : 중간테이블 등록 -->
-<insert id="insertjobPostingTechStack">
-INSERT INTO JOB_POSTING_TECH_STACK (tech_stack_seq, job_posting_seq) 
-VALUES (#{techStackSeq}, #{jobPostingSeq})
+<insert id="insertJobPostingTechStack" parameterType="map">
+INSERT INTO JOB_POSTING_TECH_STACK (job_posting_seq, tech_stack_seq) 
+VALUES (#{jobPostingSeq}, #{techStackSeq})
 </insert>
 
-<!-- 공고등록 : 중간테이블 등록 Batch -->
-<insert id="insertjobPostingTechStackBatch" parameterType="list">
-  INSERT INTO JOB_POSTING_TECH_STACK (tech_stack_seq, job_posting_seq)
-  VALUES
-  <foreach collection="list" item="stackVo" separator=",">
-    (#{stackVo.techStackSeq}, #{stackVo.jobPostingSeq})
-  </foreach>
+<!-- 공고등록 : 중간테이블 등록, 오라클 전용 문법 insert all -->
+<insert id="insertJobPostingTechStackBatch" parameterType="java.util.List">
+  INSERT ALL
+    <foreach collection="techStackVOList" item="tech">
+      INTO JOB_POSTING_TECH_STACK (job_posting_seq, tech_stack_seq)
+      VALUES (#{tech.jobPostingSeq}, #{tech.techStackSeq})
+    </foreach>
+  SELECT 1 FROM DUAL
 </insert>
+
+
+
+
+
+
+
+
+
 
 
 <!-- 공고 수정 1. 기존의 기술스택 데이터 삭제 -->

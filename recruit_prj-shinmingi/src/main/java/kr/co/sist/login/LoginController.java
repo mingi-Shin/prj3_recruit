@@ -253,7 +253,7 @@ public class LoginController {
   	
   	System.out.println(url);
   	
-    //HTTP 요청 헤더에 JSON 타입 명시
+    //HTTP 요청 헤더에 JSON 타입 명시rhtod
   	HttpHeaders headers = new HttpHeaders();
   	headers.setContentType(MediaType.APPLICATION_JSON);
   	//System.out.println(headers); //[Content-Type:"application/json"]
