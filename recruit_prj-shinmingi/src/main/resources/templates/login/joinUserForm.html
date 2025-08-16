@@ -551,7 +551,7 @@ function addTenThousandUsers(){
 	const familyName = ["김", "신", "이", "주", "유", "박", "서", "한", "하"];
 	const lastName1 = ["가", "나", "다", "라", "마", "바", "사", "아", "자", "차", "카", "타", "파", "하"];
 	const lastName2 = ["고", "노", "도", "로", "모", "보", "소", "오", "조", "초", "코", "토", "포", "호"];
-	const digits = [0,1,2,3,4,5,6,7,8,9];
+	const digits = [1,2,3,4,5,6,7,8,9];
 
 	for(let i = 1; i <= 1000; i++){
 		// 이름 생성
@@ -577,10 +577,14 @@ function addTenThousandUsers(){
 		let password = `Testuser${i}!`;
 
 		// 생일
-		let birth = `200${num()}-0${num()}-25`;
+		if(Math.random() < 0.7){
+			let birth = `200${num()}-0${num()}-01`;
+		} else {
+			let birth = `199${num()}-0${num()}-05`;
+		}
 
 		// 성별
-		let gender = Math.random() < 0.5 ? "M" : "F";
+		let gender = Math.random() < 0.6 ? "M" : "F";
 
 		// 전송할 객체
 		let formData = {
@@ -629,8 +633,8 @@ function addTenThousandResumes(){
 		const resumeData = {
 			basicInfo: {
 				resumeSeq: null, // 신규 생성이므로 null 또는 제거
-				title: `이력서입니다. [${i}]`,
-				introduction: `간단한 자기소개 [${i}]`,
+				title: `이력서입니다. - [${i}]`,
+				introduction: `간단한 자기소개 - [${i}]`,
 				isPublic: true // boolean으로 변경 (첫 번째 코드 참조)
 			},
 			links: {
@@ -659,12 +663,12 @@ function addTenThousandResumes(){
 		// 학력 수집
 		const educationTypeList = ['고등학교','대학(2,3년)','대학(4년)','대학원(석사)', '대학원(박사)'];
 		const departmentList = ["컴퓨터", "공학", "IT", "소프트웨어", "인공지능", "데이터", "정보", "사이버", "로봇", "인터넷", "AI", "시스템"];
-		const gradeList = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.3, 4.5];
+		const gradeList = [3.0, 3.2, 3.4, 3.6, 3.8, 4.0, 4.2, 4.4];
 		
 		const education = {
 			admissionDate: '2000.02',
 			graduateDate: '2004.02',
-			schoolName: i % 3 === 0 ? '서울도시대학교' : '춘천감자대학교',
+			schoolName: '대한 컴퓨터 학교',
 			department: departmentList[Math.floor(Math.random() * departmentList.length)],
 			educationType: educationTypeList[Math.floor(Math.random() * educationTypeList.length)],
 			grade: gradeList[Math.floor(Math.random() * gradeList.length)],
@@ -677,14 +681,19 @@ function addTenThousandResumes(){
 		}
 
 		// 경력 수집
-		const positionList = ["프론트엔드 개발자", "백엔드 개발자", "풀스택 개발자", "웹 개발자", "앱 개발자", "모바일 개발자", "임베디드 개발자", "게임 개발자", "AI 엔지니어", "데이터 엔지니어", "데이터 사이언티스트", "머신러닝 엔지니어", "DevOps 엔지니어", "보안 엔지니어", "시스템 엔지니어", "네트워크 엔지니어", "QA 엔지니어", "테스트 엔지니어", "DBA (데이터베이스 관리자)", "소프트웨어 아키텍트", "PM (프로젝트 매니저)", "PO (프로덕트 오너)", "기술 지원 엔지니어", "기술 컨설턴트", "UI/UX 디자이너"];
+		const positionList = ["프론트엔드 개발자", "백엔드 개발자", "풀스택 개발자", "웹 개발자", "AI 엔지니어", "DBA (데이터베이스 관리자)"];
+		const startDateList = ['2004.03', '2005.03', '2006.03', '2007.03', '2008.03'];
+		const startDate = startDateList[Math.floor(Math.random() * startDateList.length)];
+		const position = positionList[Math.floor(Math.random() * positionList.length)];
+		const endDate = "2010.03";
+		const careerYear = (Number)(endDate.substring(0,4)) - (Number)(startDate.substring(0,4));
 		
 		const career = {
-			startDate: '2000.02',
-			endDate: '2010.02',
-			companyName: "비밀의컴퍼니",
-			position: positionList[Math.floor(Math.random() * positionList.length)],
-			careerDescription: `${positionList[Math.floor(Math.random() * positionList.length)]} 업무를 담당했습니다.`
+			startDate: startDate,
+			endDate: endDate,
+			companyName: "경력주는 컴퍼니",
+			position: position,
+			careerDescription: `${positionList[Math.floor(Math.random() * positionList.length)]} 업무를 ${careerYear}년 담당했습니다.`
 		};
 
 		if (career.companyName || career.position) {
@@ -712,15 +721,21 @@ function addTenThousandResumes(){
 		}
 
 		// 기타사항 (자격증 갯수 : 최대 5개)
-		const certCount = Math.floor(Math.random() * 5) + 1; //컴터자격증 최대 5개 
+		const computerCertList = ["정보처리기사", "SQLD", "리눅스마스터", "OCP", "ADSP", "데이터분석준전문가", "리눅스 마스터 2급"];
+		const languageCertList = ["토익", "토플", "텝스", "토익스피킹", "오픽", "JPT", "HSK"];
+		const certCount = Math.floor(Math.random() * 3) + 1; //컴터자격증 최대 3개 
 		const langCount = Math.floor(Math.random() * 2) + 1; //어학자격증 최대 2개
-		const computerCertList = ["정보처리기사", "SQLD", "리눅스마스터", "OCP", "ADSP", "데이터분석준전문가"];
-		const languageCertList = ["토익", "토플", "텝스", "토익스피킹", "오픽", "JPT", "HSK", "기타"];
 		
-		for(let j = 0; j < certCount && j < computerCertList.length; j++){
+		for(let j = 0; j < certCount; j++){
+			
+			const index = Math.floor(Math.random() * computerCertList.length);
+			const value = computerCertList[index];
+			
+			computerCertList.splice(index, 1); //배열에서 해당 index로부터 1개 데이터를 꺼냄. (꺼내면 원래 배열에서는 사라짐)
+			
 			const etcItem = {
 				endDate: '2005.05',
-				activityName: computerCertList[j],
+				activityName: value,
 				recordType: "자격증",
 				relatedAgency: "한국자격증공단",
 				detailContent: `${computerCertList[j]} 자격증 취득`
@@ -732,9 +747,15 @@ function addTenThousandResumes(){
 		}
 		
 		for(let j = 0; j < langCount && j < languageCertList.length; j++){
+			
+			const index = Math.floor(Math.random() * languageCertList.length);
+			const value = languageCertList[index];
+			
+			languageCertList.splice(index, 1); 
+			
 			const etcItem = {
-				endDate: '2002.12',
-				activityName: languageCertList[j],
+				endDate: '2006.12',
+				activityName: value,
 				recordType: "어학",
 				relatedAgency: "세계언어학협회",
 				detailContent: `${languageCertList[j]} 자격증 취득`
