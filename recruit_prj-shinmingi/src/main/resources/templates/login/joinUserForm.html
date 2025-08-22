@@ -575,12 +575,18 @@ function addTenThousandUsers(){
 		// 이메일 / 비밀번호
 		let email = `testuser${i}@test.com`;
 		let password = `Testuser${i}!`;
+		let birth = '';
 
 		// 생일
 		if(Math.random() < 0.7){
-			let birth = `200${num()}-0${num()}-01`;
+			let n = num(); //성인만 나오게 
+			if(n > 4){
+				birth = `2004-0${num()}-01`;				
+			} else {
+				birth = `200${n}-0${num()}-01`;
+			}
 		} else {
-			let birth = `199${num()}-0${num()}-05`;
+			birth = `199${num()}-0${num()}-05`;
 		}
 
 		// 성별
@@ -613,6 +619,7 @@ function addTenThousandUsers(){
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}
 			return response.text();
+			//return response.json(); // 서버에서 JSON 응답 보내줄 때
 		})
 		.then(data => {
 			console.log(`회원 ${i} 가입 성공:`, data);
