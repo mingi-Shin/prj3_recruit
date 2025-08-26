@@ -48,7 +48,7 @@ public class CustomUser implements UserDetails{
 		return userDTO.getEmail();
 	}
 	
-	//헷갈리니까 getEmail도 추가하자
+	//getUsername() 헷갈리니까 getEmail도 추가하자
 	public String getEmail() {
 		return userDTO.getEmail();
 	}
@@ -61,7 +61,7 @@ public class CustomUser implements UserDetails{
 		return userDTO.getCorpNo();
 	}
 	
-	//기업회원은 초기에 이름이 없음 
+	//기업회원은 초기에 이름이 없음 -> 이메일주소 반환.  
 	public String getName() {
 		if(userDTO.getName() == null) {
 			return userDTO.getEmail();
@@ -69,7 +69,7 @@ public class CustomUser implements UserDetails{
 		return userDTO.getName();
 	}
 	
-	//프로필 사진 가져오기 
+	//프로필 사진 가져오기 -> 없으면 null 
 	public String getProfileImage() {
 		if(userDTO.getProfileImage() == null) {
 			return null;

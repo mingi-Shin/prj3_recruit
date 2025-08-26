@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -28,25 +29,28 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
 			Authentication authentication) throws IOException, ServletException {
 		
+	/**
+	 * 유저 정보 	
+	 */
 		CustomUser customUser = (CustomUser) authentication.getPrincipal();
 		
-		String tempJwt = jwtUtil.createJwt("tempJwt", customUser.getUserDTO(), 60 * 60 * 1000L); //리팩토링 할 때 access & refresh로 바꾸기  
-    //String access = jwtUtil.createJwt("access", customUser.getUserDTO(), 60 * 10 * 1000L); //10분
-    //String refresh = jwtUtil.createJwt("refresh", customUser.getUserDTO(), 60 * 60 * 86400000L); //24시간 
+	/**
+	 * 토큰 생성 (매개변수 : 카테고리(access, refresh), 유저정보, 만료시간) 
+	 */
+		//String tempJwt = jwtUtil.createJwt("tempJwt", customUser.getUserDTO(), 60 * 60 * 1000L); //리팩토링 할 때 access & refresh로 바꾸기  
+    String access = jwtUtil.createJwt("access", customUser.getUserDTO(), 60 * 10 * 1000L); //10분
+    String refresh = jwtUtil.createJwt("refresh", customUser.getUserDTO(), 60 * 60 * 86400000L); //24시간 
     
-    // access -> 이렇게 헤더에 발급 후, 프론트에서 이걸 로컬 스토리지에 저장 (실무 방식)
-    //response.setHeader("access", access);
+  /**
+   * 생성된 토큰을 분배 : access -> header (프론트에서 로컬 스토리지에 저장하게됨), refresh -> cookie
+   */
+    response.setHeader("access", access);
     
-    // refresh -> 쿠키 생성 후 저장
-    ResponseCookie cookie = ResponseCookie.from("Authorization", tempJwt) //ResponseCookie : 쿠키를 String 형태로 직접 생성해 주는 빌더
-	    .httpOnly(true)//js접근불가 (document.cookie 불가하게됨) -> xss공격을 방어 
-	    .secure(false) //HTTPS에서만 동작 (개발시 false)
-	    .sameSite("Strict") //CSRF방지 
-	    .path("/") //전체경로에 대해 쿠키 전송 
-	    .maxAge(Duration.ofHours(1)) //쿠키 1시간 유지 (JWT보다 길어야 겠지 )
-	    //.maxAge(Duration.ofHours(24)) //refresh 쿠키는 24시간 유지 
-	    .build();
-
+    ResponseCookie responseCookie = createCookie(refresh); //refreshJwt 매개변수로 refresh 쿠키 생성 
+    response.addCookie(cookie);
+    
+    
+    
     response.setHeader("Set-Cookie", cookie.toString()); // "Set-Cookie"는 서버 → 클라이언트로 쿠키를 보내기 위한 고정된 HTTP 응답 헤더
     
     response.setStatus(HttpStatus.OK.value());
@@ -68,6 +72,18 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
     	response.sendRedirect("/");
     }
     
+	}
+	
+	private ResponseCookie createCookie(String refreshJwt) {
+		
+		ResponseCookie cookie = ResponseCookie.from("refresh", refreshJwt) //ResponseCookie : 스프링부트의 쿠키 생성클래스 
+														.httpOnly(true) //js접근불가 (document.cookie 불가하게됨) -> xss공격을 방어 
+														.secure(false) //HTTPS에서만 동작 (개발시 false)
+														.sameSite("Strict") //CSRF방지 
+														.path("/") //전체경로에 대해 쿠키 전송 
+														.maxAge(Duration.ofHours(24)) //쿠키 24시간 유지 (JWT보다 길어야 겠지 )
+														.build();
+		return cookie;
 	}
 
 }
