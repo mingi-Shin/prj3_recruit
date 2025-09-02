@@ -62,7 +62,7 @@ public class JWTFIlter extends OncePerRequestFilter{
 			System.out.println(accessToken);
 		}
 		
-		//accessToken 없으면 다음필터로 
+		// 1. accessToken 없으면 다음필터로 
 		if(accessToken == null) {
 			
 			System.out.print("-- JWTFilter 디버깅 -- accessToken: ");
@@ -72,22 +72,7 @@ public class JWTFIlter extends OncePerRequestFilter{
 			return;
 		}
 		
-		//accessToken 만료시간 체크
-		try {
-			jwtUtil.isExpired(accessToken);
-		} catch (ExpiredJwtException e) {
-			e.printStackTrace();
-			
-			//response Body
-			PrintWriter writer = response.getWriter();
-			writer.print("access token expired!");
-		
-			//response status code
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); //401 
-			return;
-		}
-		
-		//토큰이 access || refresh 인지 확인(발급시에 페이로드에 명시)
+		// 2. 토큰이 access 인지 확인(발급시에 페이로드에 명시)
 		String category = jwtUtil.getCategory(accessToken);
 		
 		System.out.println("JWTFilter 디버깅 : " + category);
@@ -103,9 +88,23 @@ public class JWTFIlter extends OncePerRequestFilter{
 			return;
 		}
 		
-		//refresh 검증은? 
 		
+		// 3. accessToken 만료시간 체크
+		try {
+			jwtUtil.isExpired(accessToken);
+		} catch (ExpiredJwtException e) {
+			e.printStackTrace();
+			
+			//response Body
+			PrintWriter writer = response.getWriter();
+			writer.print("access token expired!");
 		
+			//response status code
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); //401 
+			return;
+		}
+		
+
 		//accessToken이 정상이니 SecurityContextHolder세션에 저장하자, principal에 들어갈 것들: (CustomUser 클래스 생성 -> Authentication 인터페이스의 구현체인 UsernamePasswordAuthenticationToken 객체로 생성 )
 		// 참고로 stateless 모드이므로 요청이 끝나면 Context는 소멸 (메모리에 남지않는다는 의미) 
 		UserDTO uDTO = new UserDTO();

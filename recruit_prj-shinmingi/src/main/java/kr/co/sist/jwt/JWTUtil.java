@@ -96,7 +96,7 @@ public class JWTUtil {
 	public Boolean isExpired(String token) { //토큰에서 만료시간 검증
 		
   	try {
-		return Jwts.parser()
+  		return Jwts.parser()
 					.verifyWith(secretKey)
 					.build()
 					.parseSignedClaims(token)
@@ -104,7 +104,7 @@ public class JWTUtil {
 					.getExpiration().before(new Date());
 		} catch (JwtException e) {
 			//e.printStackTrace();
-			throw new IllegalArgumentException("Invalid JWT token:만료됨", e);
+			throw new IllegalArgumentException("Invalid JWT token: 만료됨", e);
 		}
   }
     
