@@ -38,22 +38,22 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 	 * 토큰 생성 (매개변수 : 카테고리(access, refresh), 유저정보, 만료시간) 
 	 */
 		//String tempJwt = jwtUtil.createJwt("tempJwt", customUser.getUserDTO(), 60 * 60 * 1000L); //리팩토링 할 때 access & refresh로 바꾸기  
-    String access = jwtUtil.createJwt("access", customUser.getUserDTO(), 60 * 10 * 1000L); //10분
-    String refresh = jwtUtil.createJwt("refresh", customUser.getUserDTO(), 60 * 60 * 86400000L); //24시간 
+    String accessToken = jwtUtil.createJwt("access", customUser.getUserDTO(), 60 * 10 * 1000L); //10분
+    String refreshToken = jwtUtil.createJwt("refresh", customUser.getUserDTO(), 60 * 60 * 86400000L); //24시간 
     
   /**
    * 생성된 토큰을 분배 : access -> header (프론트에서 로컬 스토리지에 저장하게됨), refresh -> cookie
+   * setHeader("Set-Cookie")는 덮어써서 하나만 되니까, addHeader 메서드를 써야해, 
+   * 브라우저가 응답을 받을 때, Set-Cookie 헤더를 자동으로 파싱해서 내부 쿠키 저장소에 저장하는 거예요.
+   * 다른 이름의 헤더는 쿠키로 가지 않아  
    */
-    response.setHeader("access", access);
+    // access는 Bearer 붙여서 Authorization 이름의 Header로 
+    response.setHeader("Authorization", "Bearer " + accessToken);
+    // refresh는 Set-Cookie 붙여서 쿠키로 가게끔 
+    ResponseCookie responseCookie = createCookie(refreshToken); //refreshJwt 매개변수로 refresh 쿠키 생성 
+    response.setHeader("Set-Cookie", responseCookie.toString()); // "Set-Cookie"는 서버 → 클라이언트로 쿠키를 보내기 위한 고정된 HTTP 응답 헤더
     
-    ResponseCookie responseCookie = createCookie(refresh); //refreshJwt 매개변수로 refresh 쿠키 생성 
-    response.addCookie(cookie);
-    
-    
-    
-    response.setHeader("Set-Cookie", cookie.toString()); // "Set-Cookie"는 서버 → 클라이언트로 쿠키를 보내기 위한 고정된 HTTP 응답 헤더
-    
-    response.setStatus(HttpStatus.OK.value());
+    response.setStatus(HttpStatus.OK.value()); // 200, 그냥 코드 가독성을 위해 “성공임을 명확히 표시” 하려고 넣은 것
     
     //access토큰을 ..?컨트롤러에서? fetch에서?? 로컬 스토리지에 저장하는걸 어디서 하지 ??
     //response.sendRedirect("/user/loginProcess/jwtProcess?access=" + access + "&role="+ customUser.getRole());
@@ -74,10 +74,11 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
     
 	}
 	
-	private ResponseCookie createCookie(String refreshJwt) {
+	//ResponseCookie : 스프링부트의 쿠키 생성클래스
+	private ResponseCookie createCookie(String refreshJwt) { 
 		
-		ResponseCookie cookie = ResponseCookie.from("refresh", refreshJwt) //ResponseCookie : 스프링부트의 쿠키 생성클래스 
-														.httpOnly(true) //js접근불가 (document.cookie 불가하게됨) -> xss공격을 방어 
+		ResponseCookie cookie = ResponseCookie.from("refresh", refreshJwt)  
+														.httpOnly(true) //js접근불가 ('document.cookie' 불가하게됨) -> xss공격을 방어 
 														.secure(false) //HTTPS에서만 동작 (개발시 false)
 														.sameSite("Strict") //CSRF방지 
 														.path("/") //전체경로에 대해 쿠키 전송 

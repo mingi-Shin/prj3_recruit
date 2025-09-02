@@ -35,7 +35,7 @@ public class JWTFIlter extends OncePerRequestFilter{
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		
-		String authorization = null;
+		/** 더이상 Authrozation은 쿠키가 아님, 헤더임 
 		Cookie[] cookies = request.getCookies();
 		if(cookies == null || cookies.length == 0) {
 			filterChain.doFilter(request, response);
@@ -48,14 +48,26 @@ public class JWTFIlter extends OncePerRequestFilter{
 			}
 		}
 		String accessToken = authorization; //사용자 정보 보유중 
+		*/
+		
 		
 		/**
 		 * 07.23 추가(access token 검증)
 		 */
-		//String accessToken = request.getHeader("access"); // != getCookies() 주의
+		String accessToken = null;
+		
+		if(request.getHeader("Authorization").startsWith("Bearer")) {
+			accessToken = request.getHeader("Authorization").split(" ")[1]; // 
+			System.out.print("-- JWTFilter 디버깅 -- accessToken: ");
+			System.out.println(accessToken);
+		}
 		
 		//accessToken 없으면 다음필터로 
 		if(accessToken == null) {
+			
+			System.out.print("-- JWTFilter 디버깅 -- accessToken: ");
+			System.out.println(accessToken);
+			
 			filterChain.doFilter(request, response);
 			return;
 		}
@@ -71,16 +83,16 @@ public class JWTFIlter extends OncePerRequestFilter{
 			writer.print("access token expired!");
 		
 			//response status code
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); //401 
 			return;
 		}
 		
-		//토큰이 access인지 확인(발급시에 페이로드에 명시)
+		//토큰이 access || refresh 인지 확인(발급시에 페이로드에 명시)
 		String category = jwtUtil.getCategory(accessToken);
 		
 		System.out.println("JWTFilter 디버깅 : " + category);
 
-		if(!category.equals("tempJwt")) { 
+		if(!category.equals("access")) { 
 			
 			//response Body
 			PrintWriter writer = response.getWriter();
@@ -91,7 +103,11 @@ public class JWTFIlter extends OncePerRequestFilter{
 			return;
 		}
 		
+		//refresh 검증은? 
+		
+		
 		//accessToken이 정상이니 SecurityContextHolder세션에 저장하자, principal에 들어갈 것들: (CustomUser 클래스 생성 -> Authentication 인터페이스의 구현체인 UsernamePasswordAuthenticationToken 객체로 생성 )
+		// 참고로 stateless 모드이므로 요청이 끝나면 Context는 소멸 (메모리에 남지않는다는 의미) 
 		UserDTO uDTO = new UserDTO();
 		uDTO.setEmail(jwtUtil.getEmail(accessToken));
 		uDTO.setName(jwtUtil.getName(accessToken));
@@ -107,7 +123,7 @@ public class JWTFIlter extends OncePerRequestFilter{
 		//시큐리티 세션에 저장 (stateless 동작)
 		SecurityContextHolder.getContext().setAuthentication(authToken);
 		
-		//끝. 다음 필터로 이동
+		//끝~ 다음 필터로 이동
 		filterChain.doFilter(request, response);
 
 		

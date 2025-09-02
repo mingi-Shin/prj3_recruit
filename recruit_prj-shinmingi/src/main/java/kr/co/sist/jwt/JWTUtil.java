@@ -155,7 +155,7 @@ public class JWTUtil {
   
   
 	// JWT생성: 더 많은 정보를 담고싶다면 매개변수에 포함.
-  // category = access, referesh 추가 (25.07.23)
+  // category = access, referesh 
 	//public String createJwt(String email, String name, String role, Long corpNo, Long expiredMs, String iss) {
 	public String createJwt(String category, UserDTO user ,Long expiredMs) {
 
