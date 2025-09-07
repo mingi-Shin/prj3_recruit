@@ -3,6 +3,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import jakarta.servlet.http.HttpServletRequest;
 import kr.co.sist.jwt.CustomUser;
@@ -35,22 +36,13 @@ public class MainController {
 	
 	@GetMapping("/corp/main")
 	public String corpMainPage(HttpServletRequest request, @AuthenticationPrincipal CustomUser user, Model model) {
-
-		if(user == null) {
-			//System.out.println("디버깅 / 회원정보 상태 : " + "비회원, 로그인 필요 ");
+		// @AuthenticationPrincipal : Spring Security가 SecurityContextHolder에서 현재 인증(Authentication) 정보를 꺼내서 주입해주는 어노테이션, 현재 없음 
+		
+		CustomUser loginUser = null;
+		String header = request.getHeader("Authorization");
+		if(header != null && header.startsWith("Bearer ")) {
+			String accessToken = header.split(" ")[1];
 			
-		} else {
-			//System.out.println("디버깅 / 회원정보 상태 : " + user);
-			UserEntity ueEntity = ur.getById(user.getEmail());
-			
-			if(ueEntity.getPhone() != null) {
-				String enUserPhone = ueEntity.getPhone();
-				String deUserPhone = cu.decryptText(enUserPhone);
-				
-				
-				model.addAttribute("encryptPhone", enUserPhone);
-				model.addAttribute("decryptPhone", deUserPhone);
-			}
 		}
 		
 		//테스트

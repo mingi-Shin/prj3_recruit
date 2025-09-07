@@ -18,6 +18,25 @@
 	  menu.classList.toggle("active");
 	}
 
+	// 4. 로그아웃 함수 (토큰 제거)
+	function logout() {
+	    // 로컬 스토리지에서 토큰 제거
+	    localStorage.removeItem('accessToken');
+	    localStorage.removeItem('userRole');
+	    
+	    // 서버에 로그아웃 요청 (Refresh Token 삭제를 위해)
+	    fetch('/api/auth/logout', {
+	        method: 'POST',
+	        credentials: 'include'  // 쿠키 포함
+	    }).then(() => {
+	        // 로그인 페이지로 이동
+	        window.location.href = '/login';
+	    }).catch(error => {
+	        console.error('로그아웃 요청 오류:', error);
+	        // 오류가 발생해도 로그인 페이지로 이동
+	        window.location.href = '/login';
+	    });
+	}
 </script>
 	
 	<!-- corp-header.jsp -->
@@ -31,7 +50,9 @@
 	    <!-- GlobalHandler에서 user로 넘겨주고 있다. #authentication으로 securityContextHolder 세션의 객체를 꺼내도 된다. -->
 	    	<div id="userInfo" sec:authorize="hasRole('ROLE_CORP')" >
 		      <a th:href="@{/void}" th:text="${user.name}" class="corp-header-link" style="color: #1abc9c; text-decoration: underline;" onclick="alert('마이페이지 링크입니다.')" ></a> |
-		      <a th:href="@{/logout}" class="corp-header-link">로그아웃</a> |
+		      
+		      <a th:href="#" onclick="logout(); return false;" class="corp-header-link">로그아웃</a> |
+		      
 		      <a th:href="@{/user/help/help}" class="corp-header-link">고객센터</a> |
 		      <a th:href="@{/}" class="corp-header-link">구직서비스</a>
 		      <input type="hidden" id="userEmail" th:value="${user.email}" >

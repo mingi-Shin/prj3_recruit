@@ -39,7 +39,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 	 */
 		//String tempJwt = jwtUtil.createJwt("tempJwt", customUser.getUserDTO(), 60 * 60 * 1000L); //리팩토링 할 때 access & refresh로 바꾸기  
     String accessToken = jwtUtil.createJwt("access", customUser.getUserDTO(), 60 * 10 * 1000L); //10분
-    String refreshToken = jwtUtil.createJwt("refresh", customUser.getUserDTO(), 60 * 60 * 86400000L); //24시간 
+    String refreshToken = jwtUtil.createJwt("refresh", customUser.getUserDTO(), 24 * 60 * 60 * 1000L); //24시간 
     
   /**
    * 생성된 토큰을 분배 : access -> header (프론트에서 로컬 스토리지에 저장하게됨), refresh -> cookie
@@ -49,14 +49,12 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
    */
     // access는 Bearer 붙여서 Authorization 이름의 Header로 
     response.setHeader("Authorization", "Bearer " + accessToken);
+    
     // refresh는 Set-Cookie 붙여서 쿠키로 가게끔 
     ResponseCookie responseCookie = createCookie(refreshToken); //refreshJwt 매개변수로 refresh 쿠키 생성 
     response.setHeader("Set-Cookie", responseCookie.toString()); // "Set-Cookie"는 서버 → 클라이언트로 쿠키를 보내기 위한 고정된 HTTP 응답 헤더
     
     response.setStatus(HttpStatus.OK.value()); // 200, 그냥 코드 가독성을 위해 “성공임을 명확히 표시” 하려고 넣은 것
-    
-    //access토큰을 ..?컨트롤러에서? fetch에서?? 로컬 스토리지에 저장하는걸 어디서 하지 ??
-    //response.sendRedirect("/user/loginProcess/jwtProcess?access=" + access + "&role="+ customUser.getRole());
     
     //기업회원 로그인 성공시, 기업메인페이지로 이동  
     boolean hasRoleCorp = customUser.getAuthorities().stream()
@@ -65,12 +63,24 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
     boolean hasRoleUser = customUser.getAuthorities().stream()
     												.anyMatch(auth -> auth.getAuthority().equals("ROLE_USER"));
     //원하는 대로 리다이렉트 
+    /**
+     * 주의! SecurityContextHolder는 기본적으로 한개의 HTTP요청(Request)동안만 유지 
+     * 로그인 성공 후 sendRedirect()를 사용하면, 서버가 302응답을 클라이언트에게 보내고 
+     * 브라우저가 새 요청(GET)을 만들어 서버에 요청 -> 새 요청이므로 JWTFilter를 또 가는데, 
+     * access토큰정보가 없어서 SecurityContextHolder에 정보가 저장안됨. 따라서 ${user}가 null.
+     * 
+     *  과거에는 쿠키라서 가져올수 있었는데, header에 넣고나서는 redirect되면 초기화돼서.. 그럼결국 setHeader는 의미가 없네 
+     */
+    String targetUrl = "/";
     if(hasRoleCorp) {
-    	response.sendRedirect("/corp/main");
+    	targetUrl = "/corp/main";
     } 
     if(hasRoleUser) {
-    	response.sendRedirect("/");
+    	targetUrl = "/";
     }
+    //response.sendRedirect(targetUrl);
+    
+    request.getRequestDispatcher(targetUrl).forward(request, response);
     
 	}
 	

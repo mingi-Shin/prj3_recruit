@@ -64,8 +64,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 	}
 
 }
-
-
 /**
  * Spring Security는 내부적으로 UsernameNotFoundException을 가로채서 BadCredentialsException으로 바꿔버리기 때문입니다
  * 이것은 보안상 이유로 "아이디가 틀렸는지", "비밀번호가 틀렸는지"를 구분하지 않기 위해 의도적으로 같은 에러로 덮는 것입니다.

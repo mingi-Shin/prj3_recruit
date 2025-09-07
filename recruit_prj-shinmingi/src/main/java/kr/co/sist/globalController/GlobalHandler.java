@@ -28,6 +28,8 @@ import kr.co.sist.jwt.CustomUser;
 public class GlobalHandler {
 	
 	/**
+	 * 
+	 * 이 코드는 요청이 들어올 때마다 SecurityContextHolder에서 Authentication 가져오기용..
 	 * controller 에서 ( @ModelAttribute("user") CustomUser user) 혹은 view에서 ${user}로 호출 
 	 * 	vs
 	 * 만약 @ModelAttribute("user")	 선언을 안한다면,

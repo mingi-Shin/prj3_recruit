@@ -35,6 +35,9 @@ public class JWTFIlter extends OncePerRequestFilter{
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 		
+		Authentication testAuthentication = SecurityContextHolder.getContext().getAuthentication();
+		System.out.println(testAuthentication);
+		
 		/** 더이상 Authrozation은 쿠키가 아님, 헤더임 
 		Cookie[] cookies = request.getCookies();
 		if(cookies == null || cookies.length == 0) {
@@ -56,17 +59,16 @@ public class JWTFIlter extends OncePerRequestFilter{
 		 */
 		String accessToken = null;
 		
-		if(request.getHeader("Authorization").startsWith("Bearer")) {
-			accessToken = request.getHeader("Authorization").split(" ")[1]; // 
-			System.out.print("-- JWTFilter 디버깅 -- accessToken: ");
-			System.out.println(accessToken);
+		String header = request.getHeader("Authorization"); // NPE조심 .. 
+		
+		if(header != null && header.startsWith("Bearer")) {
+			accessToken = request.getHeader("Authorization").split(" ")[1];
+			
+			System.out.println("-- JWTFilter 디버깅 -- accessToken: " + accessToken);
 		}
 		
 		// 1. accessToken 없으면 다음필터로 
 		if(accessToken == null) {
-			
-			System.out.print("-- JWTFilter 디버깅 -- accessToken: ");
-			System.out.println(accessToken);
 			
 			filterChain.doFilter(request, response);
 			return;
@@ -75,7 +77,7 @@ public class JWTFIlter extends OncePerRequestFilter{
 		// 2. 토큰이 access 인지 확인(발급시에 페이로드에 명시)
 		String category = jwtUtil.getCategory(accessToken);
 		
-		System.out.println("JWTFilter 디버깅 : " + category);
+		System.out.println("-- JWTFilter 디버깅 -- category : " + category);
 
 		if(!category.equals("access")) { 
 			

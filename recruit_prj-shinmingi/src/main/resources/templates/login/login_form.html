@@ -15,7 +15,7 @@ $(function(){
 	    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
 	    // 다시 클릭한 탭에 active 클래스 추가
 	    this.classList.add('active');
-    });
+    	});
 	});
 	
 	//아이디창 누르면 alert사라짐
@@ -30,6 +30,26 @@ $(function(){
 		alert(errorMessage);
 	}
 	
+	//HTML 폼과 연동
+	const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // 기본 폼 제출 방지
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // 입력값 검증
+            if (!email || !password) {
+                alert('이메일과 비밀번호를 입력해주세요.');
+                return;
+            }
+            
+            // 로그인 API 호출
+            loginWithFetch(email, password);
+        });
+    }
+	
 });//ready
 
 function joinPageForm(){
@@ -40,6 +60,50 @@ function joinPageForm(){
 	document.getElementById('joinPageLink').href = href;
 }
 
+/**
+ * 프론트엔드에서 로그인 API 호출하는 예시
+ * jQuery, Fetch API, Axios 등을 사용할 수 있음
+ */
+ async function loginWithFetch(email,password){
+	try {
+		const response = await fetch('/api/auth/login', {
+			method : 'POST',
+			headers : {
+				'Content-Type' : 'application/json',
+			},
+			body : JSON.stringfy({
+				email : email,
+				password : password
+			})
+		});
+		
+		const result = await response.json();
+		if(result.sucess){
+			//로그인 성공시 
+			console.log('로그인 성공 ', result.message);
+			
+			//Access 토큰을 localStorage에 저장 
+			localStorage.setItem('accessToken', result.accessToken);
+			
+			// 사용자 역할 저장 (필요 시)
+            localStorage.setItem('userRole', result.role);
+			
+            // 리다이렉트 URL로 이동
+            window.location.href = result.redirectUrl;
+		
+		} else {
+            // 로그인 실패 시
+            console.error('로그인 실패:', result.message);
+            alert('로그인 실패: ' + result.message);
+        }
+		
+	} catch (error) {
+        console.error('로그인 요청 오류:', error);
+        alert('로그인 중 오류가 발생했습니다.');
+    }
+	
+	
+}
 
 </script>
 </head>
