@@ -150,7 +150,7 @@ public class SecurityConfig {
     }
     
     /**
-     * 	커스텀 로그인 필터 빈 등록 
+     * 	커스텀 로그인 필터를 빈 등록 
      */
     @Bean
     public CustomUsernamePasswordAuthenticationFilter customUsernamePasswordAuthenticationFilter() throws Exception {
@@ -159,6 +159,7 @@ public class SecurityConfig {
       CustomUsernamePasswordAuthenticationFilter filter = new CustomUsernamePasswordAuthenticationFilter(jwtUtil);
       
       // AuthenticationManager는 setter로 주입 (필수!)
+      // 이게 무슨 일을 하지?
       filter.setAuthenticationManager(authenticationManager(authenticationConfiguration));
       
       // 로그인 URL 설정 (선택사항, 기본값: /api/auth/login)
