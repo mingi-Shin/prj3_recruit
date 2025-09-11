@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<!-- @Mapper와 패키지명, 인터페이스명 같아야함 -->
+<mapper namespace="kr.co.sist.corp.mapper.JobPostingTechStackMapper">    
+
+<!-- 공고등록 : 중간테이블 등록 -->
+<insert id="insertJobPostingTechStack" parameterType="map">
+INSERT INTO JOB_POSTING_TECH_STACK (job_posting_seq, tech_stack_seq) 
+VALUES (#{jobPostingSeq}, #{techStackSeq})
+</insert>
+
+<!-- 공고등록 : 중간테이블 등록, 오라클 전용 문법 insert all -->
+<insert id="insertJobPostingTechStackBatch" parameterType="java.util.List">
+  INSERT ALL
+    <foreach collection="techStackVOList" item="tech">
+      INTO JOB_POSTING_TECH_STACK (job_posting_seq, tech_stack_seq)
+      VALUES (#{tech.jobPostingSeq}, #{tech.techStackSeq})
+    </foreach>
+  SELECT 1 FROM DUAL
+</insert>
+
+
+
+
+
+
+
+
+
+
+
+<!-- 공고 수정 1. 기존의 기술스택 데이터 삭제 -->
+<delete id="deleteJobPostingTechStack" parameterType="int">
+DELETE FROM JOB_POSTING_TECH_STACK WHERE job_posting_seq = #{jobPostingSeq}
+</delete>
+<!-- 공고 수정 2. 새로운 기술스택 등록 : 위에꺼 재활용 -->
+
+
+
+</mapper>

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>민기 인력 - 고객센터</title>
+    <th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+    <link rel="stylesheet" th:href="@{/user/css/header.css}" />
+    <link rel="stylesheet" th:href="@{/user/css/footer.css}" />
+    <link rel="stylesheet" th:href="@{/user/help/help.css}" />
+
+</head>
+<body>
+    <header>
+        <div th:replace="~{fragments/header :: header}"></div>
+    </header>
+
+    <main>
+        <div class="container">
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="page-title">
+                    고객센터
+                    <div class="help-icon">?</div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="tab-nav">
+                    <button class="tab-button active" onclick="switchTab('user',event)">사용자 고객센터</button>
+                    <button class="tab-button" onclick="switchTab('company',event)">기업 고객센터</button>
+                </div>
+
+					           <!-- User Notice Section -->
+					<div class="notice-section" id="user-notice-section">
+					    <div class="loading">
+					        <div class="loading-spinner"></div>
+					        공지사항을 불러오는 중...
+					    </div>
+					</div>
+				
+
+
+                    <!-- FAQ Section -->
+                    <div class="faq-section">
+                        <div class="faq-title">자주 묻는 질문<strong>(사용자)</strong></div>
+                        <div id="user-faq-container">
+                            <div class="loading">
+                                <div class="loading-spinner"></div>
+                                FAQ를 불러오는 중...
+                            </div>
+                        </div>
+                    </div>
+                	
+
+                    <!-- Contact Section -->
+                    <div class="contact-section">
+                        <div class="contact-title">다른 질문이 있으신가요?</div>
+                        <button class="contact-button" onclick="openContact()">문의하기</button>
+                    </div>
+                </div>
+
+                <!-- Company Tab Content -->
+				              <div id="user-tab" class="tab-content active">
+				  <div class="notice-section" id="user-notice-section">...</div>
+				  <div class="faq-section">...</div>
+				  <div class="contact-section">...</div>
+				</div>
+
+                    <!-- Notice Section -->
+                  
+							
+								<!-- Company Notice Section -->
+					<div class="notice-section" id="company-notice-section">
+					    <div class="loading">
+					        <div class="loading-spinner"></div>
+					        공지사항을 불러오는 중...
+					    </div>
+					</div>
+                	
+                    <!-- FAQ Section -->
+                    <div class="faq-section">
+                        <div class="faq-title">자주 묻는 질문<strong>(기업)</strong></div>
+                        <div id="company-faq-container">
+                            <div class="loading">
+                                <div class="loading-spinner"></div>
+                                FAQ를 불러오는 중...
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Section -->
+                    <div class="contact-section">
+                        <div class="contact-title">다른 질문이 있으신가요?</div>
+                        <button class="contact-button" onclick="openContact()">문의하기</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 문의하기 모달 -->
+    <div id="inquiryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">문의하기</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group usertype-selector"></div>
+                <form id="inquiryForm" class="inquiry-form">
+                    <label>문의 유형 선택 <span class="required">*</span></label>
+                    <div>
+                        <button type="button" class="usertype-btn active" data-usertype="user">사용자</button>
+                        <button type="button" class="usertype-btn" data-usertype="company">기업</button>
+                    </div>
+                    <input type="hidden" id="userType" name="userType" value="user" />
+                    
+                    <div class="form-group">
+                        <label for="inquiryType">문의 유형 <span class="required">*</span></label>
+                        <select id="inquiryType" name="inquiryType" required>
+                            <option value="">문의 유형을 선택해주세요</option>
+                            <option value="general">일반 문의</option>
+                            <option value="technical">기술 문의</option>
+                            <option value="account">계정 문의</option>
+                            <option value="recruitment">구직 관련</option>
+                            <option value="company-general">기업 일반</option>
+                            <option value="company-service">기업 서비스</option>
+                            <option value="company-payment">기업 결제</option>
+                            <option value="other">기타</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inquiryTitle">제목 <span class="required">*</span></label>
+                        <input type="text" id="inquiryTitle" name="inquiryTitle" required placeholder="문의 제목을 입력해주세요" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inquiryContent">문의 내용 <span class="required">*</span></label>
+                        <textarea
+                            id="inquiryContent"
+                            name="inquiryContent"
+                            required
+                            placeholder="문의 내용을 자세히 작성해주세요"
+                            maxlength="1000"
+                            oninput="updateCharCount()"
+                        ></textarea>
+                        <div class="character-count">
+                            <span id="charCount">0</span>/1000
+                        </div>
+                    </div>
+
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">취소</button>
+                        <button type="submit" class="btn btn-primary">문의하기</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div th:replace="~{fragments/footer :: footer}"></div>
+    </footer>
+
+    <script type="text/javascript">
+        // 현재 활성 탭
+        let currentTab = "user";
+
+        // Tab switching functionality
+        function switchTab(tab,event) {
+            document.querySelectorAll(".tab-button").forEach((btn) =>
+                btn.classList.remove("active")
+            );
+            document.querySelectorAll(".tab-content").forEach((content) =>
+                content.classList.remove("active")
+            );
+
+            event.target.classList.add("active");
+            document.getElementById(tab + "-tab").classList.add("active");
+
+            currentTab = tab;
+            loadFAQs(tab);
+
+            // 문의하기 모달의 userType 값도 변경
+            document.getElementById("userType").value = tab;
+        }
+
+        // FAQ 데이터 로드
+        function loadFAQs(userType) {
+            const container = document.getElementById(userType + "-faq-container");
+
+            // 로딩 상태 표시
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    FAQ를 불러오는 중...
+                </div>
+            `;
+
+            // API 호출
+            fetch(`/user/help/api/faqs?userType=${userType}`)
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    renderFAQs(container, data, userType);
+                })
+                .catch((error) => {
+                    console.error("FAQ 로드 중 오류:", error);
+                    container.innerHTML = `
+                        <div class="empty-message">
+                            FAQ를 불러오는 중 오류가 발생했습니다.
+                            <br />잠시 후 다시 시도해주세요.
+                        </div>
+                    `;
+                });
+        }
+
+        function renderFAQs(container, faqData, userType) {
+            console.log("받은 FAQ 데이터:", faqData); // 디버깅용
+
+            // 데이터가 없는 경우
+            if (!faqData || (Array.isArray(faqData) && faqData.length === 0) || 
+                (typeof faqData === 'object' && Object.keys(faqData).length === 0)) {
+                container.innerHTML = `
+                    <div class="empty-message">
+                        현재 등록된 FAQ가 없습니다.
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            if (Array.isArray(faqData)) {
+                html += '<div class="faq-list">';
+                faqData.forEach(faq => {
+                    html += `
+                        <div class="faq-item" onclick="toggleFAQItem(this)">
+                            <div class="faq-question">Q. ${faq.title || '질문이 없습니다.'}</div>
+                            <div class="faq-answer">A. ${faq.content || '답변이 없습니다.'}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            } else if (typeof faqData === 'object') {
+                const categories = Object.keys(faqData);
+
+                if (categories.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-message">
+                            현재 등록된 FAQ가 없습니다.
+                        </div>
+                    `;
+                    return;
+                }
+
+                categories.forEach(category => {
+                    const categoryFaqs = faqData[category];
+                    if (Array.isArray(categoryFaqs) && categoryFaqs.length > 0) {
+                        html += `
+                            <div class="faq-category">
+                                <div class="faq-category-title">${category}</div>
+                                <div class="faq-list">
+                        `;
+
+                        categoryFaqs.forEach(faq => {
+                            html += `
+                                <div class="faq-item" onclick="toggleFAQItem(this)">
+                                    <div class="faq-question">Q. ${faq.title || '질문이 없습니다.'}</div>
+                                    <div class="faq-answer">A. ${faq.content || '답변이 없습니다.'}</div>
+                                </div>
+                            `;
+                        });
+
+                        html += '</div></div>';
+                    }
+                });
+            }
+
+            if (!html.trim()) {
+                container.innerHTML = `
+                    <div class="empty-message">
+                        현재 등록된 FAQ가 없습니다.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = html;
+        }
+
+
+        // FAQ 아이템 토글 기능
+        function toggleFAQItem(item) {
+            item.classList.toggle('active');
+        }
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return "";
+
+            const yyyy = date.getFullYear();
+            const mm = String(date.getMonth() + 1).padStart(2, "0");
+            const dd = String(date.getDate()).padStart(2, "0");
+            return `${yyyy}${mm}${dd}`;
+        }
+
+
+        // Contact modal functionality
+        function openContact() {
+            document.getElementById("inquiryModal").style.display = "block";
+            document.body.style.overflow = "hidden";
+        }
+        function loadNotices(userType) {
+            const section = document.getElementById(`${userType}-notice-section`);
+
+            section.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    공지사항을 불러오는 중...
+                </div>
+            `;
+
+            fetch("/user/help/api/notice/list")
+                .then(response => {
+                    if (!response.ok) throw new Error("공지사항 로드 실패");
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data || data.length === 0) {
+                        section.innerHTML = `<div class="empty-message">등록된 공지사항이 없습니다.</div>`;
+                        return;
+                    }
+
+                    let html = "";
+                    data.forEach(notice => {
+                        const title = notice.title || "제목 없음";
+                        const date = notice.regsDate ? formatDate(notice.regsDate) : "";
+                        html += `
+                            <div class="notice-item">
+                                ${title} <span class="notice-date">(${date})</span>
+                            </div>
+                        `;
+                    });
+
+                    section.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error("공지사항 로딩 오류:", error);
+                    section.innerHTML = `<div class="empty-message">공지사항을 불러오는 중 오류가 발생했습니다.</div>`;
+                });
+        }
+
+
+        function closeModal() {
+            document.getElementById("inquiryModal").style.display = "none";
+            document.body.style.overflow = "auto";
+            document.getElementById("inquiryForm").reset();
+            document.getElementById("charCount").textContent = "0";
+        }
+
+        // 모달 외부 클릭 시 닫기
+        window.onclick = function (event) {
+            const modal = document.getElementById("inquiryModal");
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+
+        // 글자 수 카운트 업데이트
+        function updateCharCount() {
+            const textarea = document.getElementById("inquiryContent");
+            const charCount = document.getElementById("charCount");
+            charCount.textContent = textarea.value.length;
+        }
+
+        // 폼 제출 처리
+        document.getElementById("inquiryForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            // 유효성 검사
+            const inquiryType = document.getElementById("inquiryType").value;
+            const inquiryTitle = document.getElementById("inquiryTitle").value;
+            const inquiryContent = document.getElementById("inquiryContent").value;
+
+            if (!inquiryType || !inquiryTitle || !inquiryContent) {
+                alert("필수 항목을 모두 입력해주세요.");
+                return;
+            }
+
+            // 제출 버튼 비활성화
+            const submitBtn = document.querySelector(".btn-primary");
+            submitBtn.disabled = true;
+            submitBtn.textContent = "전송 중...";
+
+            // 폼 데이터 수집
+            const formData = new FormData(this);
+
+            console.log("=== 전송할 데이터 확인 ===");
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
+            console.log("========================");
+
+            // 서버로 데이터 전송
+            fetch("/user/help/inquiry", {
+                method: "POST",
+                body: formData,
+            })
+                .then((response) => {
+                    console.log("서버 응답 상태:", response.status);
+                    if (!response.ok) {
+                        throw new Error("Network response was not ok");
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    console.log("서버 응답 데이터:", data);
+                    if (data.success) {
+                        alert("문의가 성공적으로 접수되었습니다.\n빠른 시일 내에 답변드리겠습니다.");
+                        closeModal();
+                        setTimeout(() => {
+                            loadFAQs(currentTab);
+                        }, 1000);
+                    } else {
+                        alert("문의 접수 중 오류가 발생했습니다: " + data.message);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("문의 접수 중 오류가 발생했습니다. 다시 시도해주세요.");
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "문의하기";
+                });
+        });
+
+        // 버튼 클릭 시 userType 값 변경
+        document.querySelectorAll(".usertype-btn").forEach(button => {
+            button.addEventListener("click", (e) => {
+                document.querySelectorAll(".usertype-btn").forEach(btn => btn.classList.remove("active"));
+                e.target.classList.add("active");
+
+                const userTypeValue = e.target.getAttribute("data-usertype");
+                document.getElementById("userType").value = userTypeValue;
+
+                console.log("userType set to:", userTypeValue);
+            });
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+            loadFAQs(currentTab);
+            loadNotices("user");     // 사용자 공지사항
+            loadNotices("company");  // 기업 공지사항
+        });
+
+    </script>
+</body>
+</html>

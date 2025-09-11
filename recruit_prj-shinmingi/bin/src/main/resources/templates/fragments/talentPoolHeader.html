@@ -1,0 +1,95 @@
+<!-- fragment/talentPoolHeader.html -->
+<th:block th:fragment="talentPoolHeader">
+<div class="header-tabs">
+  <a th:href="@{/corp/talentPool/talent_pool}" 
+     th:classappend="${activeTab == 'talent_pool'} ? ' active'" class="tab">전체 인재</a>
+<!--   <a th:href="@{/corp/talentPool/offer}" 
+     th:classappend="${activeTab == 'offer'} ? ' active'" class="tab">채용제의한 인재</a> -->
+  <a th:href="@{/corp/talentPool/scrap}" 
+     th:classappend="${activeTab == 'scrap'} ? ' active'" class="tab">스크랩한 인재</a>
+  <a th:href="@{/corp/talentPool/recently_viewed}" 
+     th:classappend="${activeTab == 'recently_viewed'} ? ' active'" class="tab">최근본 인재</a>
+</div>
+        <div class="search-section">
+		  <form id="searchForm" method="get" th:action="@{/corp/talentPool/talent_pool}">
+			
+			  <div class="search-row">
+				<div class="search-select" style="font-weight: bold; font-size: 16px;">⌕ 통합 검색</div>
+			    <input type="text" class="search-input" name="keyword" id="keyword"
+			           th:value="${param.keyword}" placeholder="키워드를 자유롭게 입력해보세요" />
+			    <button type="submit" class="search-btn">검색</button>
+			  </div>
+			
+			  <div class="select-row">
+			    <!-- 성별 (단일 선택) -->
+			    <select class="search-select" name="gender" id="gender">
+			      <option value="">성별</option>
+			      <option value="M" th:selected="${param.gender == 'M'}">남</option>
+			      <option value="F" th:selected="${param.gender == 'F'}">여</option>
+			    </select>
+			
+			    <!-- 경력 (단일 선택, DTO 필드명과 일치) -->
+			    <select class="search-select" name="career" id="career">
+			      <option value="">경력</option>
+			      <option value="0-0" th:selected="${param.career == '0-0'}">신입</option>
+			      <option value="12-36" th:selected="${param.career == '12-36'}">1-3년</option>
+			      <option value="36-60" th:selected="${param.career == '36-60'}">3-5년</option>
+			      <option value="60-999" th:selected="${param.career == '60-999'}">5년 이상</option>
+			    </select>
+			
+			    <!-- 지역 (단일 선택) -->
+			    <select class="search-select" name="address" id="address">
+			      <option value="">지역</option>
+			      <option value="서울" th:selected="${param.address == '서울'}">서울</option>
+			      <option value="경기" th:selected="${param.address == '경기'}">경기</option>
+			      <option value="인천" th:selected="${param.address == '인천'}">인천</option>
+			      <option value="부산" th:selected="${param.address == '부산'}">부산</option>
+			      <option value="기타" th:selected="${param.address == '기타'}">기타</option>
+			    </select>
+			
+			    <!-- 학력 -->
+			    <select class="search-select" name="education" id="education">
+			      <option value="">학력</option>
+			      <option value="고등학교" th:selected="${param.education == '고등학교'}">고등학교</option>
+			      <option value="대학(2,3년)" th:selected="${param.education == '대학(2,3년)'}">대학(2,3년)</option>
+			      <option value="대학(4년제)" th:selected="${param.education == '대학(4년제)'}">대학(4년제)</option>
+			      <option value="대학원(석사)" th:selected="${param.education == '대학원(석사)'}">대학원(석사)</option>
+			      <option value="대학원(박사)" th:selected="${param.education == '대학원(박사)'}">대학원(박사)</option>
+			    </select>
+			
+			    <!-- 기술 스택 -->
+			    <select class="search-select" name="techStack" id="techStack">
+			      <option value="">기술스택</option>
+			      <option value="java" th:selected="${param.techStack == 'java'}">Java</option>
+			      <option value="cpp" th:selected="${param.techStack == 'cpp'}">C++</option>
+			      <option value="c" th:selected="${param.techStack == 'c'}">C</option>
+			      <option value="python" th:selected="${param.techStack == 'python'}">Python</option>
+			      <option value="기타" th:selected="${param.techStack == '기타'}">기타</option>
+			    </select>
+			
+			    <!-- 희망 포지션 -->
+			    <select class="search-select" name="position" id="position">
+			      <option value="">포지션</option>
+			      <option value="backend" th:selected="${param.position == 'backend'}">백엔드</option>
+			      <option value="frontend" th:selected="${param.position == 'frontend'}">프론트엔드</option>
+			      <option value="fullstack" th:selected="${param.position == 'fullstack'}">풀스택</option>
+			      <option value="기타" th:selected="${param.position == '기타'}">기타</option>
+			    </select>
+			  </div>
+		<div id="hiddenInputs" style="display: none;"></div>
+		<input type="hidden" name="corpNo" id="corpNo" th:value="${session.corpNo}" />
+			</form>
+		  <div class="selected-filters" id="selectedFilters">
+		    <div class="filter-header">
+		      <div class="filter-tags" id="filterTags"></div>
+		      <button type="button" class="reset-btn" id="resetFilters">
+		        <span>초기화</span>
+		        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+		          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+		          <path d="M3 3v5h5"/>
+		        </svg>
+		      </button>
+		    </div>
+		  </div>
+		</div>
+</th:block>

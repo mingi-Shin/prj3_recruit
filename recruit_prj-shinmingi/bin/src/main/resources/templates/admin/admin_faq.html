@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+<meta charset="UTF-8">
+<title>민기인력 - 관리자 FAQ</title>
+<link rel="stylesheet" th:href="@{/admin/css/admin_board.css}"/>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+/* 모달 스타일 */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 800px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  animation: slideIn 0.3s;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-header {
+  background-color: #4caf50;
+  color: white;
+  padding: 20px 30px;
+  border-radius: 8px 8px 0 0;
+  position: relative;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.close {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+}
+
+.close:hover {
+  background-color: rgba(255,255,255,0.2);
+}
+
+.modal-body {
+  padding: 30px;
+}
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+  font-size: 16px;
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.form-group input[type="text"]:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 150px;
+}
+
+.modal-footer {
+  padding: 20px 30px;
+  border-top: 1px solid #eee;
+  text-align: left !important;
+  background-color: #f9f9f9;
+  border-radius: 0 0 8px 8px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.btn {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: all 0.3s ease;
+  min-width: 100px;
+}
+
+.btn:first-child {
+  margin-left: 0;
+}
+
+.btn-primary {
+  background-color: #4caf50;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #43a047;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268;
+  transform: translateY(-1px);
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 5px;
+  display: none;
+}
+</style>
+
+<script type="text/javascript">
+$(function() {
+  let isEditMode = false;
+  let currentFaqSeq = null;
+
+  function loadFaqList() {
+    $.ajax({
+      url: '/admin/faq',
+      method: 'GET',
+      success: function(data) {
+        const tbody = $('#faqTable tbody');
+        tbody.empty();
+
+        if (!data || data.length === 0) {
+          tbody.append('<tr><td colspan="8">등록된 FAQ가 없습니다.</td></tr>');
+          return;
+        }
+
+        data.forEach(function(faq, index) {
+          const num = data.length - index;
+          const content = faq.content || "";
+          const shortContent = content.length > 50 ? content.substring(0, 50) + '...' : content;
+
+          const row = `
+            <tr>
+              <td><input type="checkbox" class="chk" value="${faq.faqSeq}"></td>
+              <td>${num}</td>
+              <td>${faq.adminId}</td>
+              <td><span>${faq.title}</span></td>
+              <td colspan="4">${shortContent}</td>
+            </tr>
+          `;
+          tbody.append(row);
+        });
+
+        $('#selectAll').prop('checked', false);
+        $('#deleteBtn').prop('disabled', true);
+        $('#createBtn').prop('disabled', false);
+      },
+      error: function() {
+        alert('FAQ 목록을 불러오는 데 실패했습니다.');
+      }
+    });
+  }
+
+  function openCreateModal() {
+    isEditMode = false;
+    currentFaqSeq = null;
+    $('#modalTitle').text('FAQ 작성');
+    $('#faqTitle').val('');
+    $('#faqContent').val('');
+    $('#submitBtn').text('작성하기');
+    $('.error-message').hide();
+    $('#faqModal').show();
+  }
+
+  function closeModal() {
+    $('#faqModal').hide();
+  }
+
+  function saveFaq() {
+    const title = $('#faqTitle').val().trim();
+    const content = $('#faqContent').val().trim();
+
+    let hasError = false;
+    
+    if (!title) {
+      $('#titleError').text('제목을 입력해주세요.').show();
+      hasError = true;
+    } else {
+      $('#titleError').hide();
+    }
+
+    if (!content) {
+      $('#contentError').text('내용을 입력해주세요.').show();
+      hasError = true;
+    } else {
+      $('#contentError').hide();
+    }
+
+    if (hasError) {
+      return;
+    }
+
+    const faqData = {
+      title: title,
+      content: content
+    };
+
+    if (isEditMode) {
+      faqData.faqSeq = currentFaqSeq;
+      $.ajax({
+        url: '/admin/faq/' + currentFaqSeq,
+        method: 'PUT',
+        contentType: 'application/json',
+        data: JSON.stringify(faqData),
+        success: function() {
+          alert('FAQ가 성공적으로 수정되었습니다.');
+          closeModal();
+          loadFaqList();
+        },
+        error: function() {
+          alert('FAQ 수정 중 오류가 발생했습니다.');
+        }
+      });
+    } else {
+      const form = $('<form>', {
+        method: 'POST',
+        action: '/admin/admin_faq/save'
+      });
+      
+      form.append($('<input>', {
+        type: 'hidden',
+        name: 'title',
+        value: title
+      }));
+      
+      form.append($('<input>', {
+        type: 'hidden',
+        name: 'content',
+        value: content
+      }));
+      
+      $('body').append(form);
+      form.submit();
+    }
+  }
+
+  // 초기 로드
+  loadFaqList();
+
+  // 전체 선택/해제
+  $('#selectAll').on('change', function() {
+    $('.chk').prop('checked', $(this).prop('checked'));
+    $('#deleteBtn').prop('disabled', !$(this).prop('checked'));
+  });
+
+  $('#deleteBtn').on('click', function() {
+    let checked = $('.chk:checked').map(function() {
+      return parseInt($(this).val());
+    }).get();
+
+    if (checked.length === 0) {
+      alert("삭제할 FAQ를 선택하세요.");
+      return;
+    }
+
+    if (!confirm("정말 삭제하시겠습니까?")) {
+      return;
+    }
+
+    let deleteCount = 0;
+    checked.forEach(function(faqSeq) {
+      $.ajax({
+        url: '/admin/faq/' + faqSeq,
+        type: 'DELETE',
+        success: function() {
+          deleteCount++;
+          if (deleteCount === checked.length) {
+            alert("삭제가 완료되었습니다.");
+            loadFaqList();
+          }
+        },
+        error: function() {
+          alert("삭제 중 오류가 발생했습니다.");
+        }
+      });
+    });
+  });
+
+  $(document).on('change', '.chk', function() {
+    const totalChk = $('.chk').length;
+    const checkedChk = $('.chk:checked').length;
+
+    $('#selectAll').prop('checked', totalChk === checkedChk);
+    $('#deleteBtn').prop('disabled', checkedChk === 0);
+  });
+
+  $('#createBtn').on('click', function() {
+    openCreateModal();
+  });
+
+  // 제목 클릭시 모달 열기 제거됨
+
+  $('.close, #cancelBtn').on('click', function() {
+    closeModal();
+  });
+
+  $(window).on('click', function(event) {
+    if (event.target.id === 'faqModal') {
+      closeModal();
+    }
+  });
+
+  $('#submitBtn').on('click', function() {
+    const action = isEditMode ? '수정' : '작성';
+    if (confirm(`정말 ${action}하시겠습니까?`)) {
+      saveFaq();
+    }
+  });
+
+  $(document).on('keydown', function(e) {
+    if (e.key === 'Escape' && $('#faqModal').is(':visible')) {
+      closeModal();
+    }
+  });
+});
+</script>
+
+</head>
+
+<body>
+
+<th:block th:replace="~{fragments/adminHeader :: adminHeader}"></th:block>
+
+<div class="admin-container">
+  <section class="review-wrapper">
+    <h2 class="review-title">FAQ 관리</h2>
+
+    <div class="review-table-wrapper">
+      <table id="faqTable" class="admin-table" summary="FAQ 목록 테이블">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll" /></th>
+            <th>번호</th>
+            <th>작성자(관리자 ID)</th>
+            <th>제목</th>
+            <th colspan="4">내용</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- AJAX로 FAQ 리스트 동적 생성 -->
+        </tbody>
+      </table>
+      <div class="button-container">
+      <span sec:authorize="hasRole('대리') or hasRole('과장') or hasRole('팀장') or hasRole('SUPER')">
+        <button id="createBtn" class="delete-btn" type="button" style="background-color: green">작성</button>
+        </span>
+        <span sec:authorize="hasRole('팀장') or hasRole('SUPER')">
+        <button id="deleteBtn" class="delete-btn" type="button" disabled>삭제</button>
+        </span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="faqModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalTitle">FAQ 작성</h2>
+      <span class="close">&times;</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label for="faqTitle">제목 *</label>
+        <input type="text" id="faqTitle" placeholder="FAQ 제목을 입력하세요">
+        <div id="titleError" class="error-message"></div>
+      </div>
+      <div class="form-group">
+        <label for="faqContent">내용 *</label>
+        <textarea id="faqContent" placeholder="FAQ 내용을 입력하세요" rows="10"></textarea>
+        <div id="contentError" class="error-message"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" id="submitBtn" class="btn btn-primary">작성하기</button>
+      <button type="button" id="cancelBtn" class="btn btn-secondary">취소</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!-- fragments/interviewOffer.html -->
+<div th:fragment="modalContent" class="modal" id="interviewModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>면접 제안 메일 보내기</h3>
+      <button type="button" class="modal-close">Ⅹ</button>
+    </div>
+    <div class="modal-body">
+	<form id="interviewOfferForm" method="post" th:action="@{/corp/talentPool/interviewOffer/send}">
+	    <input type="hidden" th:value="${corpNo}" id="corpNo" name="corpNo">
+	    <input type="hidden" th:value="${email}" id="email" name="email">
+        <input type="hidden" th:value="${resumeSeq}" name="resumeSeq" />
+
+        <div class="form-group">
+          <label class="form-label">메일 제목</label>
+		<input type="text" class="form-input" name="messageTitle" value="면접 제안 안내드립니다." required />
+
+        </div>
+        <div class="form-group">
+          <label class="form-label">메일 내용</label>
+          <span th:text="${corpInfo != null ? corpInfo.corpName : 'DefaultCorpName'}"></span>
+          <textarea class="form-input email-textarea" name="messageContent" rows="12" required>
+          
+안녕하세요.
+
+저희 [[${corpInfo.corpName}]] 인사담당 팀에서 귀하의 이력서를 검토하였고,
+적합한 인재라 판단하여 면접 제안을 드립니다.
+
+편하신 일정을 회신 주시면, 인터뷰 일정을 조율하여 연락드리겠습니다.
+
+감사합니다.
+[[${corpInfo.corpName}]] 드림
+
+[[${corpInfo.corpName}]] 홈페이지 : [[${corpInfo.corpUrl}]]
+          </textarea>
+        </div>
+        <div class="contact-info">
+          <p>📞 전화 문의 1588-1234 (평일 09:00~18:00)</p>
+          <p>📧 담당자 이메일 : [[${corpInfo.corpEmail}]]</p>
+        </div>
+        <button type="submit" class="submit-btn">메일 보내기</button>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<link rel="shortcut icon" href="http://localhost/images/favicon.png"/>
+ <style>
+    body {
+      background-color: #f0f2f5;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+    }
+
+    .container {
+      width: 90%;
+      height:90vh;
+      margin-top: 30px;
+      margin-left: 250px;
+      margin-right: 50px;
+      padding: 40px 30px;
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 25px;
+      font-size: 22px;
+      color: #343a40;
+    }
+
+    table {
+      width: 100%;
+      height:85%;
+      border-collapse: collapse;
+      margin-bottom: 30px;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      font-size: 15px;
+      border: 1px solid #dee2e6;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9fafb;
+    }
+
+    td:first-child, td:nth-child(3) {
+      font-weight: bold;
+      width: 140px;
+      background-color: #f1f3f5;
+    }
+
+    input[type="button"] {
+      padding: 10px 24px;
+      margin-top: 10px;
+      background-color: #6c757d;
+      color: white;
+      font-weight: 500;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    input[type="button"]:hover {
+      background-color: #5c636a;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        margin: 20px;
+        padding: 20px;
+      }
+
+      table, th, td {
+        font-size: 13px;
+      }
+
+      input[type="button"] {
+        width: 100%;
+        margin-top: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<th:block th:replace="fragments/adminHeader :: adminHeader"></th:block>
+<div class="container">
+<h2>기업 상세정보</h2>
+<table border="1">
+<tbody>
+<tr>
+<td>사업번호</td>
+<td th:text="${corp.corpNo}"></td>
+<td>사업명</td>
+<td th:text="${corp.corpNm}"></td>
+</tr>
+<tr>
+<td>사업정보</td>
+<td th:text="${corp.corpInfo}"></td>
+<td>URL</td>
+<td th:text="${corp.corpUrl}"></td>
+</tr>
+<tr>
+<td>평균연봉</td>
+<td th:text="${corp.corpAvgSal}"></td>
+<td>매출액</td>
+<td th:text="${corp.corpAnnualRevenue}"></td>
+</tr>
+<tr>
+<td>생성일</td>
+<td th:text="${corp.corpCreatedAt}"></td>
+<td>사원수</td>
+<td th:text="${corp.corpEmpCnt}"></td>
+</tr>
+<tr>
+<td>산업명</td>
+<td th:text="${corp.industry}"></td>
+<td>CEO</td>
+<td th:text="${corp.corpCeo}"></td>
+</tr>
+</tbody>
+</table>
+<a href="/admin/admin_corp">
+  <input type="button" value="뒤로가기" />
+</a>
+</div>
+<!-- jquery CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+<script type="text/javascript">
+$(function(){
+	$("btn").click(function(){
+		alert("제재 취소?");
+	})
+});
+
+</script>
+</body>
+</html>

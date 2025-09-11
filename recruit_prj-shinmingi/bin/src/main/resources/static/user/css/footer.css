@@ -1,0 +1,98 @@
+.footer {
+    background-color: #f8f8f8;
+    border-top: 1px solid #e0e0e0;
+    padding: 30px 20px;
+    margin-top: 50px;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 11px;
+    color: #666;
+}
+
+.footer-policy {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.policy-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    list-style: none;
+    gap: 10px 20px;
+    padding: 0;
+    margin: 0;
+}
+
+.policy-list li a {
+    text-decoration: none;
+    color: #666;
+    transition: color 0.3s;
+}
+
+.policy-list li a:hover {
+    color: #00d084;
+}
+
+.footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.company-info address {
+    font-style: normal;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.company-info dl {
+    margin: 10px 0;
+}
+
+.company-info dt {
+    display: inline-block;
+    width: 120px;
+    font-weight: bold;
+}
+
+.company-info dd {
+    display: inline-block;
+    margin: 0 0 5px 0;
+}
+
+.btn-ftc {
+    margin-left: 5px;
+    color: #00d084;
+    text-decoration: underline;
+    font-size: 11px;
+}
+
+.family-site {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.family-site h3 a {
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+    text-decoration: none;
+}
+
+.go-btn {
+    display: inline-block;
+    margin-top: 5px;
+    padding: 4px 10px;
+    background-color: #00d084;
+    color: #fff;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.go-btn:hover {
+    background-color: #00b371;
+}

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>민기 인력</title>
+  <th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+  <link rel="stylesheet" th:href="@{/user/css/header.css}" />
+  <link rel="stylesheet" th:href="@{/user/css/footer.css}" />
+  <link rel="stylesheet" th:href="@{/user/jobPosting/css/main_page.css}"/>
+  <link rel="stylesheet" th:href="@{/user/jobPosting/css/company_info.css}"/>
+  <style type="text/css">
+    
+  </style>
+  <script type="text/javascript">
+  
+  $(document).ready(function () {
+	 
+	  const corpNoStr=$("#corpNoForScrap").val();
+	  if(corpNoStr && !isNaN(corpNoStr)){
+		   const corpNo = parseInt(corpNoStr, 10);
+	
+		   
+		   $.ajax({
+			   url:"/corpScrap/check",
+			   method:"GET",
+			   data: {corpNo:corpNo},
+			   success:function(data){
+				   if (data.success) {
+	                    const heartIcon = $("#heartIcon");
+	                    heartIcon.text(data.scrapped ? "❤️" : "🤍");
+	                }
+			   },
+			   error: function(){
+				   console.error("스크랩 상태 확인 실패");
+			   }
+			   
+		   });//ajax
+		   
+		   
+		   $("#scrapBtn").click(function(){
+			  const heartIcon=$("#heartIcon");
+			  const isScrapped=heartIcon.text() =="❤️";
+			  const url=isScrapped ? "/corpScrap/remove" : "/corpScrap/add";
+			   
+			  $.ajax({
+				 url:url,
+				 method:"POST",
+				 contentType:"application/json",
+				 data: JSON.stringify({corpNo:corpNo}),
+				 success:function(data){
+					 alert(data.message);
+					 if(data.success){
+						 heartIcon.text(isScrapped ?  "🤍" : "❤️");
+					 }
+				 },
+				   error: function (xhr, status, error) {
+	                    console.error("스크랩 처리 중 오류:", error);
+	                    alert("스크랩 처리 중 오류가 발생했습니다.");
+	                }
+			  });
+			   
+		   });
+	  }
+	  
+	  
+	});//ready
+	
+	$(document).ready(function () {
+	    $("#shareBtn").click(function (e) {
+	        e.preventDefault(); // 링크 이동 방지
+	        var url = window.location.href;
+	        var textarea = document.createElement("textarea");
+	        document.body.appendChild(textarea);
+	        textarea.value = url;
+	        textarea.select();
+	        document.execCommand("copy");
+	        document.body.removeChild(textarea);
+	        alert("URL이 복사되었습니다.");
+	    });
+	});
+  
+  </script>
+</head>
+<body>
+  <header>
+    <div th:replace="~{fragments/header :: header}"></div>
+  </header>
+  <main>
+     <div class="main-container">
+        <div class="row">
+            <!-- 왼쪽 콘텐츠 영역 -->
+            <div class="col-8">
+                <div class="company-header">
+                    <h2 class="company-name" th:text="${companyDTO != null ? companyDTO.corpNm : '회사 정보가 없습니다.'}">기업이름</h2>
+                    <div class="action-buttons">
+		                 <button class="floating-action-btn" id="scrapBtn">
+					        <span class="icon" id="heartIcon">🤍</span>
+					    </button>
+                        <div style="position: relative;">
+                        	<input type="hidden" id="corpNoForScrap" th:value="${companyDTO.corpNo}" />
+                            <button class="floating-action-btn" id="shareBtn">
+                                <span class="icon"><a href="#" onclick="clip(); return false;">📃</a></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div data-bs-spy="scroll" data-bs-target="#simple-list-example" data-bs-offset="0" data-bs-smooth-scroll="true" class="scrollspy-example" tabindex="0">
+                    <h4 id="simple-list-item-1">기업정보</h4>
+                    <div class="company_info">
+                       <img th:src="@{/images/corplogo/{img}(img=${companyDTO.corpLogo})}" alt="로고"/>
+                        <div class="info_box">
+                            <p>설립일:<span class="gap" th:text="${companyDTO.corpCreatedAt}"></span></p>
+                            <p>업종:<span class="gap" th:text="${companyDTO.industry}"></span></p>
+                            <p>대표자명:<span class="gap" th:text="${companyDTO.corpCeo}"></span></p>
+                            <p>홈페이지: <a th:href="@{${companyDTO.corpUrl}}" th:text="${companyDTO.corpUrl}" target="_blank"></a></p>
+                        </div>
+                    </div>
+
+                    <h4 id="simple-list-item-2">회사소개</h4>
+                    <p class="content-detail" th:text="${companyDTO.corpInfo}"></p>
+
+                    <h4 id="simple-list-item-3">기업 규모</h4>
+                    <div class="company-scale">
+                        <div class="scale-item">
+                            <p class="scale-label">사원수</p>
+                            <p class="scale-value" th:text="|${companyDTO.corpEmpCnt}명|"></p>
+                        </div>
+                        <div class="scale-item">
+                            <p class="scale-label">매출</p>
+                            <p class="scale-value" th:text="${corpAnnualRevenue}"></p>
+                        </div>
+                        <div class="scale-item">
+                            <p class="scale-label">규모</p>
+                            <p class="scale-value" th:text="${companyDTO.companySize}"></p>
+                        </div>
+                    </div>
+
+                    <h4 id="simple-list-item-5">평균 연봉 정도</h4>
+                    <div class="info-card">
+                        <div class="salary-block">
+                            <p class="info-title">전체</p>
+                            <p class="info-value" th:text="${corpAvgSal}"></p>
+                        </div>
+                    </div>
+
+                  <h4 id="simple-list-item-6">채용중인 포지션</h4>
+
+					<!-- 공고 없을 때 메시지 -->
+					<div th:if="${jobList == null or jobList.isEmpty()}" class="no-positions">
+					    <div style="text-align: center; padding: 40px 20px; background-color: #f8f9fa; border-radius: 8px; color: #6c757d;">
+					        <p style="font-size: 16px; margin: 0;">현재 채용중인 포지션이 없습니다.</p>
+					        <p style="font-size: 14px; margin: 10px 0 0 0;">새로운 채용공고가 올라올 때까지 기다려주세요!</p>
+					    </div>
+					</div>
+					
+					<!-- 채용 중인 공고 리스트 -->
+				<div class="job-list-grid" th:if="${jobList != null and !jobList.isEmpty()}">
+					    <div th:each="job : ${jobList}">
+					        <div th:if="${job.isEnded == 'N'}" class="job-card" style="border:1px solid #ccc; padding:1rem; margin-bottom:1rem; border-radius: 6px;">
+					            <p th:text="${job.getDdayDisplay()}" style="color: red;">D-day</p>
+					            <h5 th:text="${job.postingTitle}">공고 제목</h5>
+					            <h5 th:text="${job != null} ? ${job.stackName} : ''" style="font-size: 14px; color:gray"></h5>
+					            <a  th:href="@{/user/job_posting/job_posting_detail(jobPostingSeq=${job.jobPostingSeq})}" style="color: blue;">자세히 보기</a>
+					            
+					        </div>
+					    </div>
+				</div>
+                    <div class="review-header">
+                        <h4 id="simple-list-item-7" style="font-size: 16px">기업 후기</h4>
+                     <a th:href="@{/user/job_posting/review(corpNo=${companyDTO.corpNo})}" type="button" class="write-review-btn">자세히 보기</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 오른쪽 메뉴 목록 -->
+            <div class="col-4">
+                <div id="simple-list-example" class="menu-list">
+                    <a class="menu-item" href="#simple-list-item-1">기업정보</a>
+                    <a class="menu-item" href="#simple-list-item-2">회사소개</a>
+                    <a class="menu-item" href="#simple-list-item-3">기업 규모</a>
+                    <a class="menu-item" href="#simple-list-item-5">평균 연봉 정도</a>
+                    <a class="menu-item" href="#simple-list-item-6">채용중인 포지션</a>
+                    <a class="menu-item" href="#simple-list-item-7">기업 후기</a>
+                </div>
+            </div>
+        </div>
+    </div>
+  </main>
+  <footer>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+  </footer>
+</body>
+</html>

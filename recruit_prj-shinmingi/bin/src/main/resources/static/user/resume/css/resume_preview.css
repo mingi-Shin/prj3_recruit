@@ -1,0 +1,262 @@
+body {
+	font-family: "Malgun Gothic", "맑은 고딕", Arial, sans-serif;
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 20px;
+	background-color: #f5f5f5;
+	line-height: 1.6;
+}
+
+.container {
+	background-color: white;
+	padding: 40px;
+	border-radius: 8px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.section {
+	margin-bottom: 40px;
+}
+
+.section-title {
+	font-size: 18px;
+	font-weight: bold;
+	color: #333;
+	margin-bottom: 20px;
+	border-bottom: 2px solid #333;
+	padding-bottom: 8px;
+}
+
+.basic-info {
+	display: flex;
+	align-items: flex-start;
+	gap: 30px;
+}
+
+.profile-image {
+	width: 120px;
+	height: 150px;
+	border: 3px solid #333;
+	border-radius: 15px;
+	background-color: #f8f8f8;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	overflow: hidden;
+}
+
+.profile-image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.dice-dots {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
+
+.dot {
+	width: 12px;
+	height: 12px;
+	background-color: #333;
+	border-radius: 50%;
+	position: absolute;
+}
+
+.dot:nth-child(1) {
+	top: 20px;
+	left: 20px;
+}
+
+.dot:nth-child(2) {
+	bottom: 20px;
+	right: 20px;
+}
+
+.info-details {
+	flex: 1;
+}
+
+.name {
+	font-size: 32px;
+	font-weight: bold;
+	color: #333;
+}
+
+.contact-info {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	margin-bottom: 20px;
+}
+
+.contact-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: #666;
+}
+
+.contact-item::before {
+	content: "";
+	width: 16px;
+	height: 16px;
+	background-color: #666;
+	display: inline-block;
+}
+
+.contact-item:first-child::before {
+	content: "✉";
+	background: none;
+	font-size: 14px;
+}
+
+.phone-birth {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	color: #666;
+}
+
+.phone-birth::before {
+	content: "📞";
+	background: none;
+	font-size: 14px;
+}
+
+.intro-question {
+	font-size: 16px;
+	color: #333;
+	margin-bottom: 15px;
+}
+
+.skills-interests {
+	display: flex;
+	gap: 40px;
+}
+
+.skill-item, .interest-item {
+	flex: 1;
+}
+
+.skill-item h4, .interest-item h4 {
+	margin: 0 0 8px 0;
+	color: #333;
+	font-size: 14px;
+}
+
+.skill-item p, .interest-item p {
+	margin: 0;
+	color: #666;
+	font-size: 14px;
+}
+
+.timeline-item {
+	margin-bottom: 30px;
+	display: flex;
+	gap: 20px;
+}
+
+.timeline-date {
+	min-width: 120px;
+	font-size: 14px;
+	color: #666;
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+}
+
+.timeline-date::before {
+	content: "○";
+	color: #333;
+	font-weight: bold;
+}
+
+.timeline-content {
+	flex: 1;
+}
+
+.timeline-content h4 {
+	margin: 0 0 5px 0;
+	font-size: 16px;
+	color: #333;
+}
+
+.timeline-content p {
+	margin: 0 0 3px 0;
+	color: #666;
+	font-size: 14px;
+}
+
+.timeline-content .sub-info {
+	color: #999;
+	font-size: 12px;
+}
+
+.career-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
+}
+
+.career-period {
+	color: #666;
+	font-size: 14px;
+}
+
+.project-details {
+	margin-left: 20px;
+}
+
+.project-details h5 {
+	margin: 10px 0 5px 0;
+	color: #333;
+	font-size: 14px;
+}
+
+.project-details p {
+	margin: 0 0 5px 0;
+	color: #666;
+	font-size: 14px;
+}
+
+.project-details .project-link {
+	color: #0066cc;
+	text-decoration: none;
+	font-size: 14px;
+}
+
+.project-details .project-link:hover {
+	text-decoration: underline;
+}
+
+.red-dot {
+	color: red;
+	font-size: 20px;
+	margin-left: 5px;
+}
+
+.links-section .timeline-content p {
+	margin-bottom: 8px;
+}
+
+.links-section .timeline-content p:last-child {
+	margin-bottom: 0;
+}
+
+.tag {
+	display: inline-block;
+	padding: 6px 14px;
+	border-radius: 24px;
+	margin: 4px 6px 4px 0;
+	font-size: 14px;
+	font-weight: 500;
+	color: #333;
+	background-color: #fff;
+	border: 1px solid #ccc; /* 얇고 연한 회색 테두리 */
+}
+

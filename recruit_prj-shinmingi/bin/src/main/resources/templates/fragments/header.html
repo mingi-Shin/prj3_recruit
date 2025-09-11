@@ -1,0 +1,27 @@
+<div class="header" th:fragment="header">
+	<div class="header-main">
+		<!-- 왼쪽: 로고 + 네비게이션 -->
+		<div class="header-left">
+			<div class="logo">
+			 <a href="/">
+				<img th:src="@{/images/logo.png}" alt="민기인력 로고" />
+			</a>
+			</div>
+			<nav class="nav-menu">
+				<a href="/user/job_posting/job_posting" class="nav-item active">개발자 채용</a> <a href="/user/resume/resume_management"
+					class="nav-item">이력서</a> <a href="/user/tools/resume_coach" class="nav-item">취업 TOOL</a> <a
+					href="/user/help/help" class="nav-item">고객센터</a>
+			</nav>
+		</div>
+
+		<!-- 오른쪽: 검색창 + 회원가입 + 기업서비스 -->
+		<div class="header-right" sec:authorize="!hasRole('ROLE_USER')">
+				<a th:href= @{/login} class="auth-button">회원가입/로그인</a> 
+				<a href="/corp/main" class="business-button">기업서비스</a>
+		</div>
+		<div class="header-right" sec:authorize="hasRole('ROLE_USER')">
+				<a th:href= @{/logout} class="auth-button">로그아웃</a> 
+				<a href="/corp/main" class="business-button">기업서비스</a>
+		</div>
+	</div>
+</div>

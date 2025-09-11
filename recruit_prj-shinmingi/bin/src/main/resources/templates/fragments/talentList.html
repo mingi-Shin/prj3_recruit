@@ -1,0 +1,57 @@
+<th:block th:fragment="talentList" >
+   <div class="talent-list" id="talentList" th:attr="data-total-pages=${totalPages}">
+         <div th:if="${#lists.isEmpty(talentPool)}">
+	  <p>해당 인재가 없습니다.</p>
+	  </div>
+	  
+	  <div th:if="${!#lists.isEmpty(talentPool)}">
+           <div class="talent-item" th:each="talent : ${ talentPool }">
+               <!-- 이력서 구직자 이름, 성별, 나이 -->
+               <div class="talent-left">
+        		<div class="talent-profile" th:text="${ talent.name != null && talent.name != '' ? talent.name : '미기재' }"></div>
+				<div class="talent-info" 
+				     th:text="|${talent.gender == 'M' ? '남' : (talent.gender == 'F' ? '여' : '기타')} 
+				     · ${ talent.birth != null && talent.birth != '' ? talent.birth : '미기재' }|">
+				</div>
+               </div> 
+               <!-- 이력서 간소화 정보 -->
+               <div class="talent-right">
+                   <div class="spec-grid">
+		            <div class="spec-title">최종학력</div>
+		            <div th:text="${ talent.finalEducation != null && talent.finalEducation != '' ? talent.finalEducation : '미기재' }+ ' ' + ${talent.educationType}"></div>
+		            <div class="spec-title">경력</div>
+					<div th:text="${ talent.totalCareer != null && talent.totalCareer != '' && talent.totalCareer != '0' ? talent.totalCareer : '신입' }"></div>
+		            <div class="spec-title">거주지</div>
+		            <div th:text="${ talent.shortAddress != null && talent.shortAddress != '' ? talent.shortAddress : '미기재' }"></div>
+		            <div class="spec-title">자격증</div>
+		            <div th:text="${ talent.certifications != null && talent.certifications != '' ? talent.certifications : '미기재' }"></div>
+		            <div class="spec-title">기술 스택</div>
+		            <div class="skill-tags">
+		                <span class="skill-tag" th:text="${ talent.techStacks != null && talent.techStacks != '' ? talent.techStacks : '미기재' }"></span>
+		            </div>
+		            <div class="spec-title">희망 직종</div>
+		            <div class="skill-tags">
+		                <span class="skill-tag" th:text="${ talent.desiredPositions != null && talent.desiredPositions != '' ? talent.desiredPositions : '미기재' }"></span>
+		            </div>
+		        </div>
+		    	</div>
+       		    <!-- 이력서 버튼들 -->
+                <div class="talent-actions">
+				<button class="action-btn bookmark-btn"
+		        th:data-resume-seq="${talent.resumeSeq}"
+		        th:data-corp-no="${talent.corpNo}">
+	    		<span class="bookmark-star" 
+		      	th:classappend="${talent.isScrapped == 'Y'} ? 'filled'" 
+		      	th:text="${talent.isScrapped == 'Y'} ? '★' : '☆'"></span>스크랩
+				</button>
+                <a th:href="@{/corp/talentPool/resume_detail(resumeNo=${talent.resumeSeq})}">
+					<button class="action-btn resume-btn">이력서 확인</button></a>
+				<button class="action-btn interview-btn openInterviewModalBtn"
+				        th:data-resume-seq="${talent.resumeSeq}"
+				        th:data-corp-no="${corpNo}">면접 제안</button>
+                </div>
+            </div>
+       	</div>
+      	
+     </div>
+</th:block>

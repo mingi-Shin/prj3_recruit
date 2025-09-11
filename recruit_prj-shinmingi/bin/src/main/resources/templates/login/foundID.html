@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>아이디 찾기</title>
+	<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+	<link rel="stylesheet" th:href="@{/login/login_form.css}">
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<script type="text/javascript">
+		$(function() {
+			// 탭 전환
+			$('.tab').on('click', function () {
+				$('.tab').removeClass('active');
+				$(this).addClass('active');
+			});
+
+			// 아이디 찾기 Ajax 요청
+			$('#findIdForm').on('submit', function (e) {
+				e.preventDefault();
+
+				const name = $('#name').val().trim();
+				const phone = $('#phone').val().trim();
+
+				if (!name || !phone) {
+					showMessage('이름과 전화번호를 모두 입력해주세요.', false);
+					return;
+				}
+
+				$.ajax({
+					url: '/account/foundID',
+					type: 'POST',
+					data: { name: name, phone: phone },
+					success: function (response) {
+						showMessage(response, true);
+					},
+					error: function (xhr) {
+						showMessage(xhr.responseText, false);
+					}
+				});
+			});
+
+			// 결과 메시지 출력 함수
+			function showMessage(message, isSuccess) {
+				const resultBox = $('#resultMessage');
+				resultBox
+					.removeClass('alert-success alert-danger')
+					.addClass(isSuccess ? 'alert-success' : 'alert-danger')
+					.text(message)
+					.show();
+			}
+		});
+	</script>
+</head>
+<body>
+
+<div class="login-container">
+
+	<!-- 탭 메뉴 -->
+	<div class="tab-container">
+		<div class="tab-menu">
+			<div class="user-type tab active">개인회원</div>
+			<div class="corp-type tab">기업회원</div>
+		</div>
+	</div>
+
+	<!-- 아이디 찾기 폼 -->
+	<form id="findIdForm">
+		<table class="login-table">
+			<tr>
+				<td><input type="text" name="name" id="name" class="input-field" placeholder="이름" required></td>
+			</tr>
+			<tr>
+				<td><input type="text" name="phone" id="phone" class="input-field" placeholder="전화번호 (숫자만 입력)" required></td>
+			</tr>
+			<tr>
+				<td><button type="submit" class="login-button">아이디 찾기</button></td>
+			</tr>
+		</table>
+	</form>
+
+	<!-- 결과 메시지 -->
+	<div id="resultMessage" class="alert" style="display:none; margin-top: 20px;"></div>
+
+	<!-- 하단 링크 -->
+	<div class="bottom-links" style="margin-top: 20px;">
+		<a th:href="@{/login}">로그인</a> 
+		<span>|</span> 
+		<a th:href="@{/findPw}">비밀번호 찾기</a> 
+		<span>|</span> 
+		<a th:href="@{/user/join}">회원가입</a>
+	</div>
+
+</div>
+
+</body>
+</html>

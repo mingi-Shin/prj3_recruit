@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기 인력</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/user/jobPosting/css/header.css}" />
+<link rel="stylesheet" th:href="@{/user/jobPosting/css/footer.css}" />
+<link rel="stylesheet" th:href="@{/user/jobPosting/css/review_write.css}" />
+<style>
+
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+	  const stars = document.querySelectorAll('.star-rating span');
+	  const ratingInput = document.getElementById('ratingInput');
+	  
+	  stars.forEach((star, index) => {
+	    star.addEventListener('click', () => {
+	      const rating = index + 1;
+	      ratingInput.value = rating;
+	      stars.forEach((s, i) => {
+	        s.classList.toggle('selected', i < rating);
+	      });
+	    });
+	    
+	    // 마우스 호버 효과
+	    star.addEventListener('mouseenter', () => {
+	      stars.forEach((s, i) => {
+	        s.style.color = i <= index ? '#ffc107' : '#dee2e6';
+	      });
+	    });
+	  });
+	  
+	  // 마우스가 별점 영역을 벗어날 때 원래 상태로 복원
+	  document.querySelector('.star-rating').addEventListener('mouseleave', () => {
+	    const currentRating = parseInt(ratingInput.value) || 0;
+	    stars.forEach((s, i) => {
+	      s.style.color = i < currentRating ? '#ffc107' : '#dee2e6';
+	    });
+	  });
+	  
+	  // 폼 검증
+	  document.querySelector('form').addEventListener('submit', function(e) {
+	    const rating = parseInt(ratingInput.value);
+	    const summary = document.getElementById('summary').value.trim();
+	    const pros = document.getElementById('pros').value.trim();
+	    const cons = document.getElementById('cons').value.trim();
+	    
+	    if (rating === 0 || rating < 1 || rating > 5) {
+	      alert('별점을 선택해주세요.');
+	      e.preventDefault();
+	      return;
+	    }
+	    
+	    if (!summary) {
+	      alert('한줄평을 입력해주세요.');
+	      e.preventDefault();
+	      return;
+	    }
+	    
+	    if (!pros) {
+	      alert('장점을 입력해주세요.');
+	      e.preventDefault();
+	      return;
+	    }
+	    
+	    if (!cons) {
+	      alert('단점을 입력해주세요.');
+	      e.preventDefault();
+	      return;
+	    }
+	  });
+	});
+</script>
+</head>
+<body>
+<header>
+<div th:replace="~{fragments/header :: header}"></div>
+</header>
+
+<main>
+<div class="review-container">
+
+<!-- 알림 메시지 -->
+<div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+<div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+<h2 th:text="${companyName != null ? companyName + ' 후기 작성' : '기업 후기 작성'}">기업 후기 작성</h2>
+
+<form action="/user/job_posting/review" method="post">
+<input type="hidden" name="corpNo" th:value="${corpNo}" />
+<input type="hidden" name="rating" id="ratingInput" value="0" />
+
+<div class="form-group">
+<label>별점 평가 <span style="color: red;">*</span></label>
+<div class="star-rating">
+<span>★</span><span>★</span><span>★</span><span>★</span><span>★</span>
+</div>
+<small class="form-text text-muted">별을 클릭하여 평점을 선택하세요 (1~5점)</small>
+</div>
+
+<div class="form-group">
+<label for="summary">한줄평 <span style="color: red;">*</span></label>
+<input type="text" id="summary" name="summary" 
+       placeholder="회사에 대한 총평을 한 줄로 요약해주세요 (최대 150자)" 
+       class="form-control" 
+       maxlength="150"
+       required />
+</div>
+
+<div class="form-group">
+<label for="pros">장점 <span style="color: red;">*</span></label>
+<textarea id="pros" name="pros" 
+          placeholder="이 회사의 장점을 구체적으로 작성해주세요 (최대 1000자)" 
+          maxlength="1000"
+          required></textarea>
+</div>
+
+<div class="form-group">
+<label for="cons">단점 <span style="color: red;">*</span></label>
+<textarea id="cons" name="cons" 
+          placeholder="아쉬웠던 점이나 개선사항을 작성해주세요 (최대 1000자)" 
+          maxlength="1000"
+          required></textarea>
+</div>
+
+<div class="form-group">
+<button type="submit" class="btn btn-primary">후기 등록하기</button>
+<a th:href="@{/user/job_posting/review(corpNo=${corpNo})}" class="btn btn-secondary">취소</a>
+</div>
+
+</form>
+</div>
+
+</main>
+
+<footer>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+</body>
+</html>

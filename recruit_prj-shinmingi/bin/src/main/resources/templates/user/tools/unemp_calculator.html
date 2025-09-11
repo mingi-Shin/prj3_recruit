@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기 인력</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/user/tools/css/tools_header.css}" />
+<link rel="stylesheet" th:href="@{/user/tools/css/umemp_calculator.css}" />
+<style type="text/css">
+</style>
+<script type="text/javascript">
+$(function() {
+	  function formatNumber(num) { return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+	  function parseNumber(str) { return parseInt(str.replace(/,/g, '')) || 0; }
+
+	  $('#salary').on('input', function() {
+	    let value = $(this).val().replace(/,/g, '');
+	    if (!isNaN(value) && value !== '') {
+	      $(this).val(formatNumber(value));
+	    }
+	  });
+
+	  $('.quick-btn').on('click', function() {
+	    let currentValue = parseNumber($('#salary').val());
+	    let addAmount = parseInt($(this).data('amount'));
+	    let newValue = currentValue + addAmount;
+	    $('#salary').val(formatNumber(newValue));
+	    calculateUnemploymentBenefit();
+	  });
+
+	  function calculateAge(birthDate, referenceDate) {
+	    let birth = new Date(birthDate);
+	    let reference = new Date(referenceDate);
+	    let age = reference.getFullYear() - birth.getFullYear();
+	    if (reference.getMonth() < birth.getMonth() || 
+	       (reference.getMonth() === birth.getMonth() && reference.getDate() < birth.getDate())) age--;
+	    return age;
+	  }
+
+	  function calculateWorkPeriod(startDate, endDate) {
+	    let start = new Date(startDate);
+	    let end = new Date(endDate);
+	    let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+	    return months < 0 ? 0 : months;
+	  }
+
+	  function getUnemploymentPeriod(age, workMonths) {
+		  let isUnder50 = age < 50;
+		  if (workMonths < 12) return 120;
+		  else if (workMonths < 36) return isUnder50 ? 150 : 180;
+		  else if (workMonths < 60) return isUnder50 ? 180 : 210;
+		  else if (workMonths < 120) return isUnder50 ? 210 : 240;
+		  else return isUnder50 ? 240 : 270;
+		}
+
+	  function calculateUnemploymentBenefit() {
+	    let birthDate = $('#birthDate').val(), startDate = $('#startDate').val(), endDate = $('#endDate').val();
+	    let salary = parseNumber($('#salary').val());
+
+	    if (!birthDate || !startDate || !endDate || salary === 0) {
+	      resetResults();
+	      return;
+	    }
+
+	    let age = calculateAge(birthDate, endDate);
+	    let workMonths = calculateWorkPeriod(startDate, endDate);
+	    let benefitDays = getUnemploymentPeriod(age, workMonths);
+
+	    let dailyWage = Math.floor(salary / 30);
+	    let dailyBenefit = Math.floor(dailyWage * 0.6);
+
+	    let maxDailyBenefit = 66000; // 2025 상한액
+	    let minDailyBenefit = 64192; // 2025 하한액
+
+	    dailyBenefit = Math.max(Math.min(dailyBenefit, maxDailyBenefit), minDailyBenefit);
+
+	    let totalBenefit = dailyBenefit * benefitDays;
+	    let monthlyBenefit = dailyBenefit * 30;
+
+	    $('.result-header').html(`총 실업급여<br>${formatNumber(totalBenefit)}<span class="won-unit">원</span>`);
+	    $('.result-row').eq(0).find('.result-value').text(`만 ${age}세`);
+	    $('.result-row').eq(1).find('.result-value').text(`${benefitDays}일`);
+	    $('.result-row').eq(2).find('.result-value').text(`${formatNumber(dailyBenefit)}원`);
+	    $('.result-row').eq(3).find('.result-value').text(`${formatNumber(monthlyBenefit)}원`);
+	  }
+
+	  function resetResults() {
+	    $('.result-header').html('총 실업급여<br>0<span class="won-unit">원</span>');
+	    $('.result-row .result-value').each(function() { $(this).text('0'); });
+	  }
+
+	  $('#birthDate, #startDate, #endDate, #salary').on('change input', function() {
+		  let startDate = $('#startDate').val();
+		  let endDate = $('#endDate').val();
+
+		  if (startDate && endDate) {
+		    let start = new Date(startDate);
+		    let end = new Date(endDate);
+		    let diffMs = end - start;
+		    let diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+		    if (diffDays < 180) {
+		      alert('근무 기간이 6개월(180일) 미만입니다. 실업급여 수급 요건을 충족하지 않습니다.');
+		      $('#startDate').val('');
+		      $('#endDate').val('');
+		      resetResults();
+		      return; // 계산하지 않고 종료
+		    }
+		  }
+
+		  calculateUnemploymentBenefit();
+		});
+
+	  $('#resetBtn').on('click', function() {
+	    let today = new Date().toISOString().split('T')[0];
+	    $('#birthDate').val('');
+	    $('#startDate').val('');
+	    $('#endDate').val(today);
+	    $('#salary').val('0');
+	    resetResults();
+	  });
+
+	  $('#calculateBtn').on('click', function() {
+	    calculateUnemploymentBenefit();
+	    let totalText = $('.result-header').text().trim();
+	    navigator.clipboard.writeText(totalText).then(() => alert('결과가 클립보드에 복사되었습니다.'), () => alert('복사 실패!'));
+	  });
+
+	  calculateUnemploymentBenefit();
+	});
+</script>
+</head>
+<body>
+	<header>
+		<div th:replace="~{fragments/header :: header}"></div>
+	</header>
+	<main>
+		<div th:replace="~{user/tools/tools_header :: tools-header}"></div>
+		<div class="salary-calculator">
+			<div class="calculator-content">
+				<div class="left-panel">
+					<div class="form-group">
+						<label class="form-label">생년월일</label> <input type="date"
+							class="form-input" id="birthDate">
+					</div>
+
+					<div class="date-row">
+						<div class="form-group">
+							<label class="form-label">입사일</label> <input type="date"
+								class="form-input" id="startDate">
+						</div>
+						<div class="form-group">
+							<label class="form-label">퇴사일 (마지막 근무일)</label> <input
+								type="date" class="form-input" id="endDate">
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label class="form-label">월급 (세전)</label>
+						<div class="salary-input-group">
+							<input type="text" class="form-input salary-input" id="salary"
+								value="0"> <span class="salary-unit">원</span>
+						</div>
+						<div class="quick-buttons">
+							<button class="quick-btn" data-amount="1000000">+100만</button>
+							<button class="quick-btn" data-amount="100000">+10만</button>
+						</div>
+					</div>
+
+					<div class="notice-text">
+						퇴사 당시 나이와 고용보험 가입 기간에 따라 실업급여를 받을 수 있는 기간이 달라집니다. 퇴사 전 3개월간의 평균
+						급여를 기준으로 산정됩니다.<br> <br> 본 계산기는 모의계산 결과 확인 효력이 없습니다.<br>
+						<br> 수급 여부 및 정확한 금액은 반드시 관할 고용센터에 문의하시기 바랍니다.<br> <br>
+						실 수령액 산정 기준 : <a href="#">실업급여 신청 기준 보기</a><br> <br>
+						실업급여 수급 관련 정보 : <a href="#">실업급여 지급 확인</a>, <a href="#">실업급여
+							받는 방법</a>
+					</div>
+				</div>
+
+				<div class="right-panel">
+					<div class="result-header">
+						총 실업급여<br>0<span class="won-unit">원</span>
+					</div>
+
+					<div class="result-row">
+						<span class="result-label">퇴사 당시 만 나이</span> <span
+							class="result-value">만 0세</span>
+					</div>
+
+					<div class="result-row">
+						<span class="result-label">지급 기간</span> <span class="result-value">0일</span>
+					</div>
+
+					<div class="result-row">
+						<span class="result-label">1일 지급 금액</span> <span
+							class="result-value">0원</span>
+					</div>
+
+					<div class="result-row">
+						<span class="result-label">월 평균 지급 금액</span> <span
+							class="result-value">0원</span>
+					</div>
+
+					<div class="action-buttons">
+						<button class="btn btn-primary">결과 복사</button>
+						<button class="btn btn-secondary">↻ 초기화</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</main>
+	<footer>
+		<div th:replace="~{fragments/footer :: footer}"></div>
+	</footer>
+</body>
+</html>
+

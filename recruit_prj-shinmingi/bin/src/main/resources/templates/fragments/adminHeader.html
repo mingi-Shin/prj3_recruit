@@ -1,0 +1,100 @@
+<!-- fragments/adminHeader.html -->
+<th:block th:fragment="adminHeader">
+<link rel="stylesheet" th:href="@{/admin/css/admin_header.css}"/>
+    <!-- 모바일 메뉴 버튼 -->
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+
+    <!-- 사이드바 오버레이 -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+    <!-- 사이드바 -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <a th:href="@{/admin/admin_mainpage}">
+                    <img th:src="@{/images/logo.png}" alt="민기인력 로고" class="corp-logo" style="width: 80%; height: 80%; object-fit: contain;">
+                </a>
+            </div>
+            <div class="admin-info">
+                <h3>관리자</h3>
+                <p>시스템 관리</p>
+                <a th:href="@{/admin/logout}" class="sidebar-logout-btn">로그아웃</a>
+            </div>
+        </div>
+
+        <div class="sidebar-menu">
+            <!-- 기본 메뉴 그룹 -->
+            <div class="menu-group">
+            <span sec:authorize="hasRole('SUPER') ">
+                <a th:href="@{/admin/admin_dashboard}" class="menu-item">대시보드</a>
+                <a th:href="@{/admin/admin_list}" class="menu-item">관리자명단</a>
+                </span>
+            </div>
+
+            <!-- 회원 관리 그룹 -->
+            <div class="menu-group">
+            <div sec:authorize="hasRole('회원관리팀') or hasRole('SUPER')">
+                <div class="menu-item main-menu">회원관리</div>
+                <a th:href="@{/admin/admin_member}" class="menu-item sub-menu">회원목록</a>
+                <a th:href="@{/admin/admin_resume}" class="menu-item sub-menu">이력서관리</a>
+                </div>
+            </div>
+
+            <!-- 기업 관리 그룹 -->
+            <div class="menu-group">
+            <div sec:authorize="hasRole('기업관리팀') or hasRole('SUPER')">
+                <div class="menu-item main-menu">기업관리</div>
+                <a th:href="@{/admin/admin_corp}" class="menu-item sub-menu">기업목록</a>
+                <a th:href="@{/admin/admin_review}" class="menu-item sub-menu">리뷰관리</a>
+                <a th:href="@{/admin/admin_jobPosting}" class="menu-item sub-menu">공고관리</a>
+            </div>
+            </div>
+
+            <!-- 고객센터 관리 그룹 -->
+            <div sec:authorize="hasRole('고객센터팀') or hasRole('SUPER')">
+            <div class="menu-group">
+                <div class="menu-item main-menu">고객센터관리</div>
+                <a th:href="@{/admin/admin_inquiry}" class="menu-item sub-menu">문의내역</a>
+                <a th:href="@{/admin/admin_faq}" class="menu-item sub-menu">FAQ</a>
+                <a th:href="@{/admin/notice_list}" class="menu-item sub-menu">공지사항</a>
+            </div>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('active');
+        }
+
+        function closeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+        }
+
+        // 메뉴 아이템 클릭 시 활성화 상태 변경
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // 모든 메뉴에서 active 클래스 제거
+                document.querySelectorAll('.menu-item').forEach(menu => {
+                    menu.classList.remove('active');
+                });
+
+                // 클릭한 메뉴에 active 클래스 추가
+                this.classList.add('active');
+
+                // 모바일에서는 사이드바 닫기
+                if (window.innerWidth <= 768) {
+                    closeSidebar();
+                }
+            });
+        });
+    </script>
+</th:block>

@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>민기인력 - 기업 메인</title>
+<!-- 카카오지도 -->
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<link rel="stylesheet" th:href="@{/corp/mainCss/main_page.css}"/>
+<link rel="stylesheet" th:href="@{/corp/jobPosting/jobPostingForm.css}">
+<style>
+
+</style>
+<script type="text/javascript">
+//header에서 corpNo갖고와서 전역변수에 넣을 꺼야.
+var corpNo = "";
+
+document.addEventListener('DOMContentLoaded', () => {
+	const userInfo = `[[${user}]]`; //그냥 문자열임 
+	console.log(userInfo);
+	
+	//header에서 가져옴 
+	corpNo = document.querySelector('#userCorpNo').value;
+	
+	// 카카오맵 주소 찾기
+	document.getElementById("openKakaoMap").addEventListener("click", openKakaoMap);
+	
+	// 포지션 비동기 검색 조회
+	getPositionList();
+	
+	// 기술스택 비동기 검색 조회
+	getStackList();
+	
+	// 폼 제출 이벤트 리스너 추가
+	setupFormSubmission();
+	
+	// 진행률 표시 기능 초기화
+	initProgressTracking();
+	
+	// 미리보기 기능 : 미구현 
+	//initPreviewFeature();
+	
+	// 공고 시작일을 현재 날짜로 설정
+	setPostingStartDate();
+	
+	//급여 입력 자동 채우기 
+	initSalaryFormatting();
+	
+	//계약직 이외 선택시 계약기간 탭 비활성화
+	preventContDt();
+	
+	//공고 마감일 현재날짜보다 앞으로 못가게 감시 
+	document.querySelector('input[name="postingEndDt"]').addEventListener('change', setPostingEndDate);
+	
+	//계약 날짜 검증
+	document.querySelectorAll('.contractDt').forEach(input => {
+		input.addEventListener('change', isValidStdEdd);
+	});
+	
+});//end ready
+
+/**
+ * 카카오 주소찾기 API 호출
+ */
+function openKakaoMap(){
+	new daum.Postcode({
+	    oncomplete: function(data) {
+	    	console.log('주소 검색 결과:', data);
+	    	document.getElementById("region").value = data.sido; // 시도 
+	    	document.getElementById("district").value = data.sigungu; // 시군구 
+	    	document.getElementById("zipcode").value = data.zonecode; // 우편번호 
+	    	document.getElementById("roadAddress").value = data.roadAddress; // 도로명주소 
+	    }
+	}).open();
+}
+
+/**
+ * 포지션 리스트 비동기 검색 기능
+ */
+function getPositionList() {
+	const positionInput = document.getElementById('positionName');
+	const resultBox = document.getElementById('resultBox');
+	
+	function noResultBox(){
+		document.querySelector('#resultBox').style.display = 'none';
+	}
+	function showResultBox(){
+		document.querySelector('#resultBox').style.display = 'block';
+	}
+	
+	//검색어 입력 시
+	positionInput.addEventListener('keyup', function () {
+		let keyword = this.value.trim();
+		if (keyword === '') {
+			resultBox.style.display = 'none';
+			return;
+		}
+		searchFetch(keyword);
+	});
+
+	//input클릭하면 결과창 호출
+	positionInput.addEventListener('click', function () {
+		if (this.value.trim() !== '') {
+			showResultBox();
+		}
+	});
+
+	//바깥 클릭시 결과창 닫음 , 단 클릭 이벤트가 먼저 실행되도록 살짝 지연
+	positionInput.addEventListener('focusout', function () {
+		setTimeout(() => {
+			resultBox.style.display = 'none';
+		}, 150); 
+	});
+
+	// 마우스가 resultBox 버튼누르면 focusout 무시---------------------- 이거 엄청 중요 이게 포인트 
+	resultBox.addEventListener('mousedown', function (e) {
+		e.preventDefault(); // input focus 아예 안 빠지게 막음
+	});
+	
+	// 1글자 이상일 때 검색 시작
+	function searchFetch(keyword){
+		let resultBox = document.querySelector('#resultBox');
+		
+		if (keyword.length >= 1) {
+			fetch(`/corp/searchPositionByKeyword?keyword=${encodeURIComponent(keyword)}`)
+				.then(response => {
+					if (!response.ok) {
+						throw new Error("포지션 리스트 호출 중 서버 오류 발생");
+					}
+					return response.json();
+				})
+				.then(data => {
+					if (data.length > 0) {
+						resultBox.innerHTML = ''; // 기존 내용 초기화 
+						resultBox.style.display = 'block';
+
+						// 검색 결과를 리스트로 표시
+						data.forEach(item => {
+							const li = document.createElement('li');
+							li.textContent = item.positionName;
+							li.classList.add('position-li');
+							li.setAttribute('data-position-seq', item.positionSeq);
+
+							// 포지션 선택 시 이벤트
+							li.addEventListener('click', function () {
+								document.getElementById('positionName').value = item.positionName;
+								document.getElementById('positionSeq').value = item.positionSeq;
+								console.log(item.positionName);
+								resultBox.style.display = 'none';
+								console.log('스타일 닫힘 안보여야해 ')
+							});
+
+							resultBox.appendChild(li);
+						});
+					} else {
+						// 검색 결과가 없는 경우
+						document.getElementById('positionSeq').value = '';
+						resultBox.innerHTML = '<li>검색 결과 없음</li>';
+						resultBox.style.display = 'block';
+					}
+				})
+				.catch(error => {
+					console.error("포지션 검색 에러:", error);
+					resultBox.innerHTML = '<li>검색 중 오류가 발생했습니다.</li>';
+					resultBox.style.display = 'block';
+				});
+		}
+	} //searchFetch()
+}
+
+
+/**
+ * 기술스택 검색 및 추가 기능
+ */
+function getStackList() {
+	const techStackList = document.querySelector("#techStack-list");
+	const suggestedList = document.querySelector("#suggestedStackList");
+
+	/**
+	 * 기술스택 추가 함수
+	 */
+	function addTechStack(stackName, stackSeq) {
+		// 중복 방지 체크
+		const isDuplicate = [...document.querySelectorAll('input[name="techStack"]')]
+			.some(input => input.value.toLowerCase() === stackName.toLowerCase());
+
+		if (isDuplicate) {
+			alert(`${stackName}는 이미 등록하셨습니다.`);
+			return;
+		}
+
+		// 최대 5개 제한
+		if (document.querySelectorAll('input[name="techStack"]').length >= 5) {
+			alert('기술스택은 최대 5개까지 추가 가능합니다.');
+			return;
+		}
+
+		// 스택 뱃지 생성
+		const badge = document.createElement("span");
+		badge.className = "badge bg-primary tech-tag me-1";
+		badge.innerHTML = `${stackName} <button type="button" class="btn-close btn-close-white btn-sm ms-2" aria-label="Close"></button>`;
+
+		// 스택 이름을 위한 hidden input
+		const hiddenInput = document.createElement("input");
+		hiddenInput.type = "hidden";
+		hiddenInput.name = "techStack";
+		hiddenInput.value = stackName;
+		badge.appendChild(hiddenInput);
+
+		// 스택 시퀀스를 위한 hidden input
+		const hiddenSeqInput = document.createElement("input");
+		hiddenSeqInput.type = "hidden";
+		hiddenSeqInput.name = "techStackSeqList";
+		hiddenSeqInput.value = stackSeq;
+		hiddenSeqInput.id = `input-${stackName}`;
+		badge.appendChild(hiddenSeqInput);
+
+		// 삭제 버튼 이벤트
+		badge.querySelector("button").addEventListener("click", (e) => {
+			e.preventDefault();
+			techStackList.removeChild(badge);
+		});
+
+		techStackList.appendChild(badge);
+	}
+	
+	//suggestedStackList 안보이게 함수
+	function noSuggestedStackList(){
+		document.querySelector('#suggestedStackList').style.display = 'none';
+	}
+	//suggestedStackList 보이게 함수
+	function showSuggestedStackList(){
+		document.querySelector('#suggestedStackList').style.display = 'block';
+	}
+
+	// 기술스택 검색 자동완성
+	document.querySelector("#techStackSearch").addEventListener("input", function () {
+		const keyword = this.value.trim();
+		suggestedList.innerHTML = "";
+		
+		if(keyword.length >= 0){
+			showSuggestedStackList();
+		}
+
+		if (keyword.length === 0){
+			noSuggestedStackList();
+			return;
+		}
+		
+		document.querySelector("#techStackSearch").addEventListener('focusout', function(){
+			noSuggestedStackList();
+		});
+		document.querySelector("#techStackSearch").addEventListener('click', function(){
+			showSuggestedStackList();
+		});
+		
+		// 마우스가 suggestedStackList 버튼누르면 focusout 무시
+		suggestedList.addEventListener('mousedown', function (e) {
+			e.preventDefault(); // input focus 아예 안 빠지게 막음
+		});
+		
+
+		// 기술스택 검색 API 호출
+		fetch(`/corp/searchStackByKeyword?keyword=${encodeURIComponent(keyword)}`)
+			.then(response => {
+				if (!response.ok) {
+					throw new Error("기술스택 호출 중 오류 발생");
+				}
+				return response.json();
+			})
+			.then(data => {
+				suggestedList.innerHTML = "";
+				
+
+				// 검색어에 맞는 데이터 필터링
+				const filteredData = data.filter(item =>
+					item.stackName.toLowerCase().includes(keyword.toLowerCase())
+				);
+
+				if (filteredData.length > 0) {
+					// 검색 결과 리스트 생성
+					filteredData.forEach(item => {
+						const li = document.createElement('li');
+						li.textContent = item.stackName;
+						li.classList.add('stack-li');
+						li.setAttribute('data-stack-seq', item.techStackSeq);
+
+						// 스택 선택 시 이벤트
+						li.addEventListener('click', function () {
+							addTechStack(item.stackName, item.techStackSeq);
+							suggestedList.innerHTML = "";
+							document.querySelector("#techStackSearch").value = "";
+							suggestedList.style.display = 'none';
+						});
+						suggestedList.style.display = 'block';
+
+						suggestedList.appendChild(li);
+					});
+				} else {
+					suggestedList.innerHTML = '<li>검색 결과 없음</li>';
+					suggestedList.style.display = 'block';
+				}
+			})
+			.catch(error => {
+				console.error("기술스택 검색 에러:", error);
+				suggestedList.innerHTML = '<li>기술 스택 검색 중 오류가 발생했습니다.</li>';
+				suggestedList.style.display = 'block';
+			});
+	});
+	
+}
+
+/**
+ * 폼 제출 이벤트 설정
+ */
+function setupFormSubmission() {
+	document.getElementById('submitFormBtn').addEventListener('click', function(e) {
+		e.preventDefault();
+		
+		// 계약직인 경우 계약 기간 필수 체크
+		const employType = document.querySelector('[name="employType"]').value;
+		if(employType === "계약"){
+			document.getElementById('contStartDt').setAttribute('required', 'required');
+			document.getElementById('contEndDt').setAttribute('required', 'required');
+		} else {
+			document.getElementById('contStartDt').removeAttribute('required');
+			document.getElementById('contEndDt').removeAttribute('required');
+		}
+		
+		// 필수 필드 유효성 검사
+		if (!validateRequiredFields()) {
+			return;
+		}
+		
+		// 폼 데이터를 JSON으로 변환하여 전송
+		submitJobPostingForm();
+	});
+}
+
+/**
+ * 필수 필드 유효성 검사
+ * @returns {boolean} 유효성 검사 결과
+ */
+function validateRequiredFields() {
+	const requiredFields = document.querySelectorAll('[required]');
+	let isValid = true;
+	
+	requiredFields.forEach(field => {
+		if (!field.value.trim()) {
+			field.style.borderColor = '#e74c3c';
+			isValid = false;
+		} else {
+			field.style.borderColor = '#e1e8ed';
+		}
+	});
+	
+	if (!isValid) {
+		alert('필수 항목을 모두 입력해주세요.');
+		return false;
+	}
+	
+	return true;
+}
+
+/**
+ * 채용공고 폼 데이터를 JSON으로 변환하여 서버에 전송
+ */
+function submitJobPostingForm() {
+	try {
+		// 폼 데이터 수집
+		const formData = collectFormData();
+		
+		// JSON 형태로 서버에 전송
+		fetch('/corp/uploadJobPosting', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json', //내가 보내는 요청의 형식 (예: JSON을 보내는 중)
+				'Accept': 'application/json' //내가 받고 싶은 응답 형식 (예: JSON 받고 싶음)
+				//사용방법은 나중에 더 알아봐 
+			},
+			body: JSON.stringify(formData)
+		})
+		.then(response => {
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			return response.text(); // 서버에서 문자열 응답을 받음
+		})
+		.then(data => {
+			console.log('공고 등록 성공:', data);
+			alert('채용공고가 성공적으로 등록되었습니다!');
+			// 성공 시 리다이렉트 또는 페이지 이동
+			location.href = "/corp/main";
+		})
+		.catch(error => {
+			console.error('공고 등록 에러:', error);
+			alert('공고 등록 중 오류가 발생했습니다. 다시 시도해주세요.');
+		});
+		
+	} catch (error) {
+		console.error('폼 데이터 처리 에러:', error);
+		alert('폼 데이터 처리 중 오류가 발생했습니다.');
+	}
+}
+
+/**
+ * 폼 데이터를 객체로 반환
+ */
+function collectFormData() {
+	// 기본 폼 데이터 수집
+	const formData = {
+		postingTitle: document.getElementById('postingTitle').value,
+		positionSeq: document.getElementById('positionSeq').value,
+		expLevel: document.getElementById('expLevel').value,
+		eduLevel: document.getElementById('eduLevel').value,
+		employType: document.getElementById('employType').value,
+		recruitCnt: parseInt(document.getElementById('recruitCnt').value),
+		salary: document.getElementById('salary').value ? parseInt(document.getElementById('salary').value.replace( /,/g, '')) : 0, //,삭제 잊지말기 
+		workday: document.getElementById('workday').value,
+		workStartTime: document.getElementById('workStartTime').value,
+		workEndTime: document.getElementById('workEndTime').value,
+		contStartDt: document.getElementById('contStartDt').value,
+		contEndDt: document.getElementById('contEndDt').value,
+		zipcode: document.getElementById('zipcode').value,
+		roadAddress: document.getElementById('roadAddress').value,
+		detailAddress: document.getElementById('detailAddress').value,
+		region: document.getElementById('region').value,
+		district: document.getElementById('district').value,
+		postingDetail: document.getElementById('postingDetail').value,
+		postingStartDt: document.getElementById('postingStartDt').value,
+		postingEndDt: document.getElementById('postingEndDt').value,
+		corpNo: corpNo //헤더에서 갖고왔음 
+	};
+	
+	// 기술스택 배열 수집
+	const techStackInputs = document.querySelectorAll('input[name="techStack"]');
+	const techStackSeqInputs = document.querySelectorAll('input[name="techStackSeqList"]');
+	
+	formData.techStack = Array.from(techStackInputs).map(input => input.value);
+	formData.techStackSeqList = Array.from(techStackSeqInputs).map(input => parseInt(input.value));
+	
+	console.log('수집된 폼 데이터:', formData);
+	return formData;
+}
+
+/**
+ * 진행률 표시 기능 초기화 (클로드 선생 쎼쎼)
+ */
+function initProgressTracking() {
+	const inputs = document.querySelectorAll('.form-input, .form-textarea, .form-select');
+	const progressFill = document.querySelector('.progress-fill');
+	const progressText = document.querySelector('.progress-text');
+	
+	/**
+	 * 진행률 업데이트 함수
+	 */
+	function updateProgress() {
+		const requiredFields = document.querySelectorAll('[required]');
+		const filledFields = Array.from(requiredFields).filter(input => {
+			if (input.type === 'checkbox' || input.type === 'radio') {
+				return input.checked;
+			}
+			return input.value.trim() !== '';
+		}).length;
+		
+		const progress = Math.round((filledFields / requiredFields.length) * 100);
+		
+		progressFill.style.width = progress + '%';
+		progressText.textContent = progress + '% 완료';
+		
+		// 프로그레스 바 색상 변경
+		if (progress < 30) {
+			progressFill.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)';
+		} else if (progress < 70) {
+			progressFill.style.background = 'linear-gradient(90deg, #f39c12, #e67e22)';
+		} else {
+			progressFill.style.background = 'linear-gradient(90deg, #667eea, #764ba2)';
+		}
+	}
+	
+	// 입력 필드 변경 시 진행률 업데이트
+	inputs.forEach(input => {
+		input.addEventListener('input', updateProgress);
+		input.addEventListener('change', updateProgress);
+	});
+	
+	// 초기 진행률 설정
+	updateProgress();
+}
+
+/**
+ * 미리보기 기능 초기화
+ */
+/* function initPreviewFeature() {
+	document.querySelector('.preview-btn').addEventListener('click', function() {
+		const formData = collectFormData();
+		
+		alert('미리보기 기능을 준비중.. \n\n입력된 데이터는 콘솔에서 확인..');
+	});
+} */
+
+/**
+ * 공고 시작일을 현재 날짜로 설정(숨겨있으니 알아서 조심 )
+ */
+function setPostingStartDate() {
+	const today = new Date();
+	const formattedDate = today.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+	document.getElementById('postingStartDt').value = formattedDate;
+}
+
+/**
+ * 공고 마감일 현재날짜보다 앞으로 못가게 감시 
+ */
+ function setPostingEndDate(){
+	const today = new Date();
+	let dt = document.querySelector('input[name="postingEndDt"]').value;
+	//날짜로 변환
+	const endDt =  new Date(dt);
+	if(endDt < today.setHours(0,0,0,0)){
+		alert('공고 마감일은 오늘보다 이전일 수 없습니다. ');
+		document.querySelector('input[name="postingEndDt"]').value = "";
+	}
+}
+
+/**
+ * 연봉 입력 시 단위 표시 기능
+ */
+function initSalaryFormatting() {
+	const salaryInput = document.querySelector('input[name="salary"]');
+	if (salaryInput) {
+		salaryInput.addEventListener('input', function() {
+			let value = this.value;
+			value = value.replace(/[^0-9]/g, ''); //숫자 이외의 문자 제거
+			this.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+		});
+	}
+}
+
+/**
+ * 계약직 이외 선택시, 계약기간 탭 비활성화 
+ */
+ function preventContDt(){
+	document.querySelector('select[name="employType"]').addEventListener('change', function(){
+		let type = this.value;
+		if(type == "계약"){
+			document.querySelector('input[name="contStartDt"]').disabled = false;
+			document.querySelector('input[name="contEndDt"]').disabled = false;
+		} else {
+			document.querySelector('input[name="contStartDt"]').disabled = true;
+			document.querySelector('input[name="contEndDt"]').disabled = true;
+			document.querySelector('input[name="contStartDt"]').value = "";
+			document.querySelector('input[name="contEndDt"]').value = "";
+		}
+	})
+}
+
+/**
+ * 계약기간 날짜 실시간 검증 
+ */
+function isValidStdEdd(){
+ 	const today = new Date();
+ 	const startDayStr = document.querySelector('input[name="contStartDt"]').value;
+ 	const endDayStr = document.querySelector('input[name="contEndDt"]').value;
+
+ 	//날짜로 변환
+ 	const startDay = new Date(startDayStr);
+ 	const endDay = new Date(endDayStr);
+ 	
+ 	//1. 시작일은 오늘보다 전으로 할수 없다.
+ 	if(startDay < today.setHours(0,0,0,0,)){
+ 		alert("계약 시작일은 오늘보다 이전이 될 수 없습니다.");
+ 		document.querySelector('input[name="contStartDt"]').value = "";
+ 		return;
+ 	}
+ 	//2. 마감일은 시작일보다 앞일 수 없다. 
+ 	if(endDay < startDay.setHours(0,0,0,0)){
+ 		alert("계약 마감일은 시작일보다 이전이 될 수 없습니다. ");
+ 		document.querySelector('input[name="contEndDt"]').value = "";
+ 		return;
+ 	}
+ }
+
+</script>
+
+</head>
+<body>
+<th:block th:replace="~{fragments/corpHeader :: corpHeader}"></th:block>
+
+<div class="job-posting-container">
+    <div class="job-posting-header">
+        <h1 class="job-posting-title">채용공고 등록</h1>
+        <p class="job-posting-subtitle">우수한 인재를 찾아보세요. 정확하고 상세한 정보로 더 많은 지원자를 만나보세요.</p>
+    </div>
+
+    <div class="job-posting-main">
+        <div class="job-posting-form">
+            <form id="frm" th:action="@{/corp/uplaodJobPosting}" method="post" enctype="application/x-www-form-urlencoded">
+                
+                <!-- 기본 정보 섹션 -->
+                <div class="job-posting-section">
+                    <h2 class="section-title">📋 기본 정보</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">공고 제목</label>
+                        <input type="text" id="postingTitle" name="postingTitle" class="form-input" placeholder="예: [신입/경력] 백엔드 개발자 모집" required>
+                        <div class="form-help">지원자들이 가장 먼저 보게 되는 제목입니다. 명확하고 매력적으로 작성해주세요.</div>
+                    </div>
+
+                    <div class="form-group position-box">
+                        <label class="form-label required">포지션</label>
+                        <input type="text" id="positionName" class="form-input" placeholder="포지션 검색" style="position: relative;" autocomplete="off">
+                        <ul id="resultBox" class="list-group position-absolute" style="display: none" ></ul>
+                        <input type="hidden" id="positionSeq"> <!-- hidden으로 -->
+                    </div>
+                    
+                    <div class="form-group techStack-box">
+                        <label class="form-label">주요 기술스택 <span style="color: red">*</span> </label>
+                        <input type="text" id="techStackSearch" name="techStackSearch" class="form-input" placeholder="예: Java, Spring Boot, MySQL, AWS">
+                        <!-- 검색 리스트 (비동기로 ul > li) -->
+												<ul id="suggestedStackList" class="list-group mt-1 position-absolute" style="z-index:1000; display: none;"></ul>
+												<!-- 선택된 스택들 -->
+												<div id="techStack-list" class="mt-3"></div>
+												<!-- 스택 seq담을 input -->
+												<div id="hiddenInputsArea"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">경력 요구사항</label>
+                        <select name="expLevel" id="expLevel" class="form-select" required>
+                            <option value="none" selected readonly>경력 수준을 선택하세요</option>
+                            <option value="전체">전체 (신입/경력 무관)</option>
+                            <option value="신입">신입 (경력 없음)</option>
+                            <option value="1년">1년 이상</option>
+                            <option value="2년">2년 이상</option>
+                            <option value="3년">3년 이상</option>
+                            <option value="4년">4년 이상</option>
+                            <option value="5년">5년 이상</option>
+                            <option value="6년">6년 이상</option>
+                            <option value="7년">7년 이상</option>
+                            <option value="8년">8년 이상</option>
+                            <option value="9년">9년 이상</option>
+                            <option value="10년">10년 이상</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">학력 조건</label>
+                        <select name="eduLevel" id="eduLevel" class="form-select" required>
+                            <option value="">학력 조건을 선택하세요</option>
+                            <option value="무관">학력 무관</option>
+                            <option value="고졸이상">고등학교 졸업 이상</option>
+                            <option value="초대졸">전문대학 졸업 이상</option>
+                            <option value="대졸">대학교 졸업 이상</option>
+                            <option value="석사">석사 이상</option>
+                            <option value="박사">박사 이상</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 근무 조건 섹션 -->
+                <div class="job-posting-section">
+                    <h2 class="section-title">💼 근무 조건</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">고용 형태</label>
+                        <select name="employType" id="employType" class="form-select" required>
+                            <option value="">고용 형태를 선택하세요</option>
+                            <option value="정규">정규직</option>
+                            <option value="계약">계약직</option>
+                            <option value="인턴">인턴</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">모집 인원</label>
+                        <input type="number" id="recruitCnt" name="recruitCnt" class="form-input" placeholder="모집 인원 수" min="1" required>
+                        <div class="form-help">채용 예정 인원 수를 입력해주세요.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">급여</label>
+                        <input type="text" id="salary" name="salary" class="form-input" placeholder="연봉을 입력하세요 (단위: 원)" >
+                        <div class="salary-info">
+                            <span>회사내규를 원하실 경우 0을 입력해주세요.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">근무 요일</label>
+                        <input type="text" id="workday" name="workday" class="form-input" placeholder="예: 월~금, 주 5일">
+                        <div class="form-help">근무하는 요일을 입력해주세요.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">근무 시간</label>
+                        <div class="time-range">
+                            <input type="time" id="workStartTime" name="workStartTime" class="form-input" value="09:00">
+                            <span>~</span>
+                            <input type="time" id="workEndTime" name="workEndTime" class="form-input" value="18:00">
+                        </div>
+                        <div class="form-help">근무 시작 시간과 종료 시간을 설정해주세요.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">계약 기간 (계약직인 경우)</label>
+                        <div class="date-range">
+                            <input type="date" id="contStartDt" name="contStartDt" class="form-input contractDt">
+                            <span>~</span>
+                            <input type="date" id="contEndDt" name="contEndDt" class="form-input contractDt">
+                        </div>
+                        <div class="form-help">계약직인 경우에만 입력해주세요.</div>
+                    </div>
+                </div>
+
+                <!-- 근무지 정보 섹션 -->
+                <div class="job-posting-section">
+                    <h2 class="section-title">📍 근무지 정보</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">근무지 주소</label>
+                        <div class="zipcode-box">
+                            <input type="text" id="zipcode" name="zipcode" class="form-input" placeholder="우편번호" readonly>
+                            <button type="button" id="openKakaoMap" class="btn btn-secondary">우편번호 찾기</button>
+                        </div>
+                        <input type="text" id="roadAddress" name="roadAddress" class="form-input" placeholder="도로명 주소" readonly style="margin-bottom: 10px;">
+                        <input type="text" id="detailAddress" name="detailAddress" class="form-input" placeholder="상세 주소 (건물명, 층수 등)">
+                        <div class="form-help">정확한 근무지 정보는 지원자들의 지원 결정에 중요한 요소입니다.</div>
+                        <input type="hidden" id="region" name="region">
+                        <input type="hidden" id="district" name="district">
+                    </div>
+                </div>
+
+                <!-- 상세 정보 섹션 -->
+                <div class="job-posting-section">
+                    <h2 class="section-title">📝 상세 정보</h2>
+                    
+                    <div class="form-help important">
+                        <strong>✨ 작성 가이드</strong><br>
+                        • 주요 업무와 책임을 구체적으로 명시해주세요<br>
+                        • 필요한 기술과 경험을 명확히 작성해주세요<br>
+                        • 회사 문화와 복지 혜택을 상세히 소개해주세요<br>
+                        • 성장 기회와 교육 지원에 대해 언급해주세요
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label required">채용공고 상세 내용</label>
+                        <textarea name="postingDetail" id="postingDetail" class="form-textarea" rows="12" wrap="on"
+												placeholder="📌 주요 업무&#10;- 담당하게 될 구체적인 업무 내용을 작성해주세요&#10;- 프로젝트 성격, 사용 기술, 협업 방식 등을 포함해주세요&#10;&#10;🎯 자격 요건&#10;- 필수 요구사항을 명확히 작성해주세요&#10;- 우대사항도 함께 작성하시면 좋습니다&#10;&#10;🎁 복지 및 혜택&#10;- 급여 외 복리후생을 상세히 작성해주세요&#10;- 교육 지원, 근무 환경, 성장 기회 등을 포함해주세요&#10;&#10;📋 채용 절차&#10;- 서류 전형부터 최종 면접까지의 과정을 안내해주세요"
+												required></textarea>
+                    </div>
+                    <div class="form-group">
+                    	<input type="hidden" id="postingStartDt" name="postingStartDt" value="">
+                        <label class="form-label required">공고 마감일</label>
+                        <div class="date-range">
+                            <div style="flex: 1;">
+                                <input type="date" id="postingEndDt" name="postingEndDt" class="form-input" required>
+                            </div>
+                        </div>
+                        <div class="form-help">공고가 게시될 기간을 설정해주세요.</div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="job-posting-sidebar">
+            <div class="sidebar-card">
+                <h3 class="sidebar-title">🚀 공고 등록</h3>
+                
+                <div class="progress-indicator">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div class="progress-text">0% 완료</div>
+                </div>
+
+                <button type="button" form="frm" id="submitFormBtn"  class="submit-btn">채용공고 등록하기</button>
+                
+                <div class="preview-section">
+<!--                     <button type="button" class="preview-btn">미리보기</button> -->
+                </div>
+            </div>
+
+            <div class="sidebar-card tips-section">
+                <h4 class="tips-title">💡 작성 팁</h4>
+                <ul class="tips-list">
+                    <li>구체적이고 명확한 업무 내용 작성</li>
+                    <li>필요한 기술스택과 경험 명시</li>
+                    <li>회사 문화와 복지 혜택 상세 기재</li>
+                    <li>성장 기회와 교육 지원 내용 포함</li>
+                    <li>투명한 채용 절차 안내</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:replace="~{fragments/corpFooter :: corpFooter}"></th:block>
+</body>
+</html>

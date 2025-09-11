@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전체 인재</title>
+    <th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+    <link rel="stylesheet" th:href="@{/corp/talentPool/talent_pool.css}" />
+    <link rel="stylesheet" th:href="@{/corp/talentPool/interviewOffer.css}"/>
+<style>
+</style>
+</head>
+<body>
+    <th:block th:replace="~{fragments/corpHeader :: corpHeader}"></th:block>
+    <div class="container">
+		<th:block th:replace="~{fragments/talentPoolHeader :: talentPoolHeader(activeTab='talent_pool')}"></th:block>
+		<div class="search-toolbar">
+		    <div class="list-totalcount">
+		        전체 <span th:text="${totalCount}"></span>건
+		    </div>
+		    <div class="sort-controls">
+			  <span class="sort-btn" data-sort="latest">최신순</span> |
+			  <span class="sort-btn" data-sort="career">경력순 <span class="arrow"></span></span> |
+			  <span class="sort-btn" data-sort="education">학력순 <span class="arrow"></span></span>
+				<select class="page-size-select" name="size" id="pageSizeSelect">
+				    <option value="5" th:selected="${pageSize == 5}">5명씩</option>
+				    <option value="10" th:selected="${pageSize == 10}">10명씩</option>
+				    <option value="20" th:selected="${pageSize == 20}">20명씩</option>
+				</select>
+		    </div>
+		</div>
+       	
+       	<div class="talent-list"></div>
+   	</div><!--end컨테이너--> 
+   	
+<div class="modal" id="interviewModal" style="display:none;"></div>
+<div class="pagination">
+  <a href="#" class="page-btn prev-block">이전</a>
+  <span class="page-numbers"></span>
+  <a href="#" class="page-btn next-block">다음</a>
+</div>
+<div id="pagination-data" th:data-total-pages="${totalPages}"
+						  th:data-current-page="${page}"></div>
+
+
+<script th:inline="javascript">
+(() => {
+    // 페이지 관련 초기 설정
+    let currentPage = parseInt(document.getElementById('pagination-data')?.dataset.currentPage || '1');
+    let totalPages = parseInt(document.getElementById('pagination-data')?.dataset.totalPages || '1');
+    let currentSortBy = 'latest';
+    let currentOrder = 'desc';
+    const blockSize = 5; // 페이지네이션 기본 사이즈
+
+    // 인재 리스트 로딩 함수
+    function loadTalentList(page = 1) {
+        const pageSizeSelect = document.getElementById('pageSizeSelect');
+        const talentListEl = document.querySelector('.talent-list');
+        const size = pageSizeSelect?.value || '5';
+
+        const filterParams = new URLSearchParams(); // 새로운 URLSearchParams 객체 생성
+
+        // 기존의 정렬 및 페이지네이션 파라미터 추가
+        filterParams.append('listType', 'all');
+        filterParams.append('page', page);
+        filterParams.append('size', size);
+        filterParams.append('sortBy', currentSortBy);
+        filterParams.append('order', currentOrder);
+
+        // 폼 요소들에서 필터 값을 직접 읽어와 URLSearchParams에 추가
+        const formElements = document.querySelectorAll('#searchForm select, #searchForm input[type="text"]');
+        formElements.forEach(el => {
+            if (el.name && el.value) {
+                // 'searchKeyword'는 현재 옵션이 비어있고 'keyword'로 통합 검색하므로,
+                // 'searchKeyword' 필드는 파라미터에 포함하지 않습니다.
+                if (el.name !== 'searchKeyword') {
+                    filterParams.append(el.name, el.value);
+                }
+            }
+        });
+
+        // corpNo 추가 (hidden input에서 값 가져오기)
+        const corpNoInput = document.getElementById('corpNo');
+        if (corpNoInput && corpNoInput.value) {
+            filterParams.append('corpNo', corpNoInput.value);
+        }
+
+        // 서버로 fetch 요청 보내고 결과를 talent-list에 렌더링
+        // 쿼리 스트링에 필터 파라미터 추가
+        fetch(`/corp/talentPool/sort?${filterParams.toString()}`)
+            .then(res => {
+                if (!res.ok) {
+                    console.error(`HTTP error! status: ${res.status}`);
+                    return res.text().then(text => { throw new Error(text); });
+                }
+                return res.text();
+            })
+            .then(html => {
+                if (!talentListEl) return;
+                talentListEl.innerHTML = html;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                currentPage = page;
+                bindListEvents();
+                renderPagination();
+            })
+            .catch(err => {
+                console.error('목록 로딩 실패:', err);
+                alert('인재 목록을 불러오는 데 실패했습니다. 자세한 내용은 콘솔을 확인해주세요.');
+            });
+    }
+
+    // 페이지네이션 버튼 렌더링
+    function renderPagination() {
+        const paginationContainer = document.querySelector('.page-numbers');
+        const prevBlockBtn = document.querySelector('.prev-block');
+        const nextBlockBtn = document.querySelector('.next-block');
+
+        if (!paginationContainer) return;
+        paginationContainer.innerHTML = '';
+
+        const currentBlock = Math.floor((currentPage - 1) / blockSize);
+        const startPage = currentBlock * blockSize + 1;
+        const endPage = Math.min(startPage + blockSize - 1, totalPages);
+
+        // 페이지 버튼 생성
+        for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement('a');
+            btn.href = '#';
+            btn.textContent = i;
+            btn.className = 'page-btn';
+            if (i === currentPage) btn.classList.add('active');
+            btn.addEventListener('click', e => {
+                e.preventDefault();
+                loadTalentList(i);
+            });
+            paginationContainer.appendChild(btn);
+        }
+
+        // 이전/다음 블록 이동 버튼 이벤트
+        if (prevBlockBtn) {
+            prevBlockBtn.onclick = e => {
+                e.preventDefault();
+                if (startPage > 1) loadTalentList(startPage - 1);
+            };
+        }
+        if (nextBlockBtn) {
+            nextBlockBtn.onclick = e => {
+                e.preventDefault();
+                if (endPage < totalPages) loadTalentList(endPage + 1);
+            };
+        }
+    }
+
+    // 모달 닫기 이벤트 (ESC 키)
+    function bindModalClose() {
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeModal();
+        });
+    }
+
+    // 모달 닫기 함수
+    function closeModal() {
+        const modalEl = document.getElementById('interviewModal');
+        if (!modalEl) return;
+        modalEl.style.display = 'none';
+        modalEl.innerHTML = '';
+        document.body.style.overflow = 'auto';
+    }
+
+    // 정렬 버튼 클릭 이벤트 바인딩
+    function bindSortEvents() {
+        const sortButtons = document.querySelectorAll('.sort-btn');
+        sortButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const clickedSortBy = btn.dataset.sort;
+                if (!clickedSortBy) return;
+
+                // 같은 버튼 두 번 누르면 asc <-> desc 토글
+                if (currentSortBy === clickedSortBy) {
+                    currentOrder = currentOrder === 'desc' ? 'asc' : 'desc';
+                } else {
+                    // 새로운 정렬 항목 클릭 시 무조건 desc로 시작
+                    currentSortBy = clickedSortBy;
+                    currentOrder = 'desc';
+                }
+
+                // 버튼 스타일 및 텍스트 갱신
+                sortButtons.forEach(b => {
+                    b.classList.remove('active');
+                    b.innerText = getSortText(b.dataset.sort, null);
+                });
+
+                btn.classList.add('active');
+                btn.innerText = getSortText(clickedSortBy, currentOrder);
+
+                // 리스트 다시 불러오기
+                loadTalentList(1);
+            });
+        });
+    }
+
+    // 정렬 버튼 텍스트 설정 함수
+    function getSortText(sortBy, order) {
+        const baseText = {
+            latest: '최신순',
+            career: '경력순',
+            education: '학력순',
+        };
+        if (!order || sortBy === 'latest') return baseText[sortBy];
+        return `${baseText[sortBy]} ${order === 'desc' ? '↓' : '↑' }`;
+    }
+
+    // 페이지 사이즈 변경 이벤트
+    function bindPageSizeChange() {
+        const pageSizeSelect = document.getElementById('pageSizeSelect');
+        if (!pageSizeSelect) return;
+        pageSizeSelect.addEventListener('change', () => {
+            loadTalentList(1);
+        });
+    }
+
+    // 각종 버튼 이벤트 바인딩 (스크랩, 면접 제안 모달 등)
+    function bindListEvents() {
+        const talentListEl = document.querySelector('.talent-list');
+        if (!talentListEl) return;
+
+        // 스크랩 버튼 기능
+        talentListEl.querySelectorAll('.bookmark-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const resumeSeq = btn.dataset.resumeSeq;
+                const star = btn.querySelector('.bookmark-star');
+                if (!resumeSeq || !star) return;
+
+                fetch('/corp/talentPool/scrap', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resumeSeq }),
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'scrap_success') {
+                        star.textContent = '★';
+                        star.classList.add('filled');
+                    } else if (data.status === 'scrap_cancel') {
+                        star.textContent = '☆';
+                        star.classList.remove('filled');
+                    } else {
+                        alert('스크랩 실패: ' + data.status);
+                    }
+                })
+                .catch(() => alert('스크랩 실패'));
+            });
+        });
+
+        // 면접 제안 모달 열기
+        talentListEl.querySelectorAll('.openInterviewModalBtn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const resumeSeq = btn.dataset.resumeSeq;
+                const corpNo = btn.dataset.corpNo;
+                console.log("버튼에서 가져온 corpNo:", corpNo);
+
+                const modalEl = document.getElementById('interviewModal');
+
+                fetch('/corp/talentPool/interviewOffer')
+                    .then(res => res.text())
+                    .then(html => {
+                        modalEl.innerHTML = html;
+                        modalEl.style.display = 'block';
+                        document.body.style.overflow = 'hidden';
+
+                        const form = modalEl.querySelector('form');
+                        const hiddenCorpNoInput = form.querySelector('input[name="corpNo"]');
+
+                        if (hiddenCorpNoInput) {
+                            hiddenCorpNoInput.value = corpNo;
+                        }
+
+                        const hiddenResumeSeqInput = form.querySelector('input[name="resumeSeq"]');
+                        if (hiddenResumeSeqInput) {
+                            hiddenResumeSeqInput.value = resumeSeq;
+                        } else {
+                            const newHiddenResumeSeqInput = document.createElement('input');
+                            newHiddenResumeSeqInput.type = 'hidden';
+                            newHiddenResumeSeqInput.name = 'resumeSeq';
+                            newHiddenResumeSeqInput.value = resumeSeq;
+                            form.appendChild(newHiddenResumeSeqInput);
+                        }
+
+                        // 면접 제안 보내기
+                        form.onsubmit = (e) => {
+                            e.preventDefault();
+                            const formData = new FormData(form);
+                            const data = Object.fromEntries(formData.entries());
+
+                            console.log('전송할 데이터:', data);
+
+                            fetch('/corp/talentPool/interviewOffer/send', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(data)
+                            })
+                            .then(res => res.json())
+                            .then(result => {
+                                if (result.status === 'success') {
+                                    alert('면접 제안이 전송되었습니다.');
+                                    closeModal();
+                                } else {
+                                    alert('전송 실패: ' + result.message);
+                                }
+                            })
+                            .catch(() => alert('전송 실패'));
+                        };
+
+                        modalEl.querySelector('.modal-close')?.addEventListener('click', closeModal);
+                    })
+                    .catch(() => alert('면접 제안 모달 로딩 실패'));
+            });
+        });
+    }
+
+    // 이력서 상세 보기 기능 (이 함수는 jQuery 사용, $.ajax가 필요)
+    function viewResumeDetail(resumeSeq) {
+        console.log("열람한 이력서 번호:", resumeSeq);
+        // jQuery가 페이지에 로드되어 있다고 가정합니다.
+        if (typeof $ === 'undefined') {
+            console.error("jQuery is not loaded. Cannot use $.ajax.");
+            alert("페이지에 jQuery가 로드되어 있지 않아 이력서 열람 기능을 사용할 수 없습니다.");
+            return;
+        }
+
+        $.ajax({
+            type: "POST",
+            url: "/corp/resume_detail/resume/view",
+            data: { resumeSeq: resumeSeq },
+            success: function (response) {
+                if (response === "success") {
+                    window.location.href = "/corp/talentPool/resume_detail?resumeNo=" + resumeSeq;
+                } else {
+                    alert("이력서 열람 처리 중 오류가 발생했습니다.");
+                }
+            },
+            error: function () {
+                alert("서버 오류로 인해 열람 처리에 실패했습니다.");
+            }
+        });
+    }
+
+
+    // 필터 태그 및 검색 폼 관련 로직
+    const searchForm = document.getElementById('searchForm');
+    const filterTags = document.getElementById('filterTags');
+    const hiddenInputs = document.getElementById('hiddenInputs'); // 이 요소는 이제 UI 반영에만 사용
+    const resetBtn = document.getElementById('resetFilters');
+    const selectedFilters = document.getElementById('selectedFilters');
+
+    // HTML의 필드 id와 일치해야 합니다.
+    const fields = ['keyword', 'gender', 'career', 'address', 'education', 'techStack', 'position'];
+
+    // 현재 선택된 필터들을 UI 태그로 표시하고, hidden input에도 저장하는 함수
+    function updateFilterTags() {
+        filterTags.innerHTML = ''; // 기존 태그 초기화
+        hiddenInputs.innerHTML = ''; // hiddenInputs 초기화 (UI 동기화 목적)
+
+        let activeTagCount = 0;
+
+        fields.forEach(fieldId => {
+            const el = document.getElementById(fieldId);
+            if (!el) return;
+
+            let values = [];
+
+            if (el.multiple) { // 다중 선택 (현재 HTML에는 없음)
+                values = Array.from(el.selectedOptions).map(opt => opt.value);
+            } else { // 단일 선택 또는 텍스트 입력
+                const value = el.value?.trim();
+                // searchKeyword select는 현재 옵션이 없으므로 태그로 표시하지 않음
+                if (value && value !== '' && fieldId !== 'searchKeyword') {
+                    values = [value];
+                }
+            }
+
+            values.forEach(value => {
+                if (!value || value === '') return;
+
+                // select 박스인 경우 option의 textContent, 아니면 value 그대로 사용
+                let label = value;
+                if (el.tagName === 'SELECT') {
+                    const selectedOption = el.querySelector(`option[value="${value}"]`);
+                    if (selectedOption) {
+                        label = selectedOption.textContent;
+                    }
+                }
+
+                // 태그 생성
+                const tag = document.createElement('div');
+                tag.className = 'filter-tag';
+                tag.textContent = label;
+
+                const closeBtn = document.createElement('span');
+                closeBtn.textContent = '×';
+                closeBtn.className = 'remove-tag';
+                closeBtn.dataset.field = fieldId;
+                closeBtn.dataset.value = value;
+
+                tag.appendChild(closeBtn);
+                filterTags.appendChild(tag);
+
+                // 히든 인풋 추가 (이것은 이제 UI 동기화 목적입니다. loadTalentList는 직접 폼에서 값을 읽습니다.)
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = fieldId;
+                hiddenInput.value = value;
+                hiddenInputs.appendChild(hiddenInput);
+
+                activeTagCount++;
+            });
+        });
+
+        selectedFilters.style.display = activeTagCount > 0 ? 'block' : 'none';
+    }
+
+    // 셀렉트박스 변경 시 필터 갱신 및 목록 로드
+    fields.forEach(fieldId => {
+        const el = document.getElementById(fieldId);
+        if (el) {
+            el.addEventListener('change', () => {
+                updateFilterTags(); // UI 태그 갱신
+                loadTalentList(1); // 데이터 재로드
+            });
+        }
+    });
+
+    // 키워드 입력 후 엔터 시 필터 갱신 및 목록 로드
+    const keywordInput = document.getElementById('keyword');
+    keywordInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // 폼 제출 방지
+            updateFilterTags(); // UI 태그 갱신
+            loadTalentList(1); // 데이터 재로드
+        }
+    });
+
+    // 태그에서 x 클릭 시 필터 제거 및 목록 로드
+    filterTags.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-tag')) {
+            const fieldId = e.target.dataset.field;
+            const valueToRemove = e.target.dataset.value;
+            const el = document.getElementById(fieldId);
+
+            if (el) {
+                if (el.multiple) {
+                    Array.from(el.options).forEach(opt => {
+                        if (opt.value === valueToRemove) {
+                            opt.selected = false;
+                        }
+                    });
+                } else {
+                    el.value = ''; // 단일 선택 필드의 경우, 선택을 초기화 (첫 번째 옵션 또는 빈 값)
+                }
+                updateFilterTags(); // UI 태그 갱신
+                loadTalentList(1); // 데이터 재로드
+            }
+        }
+    });
+
+    // 초기화 버튼 클릭 시 전체 필터 제거 및 목록 로드
+    resetBtn.addEventListener('click', () => {
+        fields.forEach(fieldId => {
+            const el = document.getElementById(fieldId);
+            if (el) {
+                if (el.multiple) {
+                    Array.from(el.options).forEach(opt => opt.selected = false);
+                } else {
+                    el.value = ''; // 단일 선택 필드 초기화
+                }
+            }
+        });
+        // searchKeyword도 초기화 (만약 이 select를 UI에 사용한다면)
+        const searchKeywordSelect = document.getElementById('searchKeyword');
+        if (searchKeywordSelect) {
+            searchKeywordSelect.value = '';
+        }
+
+        updateFilterTags(); // UI 태그 갱신
+        loadTalentList(1); // 데이터 재로드
+    });
+
+    // 검색 버튼 클릭 (폼 제출) 시 필터 갱신 및 목록 로드
+    searchForm.addEventListener('submit', (e) => {
+        e.preventDefault(); // 폼의 기본 제출 동작 막기
+        updateFilterTags(); // UI 태그 갱신
+        loadTalentList(1); // 데이터 재로드
+    });
+
+    // 페이지 로드 시 초기 실행
+    document.addEventListener('DOMContentLoaded', () => {
+        bindSortEvents();
+        bindPageSizeChange();
+        bindModalClose();
+        updateFilterTags(); // 초기 로딩 시 필터 UI를 먼저 반영
+        loadTalentList(currentPage); // 초기 로딩 시 필터도 함께 적용되도록
+    });
+
+})(); // IIFE 종료
+</script>
+
+<th:block th:replace="~{fragments/corpFooter :: corpFooter}"></th:block>
+</body>
+</html>

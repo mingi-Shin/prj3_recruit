@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="kr.co.sist.user.mapper.CorpScrapMapper">
+    
+    <!-- 스크랩 존재 여부 확인 -->
+    <select id="countScrap" resultType="int" parameterType="map">
+        SELECT COUNT(*)
+        FROM FAVORITE_COMPANY
+        WHERE corp_no = #{corpNo}
+          AND email = #{email}
+    </select>
+    
+    <!-- 스크랩 추가 -->
+    <insert id="insertScrap" parameterType="kr.co.sist.user.dto.CorpScrapDTO">
+           INSERT INTO FAVORITE_COMPANY (corp_no, email, scrap_date)
+  		   VALUES (#{corpNo}, #{email}, #{scrapDate})
+    </insert>
+    
+    <!-- 스크랩 삭제 -->
+    <delete id="deleteScrap" parameterType="map">
+        DELETE FROM FAVORITE_COMPANY
+        WHERE corp_no = #{corpNo}
+          AND email = #{email}
+    </delete>
+    
+</mapper>

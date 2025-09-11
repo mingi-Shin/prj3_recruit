@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.sist.corp.mapper.ResumeDetailMapper">
+
+  <!-- ResultMap: ResumeDetailDTO 기본정보 + member 연관정보 -->
+  <resultMap id="ResumeDetailResultMap" type="kr.co.sist.corp.dto.ResumeDetailDTO">
+    <id property="resumeSeq" column="resume_seq" />
+    <result property="title" column="title" />
+    <result property="image" column="image" />
+    <result property="introduction" column="introduction" />
+    <result property="createdAt" column="created_at" />
+    <result property="updatedAt" column="updated_at" />
+    <result property="careerType" column="career_type" />
+    <result property="isPublic" column="is_public" />
+    
+    <association property="member" javaType="kr.co.sist.user.dto.UserDTO">
+      <result property="email" column="email" />
+      <result property="name" column="name" />
+      <result property="phone" column="phone" />
+      <result property="birth" column="birth" />
+      <result property="profileImage" column="profile_image" />
+    </association>
+  </resultMap>
+
+  <!-- 기본 이력서 + 회원 정보 조회 -->
+  <select id="selectResumeBasic" parameterType="long" resultMap="ResumeDetailResultMap">
+    SELECT
+      r.resume_seq,
+      r.title,
+      r.image,
+      r.introduction,
+      r.created_at,
+      r.updated_at,
+      r.career_type,
+      r.is_public,
+      
+      m.email,
+      m.name,
+      m.phone,
+      m.birth,
+      m.profile_image
+    FROM RESUME r
+    JOIN MEMBER m ON r.email = m.email
+    WHERE r.resume_seq = #{resumeSeq}
+  </select>
+
+	<!-- 스크랩 여부 조회 -->
+  <select id="selectIsScrappedByResumeAndCorp" resultType="String">
+   SELECT IS_SCRAPPED
+   FROM RESUME_SCRAP
+   WHERE RESUME_SEQ = #{resumeSeq}
+   AND CORP_NO = #{corpNo}
+  </select>
+
+  <!-- 포지션 리스트 조회 -->
+  <select id="selectPositionsByResume" parameterType="long" resultType="kr.co.sist.user.dto.PositionCodeDTO">
+    SELECT pc.position_seq, pc.position_name
+    FROM RESUME_POSITION_CODE rpc
+    JOIN POSITION_CODE pc ON rpc.position_seq = pc.position_seq
+    WHERE rpc.resume_seq = #{resumeSeq}
+    ORDER BY pc.position_seq
+  </select>
+
+  <!-- 기술 스택 리스트 조회 -->
+  <select id="selectTechStacksByResume" parameterType="long" resultType="kr.co.sist.user.dto.TechStackDTO">
+    SELECT ts.tech_stack_seq, ts.stack_name
+    FROM RESUME_TECH_STACK rts
+    JOIN TECH_STACK ts ON rts.tech_stack_seq = ts.tech_stack_seq
+    WHERE rts.resume_seq = #{resumeSeq}
+    ORDER BY ts.tech_stack_seq
+  </select>
+
+  <!-- 학력 리스트 조회 -->
+  <select id="selectEducationsByResume" parameterType="long" resultType="kr.co.sist.user.dto.EducationHistoryDTO">
+    SELECT education_history_seq, resume_seq, index_num, school_name, department, grade, standard_grade, education_type, admission_date, graduate_date
+    FROM EDUCATION_HISTORY
+    WHERE resume_seq = #{resumeSeq}
+    ORDER BY index_num
+  </select>
+
+  <!-- 경력 리스트 조회 -->
+  <select id="selectCareersByResume" parameterType="long" resultType="kr.co.sist.user.dto.CareerDTO">
+    SELECT career_seq, resume_seq, index_num, company_name, position, career_description, start_date, end_date
+    FROM CAREER
+    WHERE resume_seq = #{resumeSeq}
+    ORDER BY index_num
+  </select>
+
+  <!-- 프로젝트 리스트 조회 -->
+  <select id="selectProjectsByResume" parameterType="long" resultType="kr.co.sist.user.dto.ProjectDTO">
+    SELECT project_seq, resume_seq, project_name, project_content, start_date, end_date, release_status, repository_link
+    FROM PROJECT
+    WHERE resume_seq = #{resumeSeq}
+    ORDER BY start_date DESC
+  </select>
+
+  <!-- 기타사항 리스트 조회 -->
+  <select id="selectAdditionalsByResume" parameterType="long" resultType="kr.co.sist.user.dto.AdditionalInfoDTO">
+    SELECT additional_info_seq, resume_seq, activity_name, record_type, related_agency, detail_content, end_date
+    FROM ADDITIONAL_INFO
+    WHERE resume_seq = #{resumeSeq}
+    ORDER BY end_date DESC
+  </select>
+
+  <!-- 자기소개서 리스트 조회 -->
+  <select id="selectIntroductionsByResume" parameterType="long" resultType="kr.co.sist.user.dto.SelfIntroductionDTO">
+    SELECT self_introduction_seq, resume_seq, title, content
+    FROM SELF_INTRODUCTION
+    WHERE resume_seq = #{resumeSeq}
+    ORDER BY self_introduction_seq
+  </select>
+
+  <!-- 링크 조회 -->
+  <select id="selectLinksByResume" parameterType="long" resultType="kr.co.sist.user.dto.LinkDTO">
+    SELECT link_seq, resume_seq, github_url, notion_url, blog_url
+    FROM LINK
+    WHERE resume_seq = #{resumeSeq}
+  </select>
+
+</mapper>

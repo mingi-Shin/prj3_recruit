@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{"/>
+<style type="text/css">
+body {
+	font-family: 'Arial', sans-serif;
+	margin: 0;
+	padding: 0;
+	background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+	min-height: 100vh;
+}
+
+.email-container {
+	max-width: 600px;
+	margin: 20px auto;
+	background-color: #ffffff;
+	border-radius: 15px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+	overflow: hidden;
+}
+
+.header {
+	background: linear-gradient(135deg, #dd7565 0%, #e89584 100%);
+	padding: 50px 20px;
+	text-align: center;
+	position: relative;
+}
+
+.header::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background:
+		url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+	opacity: 0.3;
+}
+
+.header img {
+	width: 300px;
+	height: 60px;
+	position: relative;
+	z-index: 1;
+}
+
+.content {
+	padding: 50px 30px;
+	text-align: center;
+	background-color: #ffffff;
+}
+
+.content h2 {
+	color: #dd7565;
+	margin-bottom: 30px;
+	font-size: 24px;
+	font-weight: 600;
+}
+
+.content p {
+	font-size: 16px;
+	color: #333333;
+	margin: 20px 0;
+	line-height: 1.6;
+}
+
+.password-section {
+	background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+	border-radius: 12px;
+	padding: 30px;
+	margin: 30px 0;
+	border-left: 4px solid #dd7565;
+}
+
+.password-label {
+	font-size: 14px;
+	color: #666;
+	margin-bottom: 10px;
+	font-weight: 500;
+}
+
+.password-box {
+	font-size: 20px;
+	font-weight: bold;
+	color: #dd7565;
+	background-color: #ffffff;
+	padding: 15px 20px;
+	border-radius: 8px;
+	border: 2px solid #dd7565;
+	letter-spacing: 2px;
+	word-break: break-all;
+	margin: 10px 0;
+}
+
+.security-notice {
+	background-color: #fff3cd;
+	border: 1px solid #ffeaa7;
+	border-radius: 8px;
+	padding: 20px;
+	margin: 25px 0;
+}
+
+.security-notice h3 {
+	color: #856404;
+	margin-top: 0;
+	margin-bottom: 10px;
+	font-size: 16px;
+}
+
+.security-notice p {
+	color: #856404;
+	margin: 8px 0;
+	font-size: 14px;
+}
+
+.security-notice ul {
+	color: #856404;
+	text-align: left;
+	margin: 10px 0;
+	padding-left: 20px;
+}
+
+.security-notice li {
+	margin: 5px 0;
+	font-size: 14px;
+}
+
+.footer {
+	background: linear-gradient(135deg, #dd7565 0%, #c86354 100%);
+	color: white;
+	text-align: center;
+	padding: 40px 30px;
+	font-size: 14px;
+}
+
+.footer p {
+	margin: 8px 0;
+	color: white;
+}
+
+.footer .contact-info {
+	margin: 20px 0;
+}
+
+.footer .contact-info p {
+	margin: 5px 0;
+}
+
+.note {
+	font-size: 13px;
+	color: #888888;
+	margin-top: 30px;
+	padding: 20px;
+	background-color: #f8f9fa;
+	border-radius: 8px;
+}
+
+.divider {
+	height: 2px;
+	background: linear-gradient(90deg, transparent, #dd7565, transparent);
+	margin: 30px 0;
+}
+
+@media ( max-width : 600px) {
+	.email-container {
+		margin: 10px;
+		border-radius: 10px;
+	}
+	.header img {
+		width: 250px;
+		height: 50px;
+	}
+	.content {
+		padding: 30px 20px;
+	}
+	.password-box {
+		font-size: 18px;
+		padding: 12px 15px;
+	}
+	.security-notice {
+		padding: 15px;
+	}
+}
+</style>
+<script type="text/javascript">
+	$(function() {
+
+	}); //ready
+</script>
+</head>
+<body>
+	<div class="email-container">
+		<div class="header">
+		</div>
+
+		<div class="content">
+			<h2>📩 이메일 인증번호</h2>
+			<p>안녕하세요, <strong>민기인력</strong>에서 요청하신 인증번호를 아래에 안내드립니다.</p>
+
+			<div class="password-section">
+				<div class="password-label">인증번호</div>
+				<div class="password-box" th:text="${authCode}"></div>
+			</div>
+
+			<p>
+				해당 인증번호는 <strong>5분 동안만 유효</strong>합니다.<br/>
+				시간이 초과되면 다시 요청해주세요.
+			</p>
+
+			<div class="divider"></div>
+
+			<div class="security-notice">
+				<h3>🛡️ 보안 안내사항</h3>
+				<ul>
+					<li>인증번호를 타인에게 공유하지 마세요</li>
+					<li>요청하지 않은 경우 이 메일을 무시해주세요</li>
+					<li>계정 보호를 위해 비밀번호도 주기적으로 변경해주세요</li>
+				</ul>
+			</div>
+
+			<div class="note">
+				본인이 인증 요청을 하지 않았을 경우 즉시 고객센터로 연락해주세요.<br />
+				<em>If you did not request email verification, please contact our support team immediately.</em>
+			</div>
+		</div>
+
+		<div class="footer">
+			<p>
+				<strong>MingiRecruit 고객센터</strong>
+			</p>
+			<div class="contact-info">
+				<p>📧 Email: shinmingi0621@gmail.com</p>
+				<p>📱 Instagram: <a href="https://www.instagram.com/aespa_official/">@MingiRecruit</a></p>
+			</div>
+			<br />
+			<p>Team MingiRecruit 고객센터 © All Rights Reserved</p>
+		</div>
+	</div>
+</body>
+</html>

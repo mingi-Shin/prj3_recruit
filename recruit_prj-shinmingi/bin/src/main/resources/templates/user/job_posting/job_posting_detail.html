@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기 인력</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/user/css/header.css}" />
+<link rel="stylesheet" th:href="@{/user/css/footer.css}" />
+<link rel="stylesheet" th:href="@{/user/jobPosting/css/main_page.css}"/>
+<link rel="stylesheet" th:href="@{/user/jobPosting/css/job_posting_detail.css}"/>
+<style type="text/css">
+</style>     
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function () {
+    const $modal = $('#applyModal');
+    let selectedResumeId = null;
+
+    // 모달 열기 - 마감일 체크 추가
+    $('#applyBtn').on('click', function (e) {
+        e.preventDefault();
+        
+        // 버튼이 비활성화되어 있으면 모달을 열지 않음
+        if ($(this).hasClass('disabled') || $(this).prop('disabled')) {
+            alert('마감된 공고입니다.');
+            return;
+        }
+        
+        $modal.show().addClass('show');
+        $('body').css('overflow', 'hidden'); // ✅ 스크롤 비활성화
+        fetchUserResumes();
+        fetchUserAttachments();
+    });
+
+    // 모달 닫기
+    function closeModal() {
+        $modal.hide().removeClass('show');
+        $('body').css('overflow', ''); // ✅ 스크롤 복원
+        selectedResumeId = null;
+        $('.resume-item').removeClass('selected');
+        $('#attachmentList').empty();
+        // 체크박스 상태 초기화
+        $('input[name="selectedAttachments"]').prop('checked', false);
+    }
+
+    $('#closeBtn, #cancelBtn').on('click', function () {
+        closeModal();
+    });
+
+    $(document).on('keydown', function (e) {
+        if (e.key === 'Escape' && $modal.hasClass('show')) {
+            closeModal();
+        }
+    });
+
+    // 이력서 불러오기
+    function fetchUserResumes() {
+        $.ajax({
+            url: '/user/resume',
+            method: 'GET',
+            success: function (resumes) {
+                renderResumeList(resumes);
+            },
+            error: function () {
+                alert('이력서 불러오기에 실패했습니다.');
+            }
+        });
+    }
+    
+    function fetchUserAttachments(){
+    	$.ajax({
+    		url:'/user/attachments',
+    		method:'GET',
+    		success:function(attachments){
+    			renderAttachmentList(attachments);
+    		},
+    		error: function () {
+                console.error('첨부파일 불러오기에 실패했습니다.');
+                $('#attachmentList').html('<p>첨부파일을 불러올 수 없습니다.</p>');
+            }
+    	});
+    }
+
+    
+    function fetchUserAttachments(){
+        console.log('첨부파일 불러오기 시작'); // 디버깅 로그
+        
+        $.ajax({
+            url:'/user/attachments',
+            method:'GET',
+            success:function(attachments){
+                console.log('첨부파일 조회 성공:', attachments); // 응답 데이터 확인
+                renderAttachmentList(attachments);
+            },
+            error: function (xhr, status, error) {
+                console.error('첨부파일 불러오기 실패:', error);
+                console.error('Status:', status);
+                console.error('Response:', xhr.responseText);
+                $('#attachmentList').html('<p style="color: red;">첨부파일을 불러올 수 없습니다. 오류: ' + error + '</p>');
+            }
+        });
+    }
+
+    // 첨부파일 렌더링 함수 (디버깅 추가)
+    function renderAttachmentList(attachments) {
+        console.log('첨부파일 렌더링 시작:', attachments); // 디버깅 로그
+        
+        const $container = $('#attachmentList');
+        $container.empty();
+
+        if (!attachments || attachments.length === 0) {
+            console.log('첨부파일이 없음'); // 디버깅 로그
+            $container.append('<p>등록된 첨부파일이 없습니다.</p>');
+            return;
+        }
+
+        console.log('첨부파일 개수:', attachments.length); // 디버깅 로그
+
+        attachments.forEach((attachment, index) => {
+            console.log(`첨부파일 ${index}:`, attachment); // 각 첨부파일 정보 확인
+            
+            const attachmentItem = $(`
+                <div class="attachment-item">
+                    <input type="checkbox" 
+                           id="attachment_${attachment.attachmentSeq}" 
+                           name="selectedAttachments" 
+                           value="${attachment.attachmentSeq}" 
+                           class="attachment-checkbox">
+                    <label for="attachment_${attachment.attachmentSeq}" class="attachment-label">
+                        <div class="attachment-icon">📎</div>
+                        <div class="attachment-info">
+                            <div class="attachment-name">${attachment.originalName || '파일명 없음'}</div>
+                            <div class="attachment-meta">
+                                ${attachment.createdAt || '날짜 정보 없음'} 업로드 
+                                ${attachment.fileSize ? '(' + Math.round(attachment.fileSize / 1024) + 'KB)' : ''}
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            `);
+            $container.append(attachmentItem);
+        });
+        
+        console.log('첨부파일 렌더링 완료'); // 디버깅 로그
+    }
+    
+    
+    function renderResumeList(resumes) {
+        const $container = $('.resume-section');
+        $container.empty();
+
+        if (!resumes || resumes.length === 0) {
+            $container.append('<p>등록된 이력서가 없습니다.</p>');
+            return;
+        }
+
+        resumes.forEach((resume, index) => {
+            const resumeId = resume.resumeSeq;
+
+            const resumeItem = $(`
+                <div class="resume-item">
+                    <input type="radio" id="resume_${resumeId}" name="selectedResume" value="${resumeId}" class="resume-radio">
+                    <label for="resume_${resumeId}" class="resume-label">
+                        <div class="resume-icon"></div>
+                        <div class="resume-info">
+                            <div class="resume-title">${resume.title}</div>
+                            <div class="resume-meta">${resume.createdAt || ''} 등록</div>
+                        </div>
+                    </label>
+                </div>
+            `);
+
+            resumeItem.find('input').on('change', function () {
+                selectedResumeId = parseInt($(this).val(), 10);
+                $('.resume-item').removeClass('selected');
+                resumeItem.addClass('selected');
+            });
+
+            $container.append(resumeItem);
+        });
+
+        if (resumes.length > 0) {
+            selectedResumeId = parseInt(resumes[0].resumeSeq, 10);
+            $(`#resume_${selectedResumeId}`).prop('checked', true);
+            $(`#resume_${selectedResumeId}`).closest('.resume-item').addClass('selected');
+        }
+    }
+
+
+    // 지원하기 버튼 클릭
+    $('#confirmBtn').on('click', function () {
+        if (!selectedResumeId) {
+            alert('이력서를 선택해주세요.');
+            return;
+        }
+
+        const jobPostingSeq = parseInt($('#jobPostingSeq').val(), 10);
+        if (!jobPostingSeq) {
+            alert('잘못된 공고 정보입니다.');
+            return;
+        }
+		
+        //선택한 첨부파일들
+        const selectedAttachments = [];
+        $('input[name="selectedAttachments"]:checked').each(function() {
+            selectedAttachments.push(parseInt($(this).val(), 10));
+        });
+
+
+        const formData = {
+            resumeSeq: selectedResumeId,
+            jobPostingSeq: jobPostingSeq,
+            selectedAttachments: selectedAttachments
+        };
+
+
+        $.ajax({
+            url: '/apply',
+            method: 'POST',
+            data: formData,
+            traditional: true, // 배열 파라미터 전송을 위해 필요
+            success: function () {
+                alert('지원 완료');
+                closeModal();
+            },
+            error: function (xhr) {
+                alert('지원 오류: ' + xhr.responseText);
+            }
+        });
+    });
+});
+
+$(document).ready(function () {
+    const jobPostingSeqStr = $("#jobPostingSeqForScrap").val();
+    if (jobPostingSeqStr && !isNaN(jobPostingSeqStr)) {
+        const jobPostingSeq = parseInt(jobPostingSeqStr, 10);
+
+        // ⭐ [1] 페이지 로딩 시 스크랩 상태 체크
+        $.ajax({
+            url: "/scrap/check",
+            method: "GET",
+            data: { jobPostingSeq: jobPostingSeq },
+            success: function (data) {
+                if (data.success) {
+                    const heartIcon = $("#heartIcon");
+                    heartIcon.text(data.scrapped ? "❤️" : "🤍");
+                }
+            },
+            error: function () {
+                console.error("스크랩 상태 확인 실패");
+            }
+        });
+
+        // ⭐ [2] 버튼 클릭 시 스크랩 추가/삭제
+        $("#scrapBtn").click(function () {
+            const heartIcon = $("#heartIcon");
+            const isScrapped = heartIcon.text() == "❤️";
+            const url = isScrapped ? "/scrap/remove" : "/scrap/add";
+
+            $.ajax({
+                url: url,
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ jobPostingSeq: jobPostingSeq }),
+                success: function (data) {
+                    alert(data.message);
+                    if (data.success) {
+                        heartIcon.text(isScrapped ? "🤍" : "❤️");
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error("스크랩 처리 중 오류:", error);
+                    alert("스크랩 처리 중 오류가 발생했습니다.");
+                }
+            });
+        });
+    } else {
+        console.warn("공고 번호가 유효하지 않습니다.");
+    }
+});
+
+$(document).ready(function () {
+    $("#shareBtn").click(function (e) {
+        e.preventDefault(); // 링크 이동 방지
+        var url = window.location.href;
+        var textarea = document.createElement("textarea");
+        document.body.appendChild(textarea);
+        textarea.value = url;
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+        alert("URL이 복사되었습니다.");
+    });
+});
+
+
+
+</script>
+
+</head>
+<body>
+<header>
+<div th:replace="~{fragments/header :: header}"></div>
+</header>
+<main>
+   <div class="main-container" style="display: flex; gap: 30px;">
+<div style="flex: 1;">
+
+            <br>
+            <h2 class="job_posting_title" th:text="${jDto.postingTitle}" style="font-weight: bold;"></h2>
+            
+            <br>
+            <div class="stack">
+                <h3 class="section-title" style="font-size: 20px;">기술스택</h3>
+                <div class="tech-stack-container">
+                       <span class="tech-stack-tag" th:text="${jDto != null} ? ${jDto.techNames} : ''"></span>
+                </div>
+            </div>
+
+	           <div class="job-section">
+				  <h2 style="font-size: 20px;">주요내용</h2>
+				  <div class="content-detail" th:text="${jDto.postingDetail}"></div>
+				</div>
+            <div class="job-info-box">
+                <div>
+                    <h2 style="font-size: 20px;" >경력</h2>
+                  <p th:text="${jDto.expLevel}" style="font-size: 15px;">경력</p>
+
+                </div>
+                <div>
+                    <h2 style="font-size: 20px;">학력</h2>
+                    <p th:text="${jDto.eduLevel}" style="font-size: 15px;">무관</p>
+                </div>
+                <div>
+                    <h2 style="font-size: 20px;">마감일 </h2>
+                    <p th:text="${jDto.postingEndDt}" style="font-size: 15px;">마감일</p>
+
+                </div>
+                <div>
+                    <h2 style="font-size: 20px;">근무지</h2>
+               	  <p th:text="|${jDto.roadAddress} ${jDto.detailAddress}|">근무주소</p>
+                </div>
+                <div> 
+                    <h2 style="font-size: 20px;">평균 연봉</h2>
+                    <p style="font-size: 15px;" th:text="${corpAvgSal}"></p>
+                </div>
+                <div>
+                  <h2 style="font-size: 20px;">근무형태</h2>
+				<div th:if="${jDto.employType != '계약'}">
+				    <p th:text="${jDto.employType} ?: '정보 없음'" style="font-size: 15px;">근무형태</p>
+				</div> 
+				<div th:if="${jDto.employType == '계약'}">
+				    <p style="font-size: 15px;">
+				        계약 기간: 
+				        <span th:text="|${jDto.contStartDt} ~ ${jDto.contEndDt}|"></span>
+				    </p>
+				</div>
+
+                </div>
+            </div>
+
+           <div class="company-intro">
+    <h2><strong>|기업소개|</strong></h2><br><br>
+    
+    <div class="company-content">
+        <img th:src="@{/images/corpimg/{img}(img=${jDto.corpImg})}" alt="기업 이미지"
+     style="width: auto; height: 400px; object-fit: cover; border-radius: 12px;" />
+        <br><br>
+  		  <h2 th:text="${jDto.corpNm}" style="font-size: 25px;">기업이름</h2><br>
+        <div class="company-description" th:text="${jDto.corpInfo}"></div>
+    </div>
+</div>
+        </div>
+    </div>
+
+    <!-- 플로팅 사이드바 -->
+  <div class="floating-sidebar">
+    <div class="company-floating-card">
+        <div class="company-logo-section">
+            <div class="logo-placeholder">
+                 <img th:src="@{/images/corplogo/{img}(img=${jDto.corpLogo})}" alt="로고" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" />
+            </div>
+            <div class="company-title">
+                <h4 th:text="${jDto.corpNm}">기업이름</h4>
+              <a th:href="@{/user/job_posting/company_info(corpNo=${jDto.corpNo})}">
+			  기업정보 보기 &gt;
+			</a>
+            </div>
+        </div>
+
+        <div class="company-info-section">
+            <div class="info-item">
+                <span class="label">설립일</span>
+		<!-- <span class="value" id="corpCreatedAt"
+		      th:text="${jDto.corpCreatedAt != null ? jDto.corpCreatedAt.substring(0,4) + '-' + jDto.corpCreatedAt.substring(4,6) + '-' + jDto.corpCreatedAt.substring(6,8) : '정보 없음'}">
+		</span> -->
+		<span class="value" id="corpCreatedAt"
+		      th:text="${jDto.corpCreatedAt}">
+		</span>
+                
+            </div>
+             <div class="info-item">
+                <span class="label">홈페이지</span>
+               <a th:href="${jDto.corpUrl}" target="_blank" class="go-link">바로가기</a>
+            </div>
+        </div>
+
+		<!-- 비회원 -->
+       <div sec:authorize="!hasRole('ROLE_USER') and !hasRole('ROLE_CORP')">
+          <a th:href="@{/login}" class="floating-apply-btn">지원하기</a>
+       </div>
+       
+		<!-- 회원 -->
+      <div sec:authorize="hasRole('ROLE_USER')">
+        <div th:if="${user != null and user.corpNo == null}">
+      
+       <button class="floating-apply-btn" 
+        id="applyBtn" 
+        th:disabled="${jDto.isEnded == 'Y'}" 
+        th:text="${jDto.isEnded == 'Y' ? '마감된 공고' : '지원하기'}"
+        th:classappend="${jDto.isEnded == 'Y' ? ' disabled' : ''}">
+		    지원하기
+		</button>
+		</div>
+       </div>
+	    <div class="floating-actions">
+                <input type="hidden" id="jobPostingSeqForScrap" th:value="${jDto.jobPostingSeq}"/>
+                
+                <button class="floating-action-btn" id="scrapBtn">
+                    <span class="icon" id="heartIcon">🤍</span>
+                    <span class="text">스크랩</span>
+                </button>
+                
+                <button class="floating-action-btn" id="shareBtn">
+                    <span class="icon">
+                        <a href="#" onclick="clip(); return false;">📃</a>
+                    </span>
+                    <span class="text">공유</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+<!-- 모달창 -->
+ <div id="applyModal" class="modal">
+        <div class="modal-content">
+        <input type="hidden" id="jobPostingSeq" th:value="${jDto.jobPostingSeq}" />
+            <div class="modal-header">
+                <h2>입사지원</h2>
+                <span class="close-btn" id="closeBtn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="job-info">
+                   <div class="job-info">
+				    <div class="job-title" th:text="${jDto.postingTitle}">공고 제목</div>
+				    <div class="job-company" th:text="${jDto.corpNm}">회사명</div>
+                </div>
+
+                <div class="section-title">통합 계정정보</div>
+                <div class="info-section">
+                    <div class="info-row">
+                        <span class="info-label">이름</span>
+                        <span class="info-value" th:text="${user != null ? user.name : '게스트'}"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">이메일</span>
+                        <span class="info-value" th:text="${user != null ? user.email : '게스트'}"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">연락처</span>
+                        <span class="info-value" th:text="${user != null ? user.phone : '게스트'}"></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">출생년도</span>
+                        <span class="info-value" th:text="${user != null && user.birth != null ? user.birth : '정보 없음'}"></span>
+                    </div>
+                </div>
+
+                <div class="section-title">지원 이력서 <span class="required">●</span></div>
+                <div class="resume-section">
+                    <th:block th:each="resume, stat : ${resumes}">
+                    <div class="resume-item">
+                        <input type="radio"   th:id="'resume' + ${stat.index}" name="selectedResume" th:value="${resume.resumeSeq}" class="resume-radio" th:checked="${stat.index == 0}">
+                        <label  th:for="'resume' + ${stat.index}" class="resume-label">
+                            <div class="resume-icon"></div>
+                            <div class="resume-info">
+                                <div class="resume-title"  th:text="${resume.title}"></div>
+                                <div class="resume-meta" th:text="|${resume.createdAt} 등록|"></div>
+                            </div>
+                        </label>
+                    </div>
+                    </th:block>
+                </div>
+					
+			<!-- 첨부파일 -->
+			<div class="section-title">추가 첨부파일 (선택사항)</div>
+			    <div class="attachment-section">
+			        <p class="attachment-description">지원서와 함께 제출할 추가 첨부파일을 선택하세요.</p>
+			        <div id="attachmentList">
+			            <!-- JavaScript로 동적 생성 -->
+			        </div>
+			    </div>
+			</div>
+										
+
+
+
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-cancel-btn" id="cancelBtn">취소</button>
+                <button class="modal-apply-btn" id="confirmBtn">지원하기</button>
+            </div>
+        </div>
+    </div>
+</div>
+</main>
+<footer>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</footer>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<div class="tool-menu-wrapper" th:fragment="tools-header">
+	<div class="tool-menu-title">
+		<h2>
+			취업TOOL <span>| [[${menuTitle}]]</span>
+		</h2>
+	</div>
+	<div class="tool-menu-list">
+		<table>
+			<tr>
+				<td><a href="/user/tools/resume_coach">AI자소서 코칭</a></td>
+				<td><a href="/user/tools/salary_calculator">연봉계산기</a></td>
+				<td><a href="/user/tools/severance_calculator">퇴직금 계산기</a></td>
+				<td><a href="/user/tools/unemp_calculator">실업급여 계산기</a></td>
+				<td><a href="/user/tools/image_adjustment">사진 크기 조정</a></td>
+			</tr>
+		</table>
+	</div>
+
+	<script>
+		$(function() {
+			var currentPath = window.location.pathname;
+			$('.tool-menu-list td').each(function() {
+				var link = $(this).find('a').attr('href');
+				if (link === currentPath) {
+					$(this).addClass('active');
+				}
+
+				$(this).on('click', function() {
+					window.location.href = link;
+				});
+			});
+		});
+	</script>
+</div>
+
+

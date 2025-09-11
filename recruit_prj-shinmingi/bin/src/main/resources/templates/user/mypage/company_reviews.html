@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>마이페이지</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" th:href="@{/user/mypage/css/sidebar.css}">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<style>
+/* 기업 리뷰 목록 전용 스타일 */
+.review-container {
+	background: #fff;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	margin-bottom: 20px;
+}
+
+.review-header {
+	background: #f8f9fa;
+	padding: 20px;
+	border-bottom: 1px solid #dee2e6;
+	border-radius: 8px 8px 0 0;
+}
+
+.review-stats {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 15px;
+}
+
+.total-count {
+	color: #495057;
+	font-size: 14px;
+}
+
+.review-actions {
+	display: flex;
+	gap: 10px;
+}
+
+.btn-outline-primary {
+	border: 1px solid #007bff;
+	color: #007bff;
+	background: transparent;
+	padding: 6px 12px;
+	font-size: 14px;
+	border-radius: 4px;
+	text-decoration: none;
+}
+
+.btn-outline-primary:hover {
+	background: #007bff;
+	color: white;
+}
+
+.filter-section {
+	display: flex;
+	gap: 15px;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.filter-item {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.filter-item label {
+	font-size: 14px;
+	color: #6c757d;
+	margin: 0;
+}
+
+.filter-item select {
+	border: 1px solid #ced4da;
+	border-radius: 4px;
+	padding: 4px 8px;
+	font-size: 14px;
+}
+
+.review-list {
+	padding: 0;
+}
+
+.review-item {
+	border-bottom: 1px solid #e9ecef;
+	padding: 20px;
+	transition: background-color 0.2s;
+}
+
+.review-item:hover {
+	background-color: #f8f9fa;
+}
+
+.review-item:last-child {
+	border-bottom: none;
+}
+
+.company-info {
+	display: flex;
+	align-items: center;
+	margin-bottom: 12px;
+}
+
+.company-logo {
+	width: 40px;
+	height: 40px;
+	border-radius: 6px;
+	margin-right: 12px;
+	background: #e9ecef;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 16px;
+	color: #6c757d;
+}
+
+.company-details h5 {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 600;
+	color: #212529;
+}
+
+.company-details .company-meta {
+	font-size: 13px;
+	color: #6c757d;
+	margin-top: 2px;
+}
+
+.review-rating {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 8px;
+}
+
+.stars {
+	color: #ffc107;
+}
+
+.rating-score {
+	font-weight: 600;
+	color: #212529;
+}
+
+.review-date {
+	font-size: 12px;
+	color: #6c757d;
+}
+
+.review-content {
+	margin-bottom: 12px;
+}
+
+.review-title {
+	font-size: 15px;
+	font-weight: 600;
+	color: #212529;
+	margin-bottom: 6px;
+}
+
+.review-text {
+	font-size: 14px;
+	color: #495057;
+	line-height: 1.5;
+	margin-bottom: 8px;
+}
+
+.review-pros-cons {
+	display: flex;
+	gap: 20px;
+	margin-bottom: 12px;
+}
+
+.pros, .cons {
+	flex: 1;
+}
+
+.pros-label, .cons-label {
+	font-size: 12px;
+	font-weight: 600;
+	color: #495057;
+	margin-bottom: 4px;
+}
+
+.pros-text, .cons-text {
+	font-size: 13px;
+	color: #6c757d;
+	line-height: 1.4;
+}
+
+.pros-label {
+	color: #28a745;
+}
+
+.cons-label {
+	color: #dc3545;
+}
+
+.review-actions-bottom {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid #f1f3f4;
+}
+
+.review-tags {
+	display: flex;
+	gap: 6px;
+}
+
+.tag {
+	background: #e9ecef;
+	color: #495057;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 12px;
+}
+
+.action-buttons {
+	display: flex;
+	gap: 8px;
+}
+
+.btn-sm {
+	padding: 4px 8px;
+	font-size: 12px;
+	border-radius: 4px;
+	text-decoration: none;
+	border: 1px solid #dee2e6;
+	background: white;
+	color: #6c757d;
+}
+
+.btn-sm:hover {
+	background: #f8f9fa;
+	color: #495057;
+}
+
+.btn-edit {
+	border-color: #007bff;
+	color: #007bff;
+}
+
+.btn-edit:hover {
+	background: #007bff;
+	color: white;
+}
+
+.btn-delete {
+	border-color: #dc3545;
+	color: #dc3545;
+}
+
+.btn-delete:hover {
+	background: #dc3545;
+	color: white;
+}
+
+.empty-state {
+	text-align: center;
+	padding: 60px 20px;
+	color: #6c757d;
+}
+
+.empty-state i {
+	font-size: 48px;
+	margin-bottom: 16px;
+	color: #dee2e6;
+}
+
+.pagination-wrapper {
+	display: flex;
+	justify-content: center;
+	margin-top: 30px;
+}
+
+.pagination {
+	margin: 0;
+}
+
+.pagination .page-link {
+	color: #6c757d;
+	border: 1px solid #dee2e6;
+	padding: 8px 12px;
+}
+
+.pagination .page-item.active .page-link {
+	background: #007bff;
+	border-color: #007bff;
+}
+
+@media ( max-width : 768px) {
+	.review-stats {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 15px;
+	}
+	.filter-section {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 10px;
+	}
+	.review-pros-cons {
+		flex-direction: column;
+		gap: 10px;
+	}
+	.review-actions-bottom {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 10px;
+	}
+}
+</style>
+</head>
+<body>
+	<header>
+		<div th:replace="~{fragments/header :: header}"></div>
+	</header>
+	<main>
+		<div class="container">
+			<div th:replace="~{user/mypage/sidebar :: sidebar}"></div>
+			<div class="main-content">
+				<div id="content-area">
+					<div class="page-title">My기업 리뷰</div>
+
+					<div class="review-container">
+						<div class="review-header">
+							<div class="review-stats">
+								<div class="total-count">
+									<i class="fas fa-list"></i> 총 <strong th:text="${totalCnt}"></strong>개의
+									리뷰
+								</div>
+							</div>
+						</div>
+
+						<div class="review-list">
+							<th:block th:each="review : ${reviews}">
+								<div class="review-item">
+									<div class="company-info">
+										<div class="company-logo">
+											<i class="fas fa-building"></i>
+										</div>
+										<div class="company-details">
+											<h5 th:text="${review.corpNm}">삼성전자</h5>
+										</div>
+									</div>
+
+									<div class="review-rating">
+										<div class="stars">
+											<th:block
+												th:each="_ : ${#numbers.sequence(1, review.rating)}">
+												<i class="fas fa-star"></i>
+											</th:block>
+											<th:block th:if="${review.rating} != 5"
+												th:each="_ : ${#numbers.sequence(1, 5 - review.rating)}">
+												<i class="far fa-star"></i>
+											</th:block>
+										</div>
+										<span class="rating-score" th:text="|${review.rating}.0|">4.0</span>
+										<span class="review-date" th:text="${review.createdAt}">2024.12.15</span>
+									</div>
+
+									<div class="review-content">
+										<div class="review-text" th:text="${review.summary}"></div>
+
+										<div class="review-pros-cons">
+											<div class="pros">
+												<div class="pros-label">장점</div>
+												<div class="pros-text" th:text="${review.pros}">복지
+													훌륭함, 안정적인 급여, 브랜드 가치</div>
+											</div>
+											<div class="cons">
+												<div class="cons-label">단점</div>
+												<div class="cons-text" th:text="${review.cons}">경직된
+													조직문화, 느린 의사결정</div>
+											</div>
+										</div>
+									</div>
+
+									<div class="review-actions-bottom">
+										<div class="action-buttons">
+											<form th:action="@{/mypage/reviewDelete}" method="post"
+												onsubmit="return confirm('이 리뷰를 정말 삭제하시겠습니까?');">
+												<input type="hidden" name="reviewSeq"
+													th:value="${review.reviewSeq}" />
+												<button type="submit" class="btn-sm btn-delete">
+													<i class="fas fa-trash"></i> 삭제
+												</button>
+											</form>
+										</div>
+									</div>
+								</div>
+
+							</th:block>
+						</div>
+					</div>
+				</div>
+
+				<!-- 리뷰가 없을 때 표시되는 화면 (현재는 숨김) -->
+				<div class="review-container" th:if="${totalCnt} == 0">
+					<div class="empty-state">
+						<i class="fas fa-clipboard-list"></i>
+						<h5>작성한 기업 리뷰가 없습니다</h5>
+						<p>첫 번째 기업 리뷰를 작성해보세요.</p>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</main>
+	<footer>
+		<div th:replace="~{fragments/footer :: footer}"></div>
+	</footer>
+</body>
+</html>

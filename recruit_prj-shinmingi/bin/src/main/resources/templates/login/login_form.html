@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>로그인 페이지</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet" th:href="@{/login/login_form.css}" >
+<script type="text/javascript">
+$(function(){
+	// 탭 전환 기능
+	document.querySelectorAll('.tab').forEach(tab => {
+		tab.addEventListener('click', function() {
+	    // 모든 탭에서 active 클래스 제거 (위에서는 개인회원, 기업회원 두개뿐)
+	    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+	    // 다시 클릭한 탭에 active 클래스 추가
+	    this.classList.add('active');
+    });
+	});
+	
+	//아이디창 누르면 alert사라짐
+	document.getElementById('email').addEventListener("click", function(){
+		document.querySelector('.alert.alert-success').style.display="none";
+	});
+	
+	//html에 온 에러메시지를 자바스크립트로 하기 
+	const alertBox = document.getElementById('alertBox');
+	if(alertBox){
+		const errorMessage = alertBox.dataset.error; //attr 값 활용하기 
+		alert(errorMessage);
+	}
+	
+});//ready
+
+function joinPageForm(){
+	let href = "/user/join";
+	if(document.querySelector('.corp-type').classList.contains('active')){
+		href = "/corp/join";
+	}
+	document.getElementById('joinPageLink').href = href;
+}
+
+
+</script>
+</head>
+<body>
+	
+	<!-- 가입으로 redirect왔을 때 Flash사용 -->
+<!-- 	<div id="alertBox" th:if="${errorMessage}" class="alert alert-success" role="alert" th:attr="data-error=${errorMessage}">
+				<p th:text="${errorMessage}" ></p>
+			</div> 
+-->										
+<!-- 	<div id="alertBox" th:if=${errorMessage} th:attr="data-error=${errorMessage}"></div>
+	<div th:if="${msg}" class="alert alert-success" role="alert" >
+		<p th:text="${msg}" ></p>
+	</div>  -->
+<!-- 사용자에게 에러 메시지 보여주기 -->
+<div th:if="${param.errorMessage}" class="alert alert-danger" role="alert" >
+    <p th:text="${param.errorMessage}" ></p>
+</div>
+
+
+	<div class="login-container">
+		<div th:if="${msg}" style="background:#fff4e5; border:1px solid #ffc107; color:#856404; padding:10px; border-radius:6px; text-align:center;">
+			<p th:text="${msg}">
+		</div>
+	
+		<!-- 탭 메뉴 -->
+		<div class="tab-container">
+			<div class="tab-menu">
+				<div class="user-type tab active">개인회원</div>
+				<div class="corp-type tab">기업회원</div>
+			</div>
+		</div>
+
+		<!-- 로그인 폼을 테이블로 구성 -->
+		<form th:action="@{/loginProcess}" method="post" id="frm">
+			<table class="login-table">
+				<tr>
+					<td><input type="email" id="email" name="email" class="input-field" placeholder="이메일" required></td>
+				</tr>
+				<tr>
+					<td><input type="password" id="password" name="password" class="input-field" placeholder="비밀번호" required></td>
+				</tr>
+				<tr>
+					<td>
+						<div class="checkbox-container">
+							<div class="checkbox-item">
+								<input type="checkbox" id="remember"> <label
+									for="remember">로그인 유지</label>
+							</div>
+							<div class="checkbox-item">
+								<input type="checkbox" id="autofill"> <label
+									for="autofill">아이디 저장</label>
+							</div>
+						</div>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<button type="submit" id="loginBtn" class="login-button">로그인</button>
+					</td>
+				</tr>
+			</table>
+		</form>
+
+		<div class="bottom-links">
+			<a href="login/foundID" onclick="alert('아이디 찾기 기능')">아이디 찾기</a> 
+			<span>|</span> 
+			<a href="#" onclick="alert('비밀번호 찾기 기능')">비밀번호 찾기</a>
+			<span>|</span> 
+			<a th:href="@{/#}" id="joinPageLink" onclick="joinPageForm()">회원가입</a>
+		</div>
+
+		<div class="social-login">
+			<div class="social-login-text">소셜 계정으로 간편 로그인</div>
+			<div class="social-buttons">
+				<button class="social-button naver" onclick="alert('네이버 로그인')">N</button>
+				<button class="social-button kakao" onclick="alert('카카오 로그인')">💬</button>
+				<button class="social-button google" onclick="alert('구글 로그인')">G</button>
+				<button class="social-button facebook" onclick="alert('페이스북 로그인')">f</button>
+				<button class="social-button apple" onclick="alert('애플 로그인')">🍎</button>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>

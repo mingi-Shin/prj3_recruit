@@ -1,0 +1,125 @@
+@charset "UTF-8";
+
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            border: 1px solid #ddd;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .page-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background: #00d084;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .submit-btn:hover {
+            background: #00b574;
+        }
+        
+        .links {
+            margin-top: 15px;
+            font-size: 12px;
+        }
+        
+        .links a {
+            color: #666;
+            text-decoration: none;
+            margin: 0 5px;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        .divider {
+            color: #ccc;
+        }
+        
+        .error-message {
+            color: red;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .register-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: #888;       /* 회색 */
+    color: white;
+    border: none;
+    font-size: 16px;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 10px;
+    text-decoration: none;  /* a 태그 밑줄 제거 */
+}
+
+.register-btn:hover {
+    background: #666;       /* 더 어두운 회색 */
+}
+        

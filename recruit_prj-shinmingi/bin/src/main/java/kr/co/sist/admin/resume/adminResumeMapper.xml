@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @Mapper와 패키지명, 인터페이스명 같아야함 -->
+<mapper namespace="kr.co.sist.admin.resume.adminResumeMapper">
+
+	<select id="selectResume" resultType="kr.co.sist.user.dto.ResumeDTO">
+	select * from resume
+	order by resume_seq
+	</select>
+	<select id="selectResume2" resultType="map">
+	SELECT m.name as name, r.resume_seq, r.email as email,r.title as title
+	FROM member m
+	JOIN resume r
+  	ON m.email = r.email
+  	order by r.resume_seq
+	</select>
+	<select id="searchResume" resultType="map">
+	SELECT m.name as name, r.resume_seq, r.email as email,r.title as title
+	FROM member m
+	JOIN resume r
+  	ON m.email = r.email
+  	 <where>
+    <if test="name != null and name != ''">
+      and name LIKE '%' || #{name} || '%'
+    </if>
+
+    <if test="resume_seq != null and resume_seq != ''">
+      AND resume_seq =#{resume_seq}
+    </if>
+    </where>
+  	order by r.resume_seq
+	</select>
+</mapper>

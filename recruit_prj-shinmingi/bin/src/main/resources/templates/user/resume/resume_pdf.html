@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8"></meta>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"></meta>
+<title>이력서</title>
+<style>
+/* 기본 설정 */
+* {
+	box-sizing: border-box;
+}
+
+body {
+	font-family: "NanumBarunGothic", "Malgun Gothic", "맑은 고딕", sans-serif;
+	max-width: 800px;
+	margin: 0 auto;
+	padding: 20px;
+	background-color: #f5f5f5;
+	line-height: 1.6;
+	color: #333;
+}
+
+.container {
+	background-color: white;
+	padding: 40px;
+	border-radius: 8px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* 섹션 스타일 */
+.section {
+	margin-bottom: 40px;
+}
+
+.section:last-child {
+	margin-bottom: 0;
+}
+
+.section-title {
+	font-size: 18px;
+	font-weight: bold;
+	color: #333;
+	margin-bottom: 20px;
+	border-bottom: 2px solid #333;
+	padding-bottom: 8px;
+}
+
+/* 기본정보 섹션 - PDF 호환성을 위해 float 사용 */
+.basic-info {
+	overflow: hidden; /* float 요소들을 감싸기 위함 */
+	margin-bottom: 20px;
+}
+
+.profile-image {
+	width: 120px;
+	height: 150px;
+	border: 3px solid #333;
+	border-radius: 15px;
+	background-color: #f8f8f8;
+	display: block;
+	position: relative;
+	overflow: hidden;
+	float: left; /* PDF에서도 안정적인 float 사용 */
+	margin-right: 30px;
+	margin-bottom: 20px;
+}
+
+.profile-image img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.info-details {
+	margin-left: 150px; /* 프로필 이미지 너비(120px) + 마진(30px) */
+	min-height: 150px; /* 프로필 이미지와 최소 높이 맞춤 */
+}
+
+.name {
+	font-size: 32px;
+	font-weight: bold;
+	color: #333;
+	margin-bottom: 15px;
+}
+
+.contact-info {
+	margin-bottom: 20px;
+}
+
+.contact-item {
+	display: block;
+	margin-bottom: 8px;
+	color: #666;
+	font-size: 14px;
+}
+
+.phone-birth {
+	display: block;
+	color: #666;
+	font-size: 14px;
+}
+
+/* 소개 및 스킬 */
+.intro-question {
+	font-size: 16px;
+	color: #333;
+	margin-bottom: 15px;
+	line-height: 1.6;
+	clear: both; /* float 요소 이후 새 줄에서 시작 */
+}
+
+.skills-interests {
+	margin-bottom: 20px;
+	clear: both; /* 프로필 이미지 float 이후 확실히 새 줄에서 시작 */
+}
+
+.skill-item h4, .interest-item h4 {
+	margin: 0 0 12px 0;
+	color: #333;
+	font-size: 16px;
+	font-weight: bold;
+}
+
+.skill-item, .interest-item {
+	margin-bottom: 20px;
+}
+
+/* 태그 스타일 */
+.tag {
+	display: inline-block;
+	padding: 6px 12px;
+	border-radius: 20px;
+	margin: 4px 6px 4px 0;
+	font-size: 13px;
+	font-weight: 500;
+	color: #333;
+	background-color: #f8f9fa;
+	border: 1px solid #e9ecef;
+}
+
+/* 타임라인 스타일 - PDF 호환성을 위해 table-cell 사용 */
+.timeline-item {
+	margin-bottom: 30px;
+	display: table;
+	width: 100%;
+	table-layout: fixed;
+}
+
+.timeline-item:last-child {
+	margin-bottom: 0;
+}
+
+.timeline-date {
+	display: table-cell;
+	width: 140px;
+	font-size: 14px;
+	color: #666;
+	vertical-align: top;
+	padding-right: 20px;
+	position: relative;
+	padding-left: 16px;
+}
+
+.timeline-date::before {
+	content: "○";
+	color: #333;
+	font-weight: bold;
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
+.timeline-content {
+	display: table-cell;
+	vertical-align: top;
+}
+
+.timeline-content h4 {
+	margin: 0 0 8px 0;
+	font-size: 16px;
+	color: #333;
+	font-weight: bold;
+}
+
+.timeline-content p {
+	margin: 0 0 6px 0;
+	color: #666;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.timeline-content .sub-info {
+	color: #999;
+	font-size: 12px;
+}
+
+/* 프로젝트 상세 */
+.project-details {
+	margin-top: 15px;
+}
+
+.project-details h5 {
+	margin: 15px 0 8px 0;
+	color: #333;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.project-details p {
+	margin: 0 0 8px 0;
+	color: #666;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+.project-details .project-link {
+	color: #0066cc;
+	text-decoration: none;
+	font-size: 14px;
+}
+
+.project-details .project-link:hover {
+	text-decoration: underline;
+}
+
+/* 링크 섹션 */
+.links-section {
+	display: block;
+}
+
+.link-item {
+	margin-bottom: 15px;
+	overflow: hidden;
+}
+
+.link-label {
+	font-weight: bold;
+	width: 80px;
+	color: #333;
+	float: left;
+}
+
+.link-url {
+	color: #666;
+	margin-left: 100px;
+	word-break: break-all;
+	display: block;
+}
+
+/* 자기소개서 섹션 */
+.intro-section .timeline-item {
+	display: block;
+	margin-bottom: 20px;
+}
+
+.intro-section .timeline-date {
+	font-weight: bold;
+	font-size: 16px;
+	color: #333;
+	display: block;
+	width: auto;
+	margin-bottom: 10px;
+	padding-left: 0;
+}
+
+.intro-section .timeline-date::before {
+	display: none;
+}
+
+.intro-section .timeline-content {
+	display: block;
+}
+
+/* 반응형 */
+@media ( max-width : 600px) {
+	body {
+		padding: 10px;
+	}
+	.container {
+		padding: 20px;
+	}
+	.basic-info {
+		text-align: center;
+	}
+	.profile-image {
+		float: none;
+		margin: 0 auto 20px auto;
+		display: block;
+	}
+	.info-details {
+		min-height: auto;
+		margin-left: 0; /* 모바일에서는 마진 제거 */
+	}
+	.name {
+		font-size: 28px;
+	}
+	.timeline-item {
+		display: block;
+	}
+	.timeline-date {
+		display: block;
+		width: auto;
+		margin-bottom: 10px;
+		padding-left: 0;
+	}
+	.timeline-date::before {
+		display: none;
+	}
+	.timeline-content {
+		display: block;
+	}
+	.link-label {
+		float: none;
+		width: auto;
+		display: block;
+	}
+	.link-url {
+		margin-left: 0;
+	}
+}
+
+/* PDF 최적화 */
+@media print {
+	body {
+		background-color: white;
+		padding: 0;
+	}
+	.container {
+		box-shadow: none;
+		border-radius: 0;
+		padding: 20px;
+	}
+	.section {
+		page-break-inside: avoid;
+	}
+	/* PDF에서 float 레이아웃 강화 */
+	.basic-info {
+		overflow: visible;
+	}
+	.profile-image {
+		float: left;
+		margin-right: 30px;
+	}
+	.info-details {
+		margin-left: 150px;
+	}
+	/* PDF에서 타임라인 레이아웃 보정 */
+	.timeline-item {
+		display: table;
+		width: 100%;
+	}
+	.timeline-date {
+		display: table-cell;
+		width: 140px;
+		vertical-align: top;
+	}
+	.timeline-content {
+		display: table-cell;
+		vertical-align: top;
+	}
+}
+</style>
+</head>
+<body>
+	<div class="container">
+		<!-- 기본정보 -->
+		<div class="section">
+			<div class="section-title">기본정보</div>
+			<div class="basic-info">
+				<div class="profile-image">
+					<img th:if="${profileImagePath != null}"
+						th:src="${profileImagePath}" alt="프로필 사진" />
+				</div>
+				<div class="info-details">
+					<div class="name" th:text="${user.name}">홍길동</div>
+					<div class="contact-info">
+						<div class="contact-item" th:text="${user.email}">example@email.com</div>
+						<div class="phone-birth">
+							<span th:text="${user.phone}">010-1234-5678</span> | <span
+								th:text="|${user.birth}년생|">1990년생</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 소개 -->
+			<div th:if="${resume.introduction}">
+				<div class="intro-question" th:text="${resume.introduction}">
+					안녕하세요. 열정적인 개발자입니다.</div>
+			</div>
+
+			<!-- 개발 직무 -->
+			<div class="skills-interests" th:if="${!#lists.isEmpty(positions)}">
+				<div class="skill-item">
+					<h4>개발 직무</h4>
+					<div>
+						<th:block th:each="position : ${positions}">
+							<span class="tag" th:text="${position.positionName}">백엔드</span>
+						</th:block>
+					</div>
+				</div>
+			</div>
+
+			<!-- 기술 스택 -->
+			<div class="skills-interests" th:if="${!#lists.isEmpty(skills)}">
+				<div class="skill-item">
+					<h4>기술 스택</h4>
+					<div>
+						<th:block th:each="skill : ${skills}">
+							<span class="tag" th:text="${skill.stackName}">Java</span>
+						</th:block>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 학력 -->
+		<div class="section" th:if="${!#lists.isEmpty(educations)}">
+			<div class="section-title">학력</div>
+			<div class="timeline-item" th:each="education : ${educations}">
+				<div class="timeline-date" th:text="|${education.graduateDate} 졸업|">2022.10
+					졸업</div>
+				<div class="timeline-content">
+					<h4 th:text="${education.schoolName}">○○대학교</h4>
+					<p>
+						<span th:text="${education.educationType}">학사</span> | <span
+							th:text="${education.department}">컴퓨터공학과</span>
+					</p>
+					<p class="sub-info" th:if="${education.grade != 0}">
+						학점: <span th:text="${education.grade}">3.3</span> / <span
+							th:text="${education.standardGrade}">4.5</span>
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- 경력 -->
+		<div class="section" th:if="${!#lists.isEmpty(careers)}">
+			<div class="section-title">경력(업무경험)</div>
+			<div class="timeline-item" th:each="career : ${careers}">
+				<div class="timeline-date"
+					th:text="|${career.startDate} - ${career.endDate}|">2021.03 -
+					2023.12</div>
+				<div class="timeline-content">
+					<h4 th:text="${career.companyName}">○○회사</h4>
+					<p th:text="${career.position}">백엔드 개발자</p>
+					<p th:text="${career.careerDescription}">주요 업무 내용입니다.</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- 프로젝트 -->
+		<div class="section" th:if="${!#lists.isEmpty(projects)}">
+			<div class="section-title">프로젝트</div>
+			<div class="timeline-item" th:each="project : ${projects}">
+				<div class="timeline-date"
+					th:text="|${project.startDate} - ${project.endDate}|">2023.01
+					- 2023.06</div>
+				<div class="timeline-content">
+					<h4 th:text="${project.projectName}">영화예매 시스템</h4>
+					<div class="project-details">
+						<div>
+							<th:block th:each="skills : ${project.projectSkills}">
+								<span class="tag" th:text="${skills.stackName}">Java</span>
+							</th:block>
+						</div>
+						<h5>상세내용</h5>
+						<p th:text="${project.projectContent}">프로젝트 상세 설명입니다.</p>
+						<h5>저장소 링크</h5>
+						<p>
+							<a th:text="${project.repositoryLink}"
+								th:href="${project.repositoryLink}">https://github.com/example</a>
+						</p>
+						<h5 th:if="${project.releaseStatus == 'Y'}">배포 완료</h5>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- 기타사항 -->
+		<div class="section" th:if="${!#lists.isEmpty(additionals)}">
+			<div class="section-title">기타사항</div>
+			<div class="timeline-item" th:each="additional : ${additionals}">
+				<div class="timeline-date" th:text="${additional.endDate}">2023.12</div>
+				<div class="timeline-content">
+					<h4 th:text="${additional.activityName}">자격증명</h4>
+					<p>
+						<span th:text="${additional.recordType}">자격증</span> | <span
+							th:text="${additional.relatedAgency}">관련기관</span>
+					</p>
+					<h5>상세 내용</h5>
+					<p th:text="${additional.detailContent}">상세 내용입니다.</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- 자기소개서 -->
+		<div class="section intro-section"
+			th:if="${!#lists.isEmpty(introductions)}">
+			<div class="section-title">자기소개서</div>
+			<div class="timeline-item" th:each="intro : ${introductions}">
+				<div class="timeline-date" th:text="${intro.title}">지원동기</div>
+				<div class="timeline-content">
+					<p th:text="${intro.content}">자기소개서 내용입니다.</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- 링크 -->
+		<div class="section"
+			th:if="${links != null and (
+              (links.githubUrl != null and links.githubUrl != '') or
+              (links.notionUrl != null and links.notionUrl != '') or
+              (links.blogUrl != null and links.blogUrl != '')
+          )}">
+			<div class="section-title">링크</div>
+			<div class="links-section">
+				<div class="link-item"
+					th:if="${links.githubUrl != null and links.githubUrl != ''}">
+					<span class="link-label">Github</span> <a class="link-url"
+						th:href="${links.githubUrl}" th:text="${links.githubUrl}">https://github.com/example</a>
+				</div>
+				<div class="link-item"
+					th:if="${links.notionUrl != null and links.notionUrl != ''}">
+					<span class="link-label">Notion</span> <a class="link-url"
+						th:href="${links.notionUrl}" th:text="${links.notionUrl}">https://notion.so/example</a>
+				</div>
+				<div class="link-item"
+					th:if="${links.blogUrl != null and links.blogUrl != ''}">
+					<span class="link-label">Blog</span> <a class="link-url"
+						th:href="${links.blogUrl}" th:text="${links.blogUrl}">https://blog.example.com</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

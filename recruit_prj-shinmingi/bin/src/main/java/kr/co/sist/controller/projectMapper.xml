@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @Mapper와 패키지명, 인터페이스명 같아야함 -->
+<mapper namespace="kr.co.sist.user.mapper.ProjectMapper">
+
+<!-- 해당 이력서의 프로젝트 가져오기 -->
+<select id="selectProjectByResume" parameterType="int" resultType="userProjectDTO">
+SELECT PROJECT_SEQ, RESUME_SEQ, PROJECT_NAME, PROJECT_CONTENT, START_DATE, END_DATE, RELEASE_STATUS, REPOSITORY_LINK
+FROM PROJECT 
+WHERE resume_seq=#{resumeSeq}
+</select>
+
+<!-- 해당 프로젝트에 해당하는 기술 스택 가져오기 -->
+<select id="selectProjectStackByresume" parameterType="int" resultType="userProjectStackDTO">
+SELECT PROJECT_TECH_STACK_SEQ, PROJECT_SEQ, p.TECH_STACK_SEQ, STACK_NAME
+FROM PROJECT_TECH_STACK p
+JOIN TECH_STACK t ON t.TECH_STACK_SEQ = p.TECH_STACK_SEQ
+WHERE PROJECT_SEQ = #{projectSeq}
+</select>
+
+</mapper>

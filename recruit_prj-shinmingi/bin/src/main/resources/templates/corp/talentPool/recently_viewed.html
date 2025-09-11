@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>최근본 인재</title>
+    <th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+    <link rel="stylesheet" th:href="@{/corp/talentPool/talent_pool.css}" />
+    <link rel="stylesheet" th:href="@{/corp/talentPool/interviewOffer.css}"/>
+  <style>
+
+</style>
+</head>
+<body>
+    <th:block th:replace="~{fragments/corpHeader :: corpHeader}"></th:block>
+    <div class="container">
+	<th:block th:replace="~{fragments/talentPoolHeader :: talentPoolHeader(activeTab='recently_viewed')}"></th:block>
+		<div class="search-toolbar">
+		    <div class="list-totalcount">
+		        전체 <span th:text="${totalCount}"></span>건
+		    </div>
+		    <div class="sort-controls">
+			  <span class="sort-btn" data-sort="latest">최신순</span> |
+			  <span class="sort-btn" data-sort="career">경력순 <span class="arrow"></span></span> |
+			  <span class="sort-btn" data-sort="education">학력순 <span class="arrow"></span></span>
+				<select class="page-size-select" name="size" id="pageSizeSelect">
+				    <option value="5" th:selected="${pageSize == 5}">5명씩</option>
+				    <option value="10" th:selected="${pageSize == 10}">10명씩</option>
+				    <option value="20" th:selected="${pageSize == 20}">20명씩</option>
+				</select>
+		    </div>
+		</div>
+       	<div class="talent-list" th:replace="~{fragments/talentList :: talentList}"></div>
+       	
+     </div> 
+<div class="modal" id="interviewModal" style="display:none;"></div>
+			
+<div class="pagination">
+  <a href="#" class="page-btn prev-block">이전</a>
+  <span class="page-numbers"></span>
+  <a href="#" class="page-btn next-block">다음</a>
+</div>
+<div id="pagination-data"
+     th:data-total-pages="${totalPages}"
+     th:data-current-page="${page}">
+</div>
+
+<script th:inline="javascript">
+(() => {
+  let currentPage = parseInt(document.getElementById('pagination-data')?.dataset.currentPage || '1');
+  let totalPages = parseInt(document.getElementById('pagination-data')?.dataset.totalPages || '1');
+  let currentSortBy = 'latest';
+  let currentOrder = 'desc';
+  const blockSize = 5;
+
+  function loadTalentList(page = 1) {
+	    const pageSizeSelect = document.getElementById('pageSizeSelect');
+	    const size = pageSizeSelect?.value || '5';
+	    const talentListContainer = document.querySelector('.talent-list');
+
+	    fetch(`/corp/talentPool/sort?listType=recent&page=${page}&size=${size}&sortBy=${currentSortBy}&order=${currentOrder}`)
+	      .then(res => res.text())
+	      .then(html => {
+	        if (!talentListContainer) return;
+
+	        // HTML 문자열을 파싱
+	        const parser = new DOMParser();
+	        const parsedDoc = parser.parseFromString(html, 'text/html');
+
+	        // 파싱된 새 .talent-list 추출
+	        const newTalentList = parsedDoc.querySelector('.talent-list');
+	        if (!newTalentList) return;
+
+	        // 새 HTML로 교체
+	        talentListContainer.innerHTML = newTalentList.innerHTML;
+
+	        // totalPages 업데이트
+	        const updatedTotalPages = newTalentList.dataset.totalPages;
+	        totalPages = parseInt(updatedTotalPages || '1');
+			//화면 상단으로 이동 
+	        window.scrollTo({ top: 0, behavior: 'smooth' });
+	        currentPage = page;
+	        bindListEvents();
+	        renderPagination();
+
+	        console.log("Updated totalPages after fetch:", totalPages);
+	      })
+	      .catch(err => console.error('목록 로딩 실패:', err));
+	  }
+
+
+
+  function renderPagination() {
+    const paginationContainer = document.querySelector('.page-numbers');
+    const prevBlockBtn = document.querySelector('.prev-block');
+    const nextBlockBtn = document.querySelector('.next-block');
+
+    if (!paginationContainer) return;
+    paginationContainer.innerHTML = '';
+
+    const currentBlock = Math.floor((currentPage - 1) / blockSize);
+    const startPage = currentBlock * blockSize + 1;
+    const endPage = Math.min(startPage + blockSize - 1, totalPages);
+
+    for (let i = startPage; i <= endPage; i++) {
+      const btn = document.createElement('a');
+      btn.href = '#';
+      btn.textContent = i;
+      btn.className = 'page-btn';
+      if (i === currentPage) btn.classList.add('active');
+      btn.addEventListener('click', e => {
+        e.preventDefault();
+        loadTalentList(i);
+      });
+      paginationContainer.appendChild(btn);
+    }
+
+    if (prevBlockBtn) {
+      prevBlockBtn.onclick = e => {
+        e.preventDefault();
+        if (startPage > 1) loadTalentList(startPage - 1);
+      };
+    }
+    if (nextBlockBtn) {
+      nextBlockBtn.onclick = e => {
+        e.preventDefault();
+        if (endPage < totalPages) loadTalentList(endPage + 1);
+      };
+    }
+  }
+
+  function bindModalClose() {
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+  }
+
+  function closeModal() {
+    const modalEl = document.getElementById('interviewModal');
+    if (!modalEl) return;
+    modalEl.style.display = 'none';
+    modalEl.innerHTML = '';
+    document.body.style.overflow = 'auto';
+  }
+
+  function bindSortEvents() {
+    const sortButtons = document.querySelectorAll('.sort-btn');
+    sortButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const clickedSortBy = btn.dataset.sort;
+        if (!clickedSortBy) return;
+
+        if (clickedSortBy === 'latest') {
+          currentSortBy = 'latest';
+          currentOrder = 'desc';
+        } else {
+          if (currentSortBy === clickedSortBy) {
+            currentOrder = currentOrder === 'desc' ? 'asc' : 'desc';
+          } else {
+            currentSortBy = clickedSortBy;
+            currentOrder = 'asc';
+          }
+        }
+
+        sortButtons.forEach(b => {
+          b.classList.remove('active');
+          b.innerText = getSortText(b.dataset.sort, null);
+        });
+
+        btn.classList.add('active');
+        btn.innerText = getSortText(clickedSortBy, currentOrder);
+        loadTalentList(1);
+      });
+    });
+  }
+
+  function getSortText(sortBy, order) {
+    const baseText = {
+      latest: '최신순',
+      career: '경력순',
+      education: '학력순',
+    };
+    if (!order || sortBy === 'latest') return baseText[sortBy];
+    return `${baseText[sortBy]} ${order === 'desc' ? '↓' : '↑'}`;
+  }
+
+  function bindPageSizeChange() {
+    const pageSizeSelect = document.getElementById('pageSizeSelect');
+    if (!pageSizeSelect) return;
+    pageSizeSelect.addEventListener('change', () => {
+      loadTalentList(1);
+    });
+  }
+
+  function bindListEvents() {
+    const talentListEl = document.querySelector('.talent-list');
+    if (!talentListEl) return;
+
+    // 스크랩
+    talentListEl.querySelectorAll('.bookmark-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const resumeSeq = btn.dataset.resumeSeq;
+        const star = btn.querySelector('.bookmark-star');
+        if (!resumeSeq || !star) return;
+
+        fetch('/corp/talentPool/scrap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ resumeSeq }),
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.status === 'scrap_success') {
+              star.textContent = '★';
+              star.classList.add('filled');
+            } else if (data.status === 'scrap_cancel') {
+              star.textContent = '☆';
+              star.classList.remove('filled');
+            } else {
+              alert('스크랩 실패: ' + data.status);
+            }
+          })
+          .catch(() => alert('스크랩 실패'));
+      });
+    });
+
+    // 면접 제안 모달 열기
+    talentListEl.querySelectorAll('.openInterviewModalBtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const resumeSeq = btn.dataset.resumeSeq;
+        const modalEl = document.getElementById('interviewModal');
+
+        fetch('/corp/talentPool/interviewOffer')
+          .then(res => res.text())
+          .then(html => {
+            modalEl.innerHTML = html;
+            modalEl.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+
+            const form = modalEl.querySelector('form');
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'resumeSeq';
+            hiddenInput.value = resumeSeq;
+            form.appendChild(hiddenInput);
+
+            form.onsubmit = (e) => {
+              e.preventDefault();
+              const formData = new FormData(form);
+              const data = Object.fromEntries(formData.entries());
+
+              fetch('/corp/talentPool/interviewOffer/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+              })
+                .then(res => res.json())
+                .then(result => {
+                  if (result.status === 'success') {
+                    alert('면접 제안이 전송되었습니다.');
+                    closeModal();
+                  } else {
+                    alert('전송 실패: ' + result.message);
+                  }
+                })
+                .catch(() => alert('전송 실패'));
+            };
+
+            modalEl.querySelector('.modal-close')?.addEventListener('click', closeModal);
+          })
+          .catch(() => alert('면접 제안 모달 로딩 실패'));
+      });
+    });
+  }
+
+  // 초기 실행
+  document.addEventListener('DOMContentLoaded', () => {
+    bindSortEvents();
+    bindPageSizeChange();
+    bindModalClose();
+    loadTalentList(currentPage);
+  });
+})();
+
+function viewResumeDetail(resumeSeq) {
+  console.log("열람한 이력서 번호:", resumeSeq);
+  $.ajax({
+    type: "POST",
+    url: "/corp/resume_detail/resume/view",
+    data: { resumeSeq: resumeSeq },
+    success: function (response) {
+      if (response === "success") {
+        window.location.href = "/corp/talentPool/resume_detail?resumeNo=" + resumeSeq;
+      } else {
+        alert("이력서 열람 처리 중 오류가 발생했습니다.");
+      }
+    },
+    error: function () {
+      alert("서버 오류로 인해 열람 처리에 실패했습니다.");
+    }
+  });
+}
+</script>
+<script>
+    const filterManager = {
+        filters: {
+            keyword: '',
+            experience: '',
+            education: '',
+            location: '',
+            skill: '',
+            position: '',
+            gender: '',
+            age: ''
+        },
+
+        filterLabels: {
+            experience: {
+                '신입': '신입',
+                '1-3년': '경력 1-3년',
+                '3-5년': '경력 3-5년',
+                '5년이상': '경력 5년 이상'
+            },
+            education: {
+                '고졸': '고졸',
+                '전문대졸': '전문대졜',
+                '대졸': '대졸',
+                '대학원졸': '대학원졸'
+            },
+            location: {
+                '서울': '서울',
+                '경기': '경기',
+                '인천': '인천',
+                '부산': '부산',
+                '기타': '기타'
+            },
+            skill: {
+                'java': 'Java',
+                'cpp': 'C++',
+                'c': 'C',
+                'python': 'Python',
+                '기타': '기타'
+            },
+            position: {
+                'backend': '백엔드',
+                'frontend': '프론트엔드',
+                'fullstack': '풀스택',
+                '기타': '기타'
+            },
+            gender: {
+                'male': '남자',
+                'female': '여자'
+            },
+            age: {
+                '20-25': '20~25세',
+                '25-30': '25~30세',
+                '30-35': '30~35세',
+                '35-40': '35~40세',
+                '40+': '40세 이상'
+            }
+        },
+
+        init() {
+            this.loadCurrentFilters();
+            this.bindEvents();
+            this.updateFilterDisplay();
+        },
+
+        loadCurrentFilters() {
+            for (const key in this.filters) {
+                const el = document.getElementById(key);
+                if (el) this.filters[key] = el.value;
+            }
+        },
+
+        bindEvents() {
+            for (const key in this.filters) {
+                const el = document.getElementById(key);
+                if (!el) continue;
+
+                const type = el.tagName.toLowerCase();
+                const event = type === 'input' ? 'input' : 'change';
+                el.addEventListener(event, (e) => {
+                    this.filters[key] = e.target.value;
+                    this.updateFilterDisplay();
+                });
+            }
+
+            document.getElementById('resetFilters').addEventListener('click', () => {
+                this.resetAllFilters();
+            });
+        },
+
+        updateFilterDisplay() {
+            const selectedFiltersDiv = document.getElementById('selectedFilters');
+            const filterTagsDiv = document.getElementById('filterTags');
+
+            const hasActiveFilters = Object.values(this.filters).some(val => val !== '');
+            if (!hasActiveFilters) {
+                selectedFiltersDiv.style.display = 'none';
+                return;
+            }
+
+            selectedFiltersDiv.style.display = 'block';
+            filterTagsDiv.innerHTML = '';
+
+            for (const [key, value] of Object.entries(this.filters)) {
+                if (value !== '') {
+                    const tag = this.createFilterTag(key, value);
+                    filterTagsDiv.appendChild(tag);
+                }
+            }
+        },
+
+        createFilterTag(filterType, filterValue) {
+            const tag = document.createElement('div');
+            tag.className = 'filter-tag';
+
+            let displayText = '';
+            if (filterType === 'keyword') {
+                displayText = `"${filterValue}"`;
+            } else {
+                displayText = this.filterLabels[filterType]?.[filterValue] || filterValue;
+            }
+
+            tag.innerHTML = `
+                <span>${displayText}</span>
+                <button type="button" class="filter-tag-remove" onclick="filterManager.removeFilter('${filterType}')">
+                    ×
+                </button>`;
+            return tag;
+        },
+
+        removeFilter(filterType) {
+            this.filters[filterType] = '';
+            const el = document.getElementById(filterType);
+            if (el) el.value = '';
+            this.updateFilterDisplay();
+            document.getElementById('searchForm').submit(); // 필터 제거 후 폼 제출
+        },
+
+        resetAllFilters() {
+            for (const key in this.filters) {
+                this.filters[key] = '';
+                const el = document.getElementById(key);
+                if (el) el.value = '';
+            }
+            this.updateFilterDisplay();
+            document.getElementById('searchForm').submit(); // 필터 리셋 후 폼 제출
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        filterManager.init(); // 초기화
+    });
+</script>
+
+
+	<th:block th:replace="~{fragments/corpFooter :: corpFooter}"></th:block>
+</body>
+</html>

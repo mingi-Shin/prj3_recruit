@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.admin.notice.NoticeMapper">
+
+    <!-- 공지사항 목록 조회 (페이징 처리 제거) -->
+    <select id="getNotices" resultType="kr.co.sist.admin.notice.Notice">
+        SELECT 
+            n.notice_seq,
+            n.admin_id,
+            n.title,
+            n.content,
+            n.regs_date
+        FROM NOTICE n
+        WHERE n.title LIKE '%' || COALESCE(#{keyword}, '') || '%'
+        <if test="searchType == '제목'">
+            AND n.title LIKE '%' || COALESCE(#{keyword}, '') || '%'
+        </if>
+        <if test="searchType == '내용'">
+            AND n.content LIKE '%' || COALESCE(#{keyword}, '') || '%'
+        </if>
+        ORDER BY n.regs_date DESC
+    </select>
+
+    <!-- 공지사항 총 개수 조회 -->
+    <select id="getTotalCount" resultType="long">
+        SELECT COUNT(*) 
+        FROM NOTICE 
+        WHERE title LIKE '%' || COALESCE(#{keyword}, '') || '%'
+        <if test="searchType == '제목'">
+            AND title LIKE '%' || COALESCE(#{keyword}, '') || '%'
+        </if>
+        <if test="searchType == '내용'">
+            AND content LIKE '%' || COALESCE(#{keyword}, '') || '%'
+        </if>
+    </select>
+
+    <!-- 공지사항 등록 -->
+    <insert id="insertNotice" parameterType="kr.co.sist.admin.notice.Notice">
+  INSERT INTO NOTICE (ADMIN_ID, TITLE, CONTENT, REGS_DATE)
+  VALUES (#{adminId}, #{title}, #{content}, #{regsDate,jdbcType=VARCHAR})
+</insert>
+
+<!-- 공지사항 수정 - regs_date 제외 -->
+<update id="updateNotice" parameterType="kr.co.sist.admin.notice.Notice">
+    UPDATE NOTICE
+    SET title = #{title}, 
+        content = #{content}
+    WHERE notice_seq = #{noticeSeq}
+</update>
+    <!-- 공지사항 삭제 - notice_id → notice_seq 변경 -->
+<delete id="deleteNotice" parameterType="int">
+    DELETE FROM NOTICE WHERE notice_seq = #{noticeSeq}
+</delete>
+
+
+<!-- 공지사항 다중 삭제 -->
+<delete id="deleteNotices" parameterType="java.util.List">
+    DELETE FROM NOTICE 
+    WHERE notice_seq IN
+    <foreach collection="list" item="noticeSeq" open="(" separator="," close=")">
+        #{noticeSeq}
+    </foreach>
+</delete>
+    
+<!-- 공지사항 상세 조회 - notice_id → notice_seq 변경 -->
+<select id="getNoticeById" resultType="kr.co.sist.admin.notice.Notice">
+    SELECT
+        notice_seq,
+        admin_id,
+        title,
+        content,
+        regs_date
+    FROM NOTICE
+    WHERE notice_seq = #{noticeSeq}
+</select>
+
+</mapper>

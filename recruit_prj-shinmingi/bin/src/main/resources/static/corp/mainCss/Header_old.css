@@ -1,0 +1,173 @@
+@charset "UTF-8";
+
+/* 기업 헤더 전용 스타일 - 클래스명 고유화 */
+#corp-header {
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.corp-main-menu {
+  width: 100%; /* 가로 너비를 100%로 채움 */
+  background: #2c3e50; /* 어두운 네이비 컬러 배경 - 관리자 느낌 */
+  table-layout: fixed; /* 테이블 칼럼 너비 균등 분배 */
+  text-align: center; /* 텍스트 중앙 정렬 */
+  border-collapse: collapse; /* 테이블 셀 사이 간격 제거 */
+  color: #ecf0f1; /* 글자색을 연한 회색으로 지정 */
+  font-weight: 600; /* 글자 굵기 */
+  font-size: 15px; /* 글자 크기 */
+  user-select: none; /* 사용자가 텍스트 드래그해서 선택하지 못하게 함 */
+}
+
+.corp-main-menu td {
+  padding: 15px 25px; /* 셀 안쪽 여백: 위아래 15px, 좌우 25px */
+  cursor: pointer; /* 마우스 올리면 포인터(손가락) 모양으로 변경 */
+  border-right: 1px solid #34495e; /* 오른쪽에 구분선 (어두운 회색) */
+  transition: background-color 0.3s ease; /* 배경색 변경 시 부드럽게 변하도록 설정 */
+}
+
+.corp-main-menu td:last-child {
+  border-right: none; /* 마지막 메뉴에는 오른쪽 경계선 제거 */
+}
+
+.corp-main-menu td:hover {
+  background-color: #34495e; /* 마우스 올리면 배경 어두워짐 */
+  color: #1abc9c; /* 글자색이 민트색으로 강조 */
+}
+
+#corp-top-bar {
+  display: flex;            /* 플렉스 박스 활성화 */
+  align-items: flex-end;      /* 세로, 아래 정렬 */
+  padding: 10px 20px;       /* 적당한 패딩 */
+  background-color: white; /*백그라운드 컬러*/
+  height: 100px; 						/* 헤더 높이 100px, 사용자측과 동사이즈 */
+  flex-direction: row;
+}
+
+.corp-logo {
+  height: auto;
+  width: 200px;
+  display: block;
+}
+
+.corp-top-menu {
+  margin-left: auto;        /* 왼쪽 여백을 자동으로 채워 오른쪽 끝으로 밀림 */
+  margin-top: 30px; /* 원하는 만큼 아래 여백 */
+  font-weight: 600;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+/* 기업 하위 메뉴 스타일 */
+.corp-submenu-table {
+  display: none; /* 기본 상태는 숨김 */
+  width: 100%; /* 너비 100% */
+  table-layout: fixed; /* 칼럼 너비 균등 분배 */
+  background: #ecf0f1; /* 밝은 배경색 */
+  text-align: center; /* 텍스트 중앙 정렬 */
+  border-top: 2px solid #1abc9c; /* 위쪽에 두꺼운 민트색 선 추가 */
+  color: #2c3e50; /* 글자색 진한 네이비 */
+  font-weight: 500; /* 글자 굵기 약간 낮음 */
+  font-size: 13px; /* 글자 크기 작음 */
+}
+
+.corp-submenu-table td {
+  padding: 15px 20px; /* 셀 안쪽 여백 */
+  vertical-align: top; /* 셀 내 내용 위쪽 정렬 */
+  border-right: 1px solid #bdc3c7; /* 오른쪽에 연한 회색 선 */
+  cursor: default; /* 기본 커서 (포인터 X) */
+  line-height: 1.5em; /* 줄간격 약간 넉넉히 */
+}
+
+.corp-submenu-table td:last-child {
+  border-right: none; /* 마지막 셀 오른쪽 선 제거 */
+}
+
+/* 기업 하위 메뉴 안의 감싸는 div 스타일 */
+.corp-submenu-item {
+  display: inline-block; /* 내용들이 가로로 붙도록 함 */
+}
+
+/* 기업 하위 메뉴 안에 각각의 링크 스타일 */
+.corp-submenu-link {
+  display: inline-block; /* transform 효과를 위해 inline-block */
+  transition: transform 0.3s ease, color 0.3s ease, background-color 0.3s ease; /* 변화 시 부드럽게 */
+  font-size: 13px; /* 글자 크기 */
+  color: #2c3e50; /* 글자 색 진한 네이비 */
+  cursor: pointer; /* 마우스 올리면 포인터(손가락) 모양 */
+  padding: 2px 6px; /* 텍스트 주위 여백 */
+  border-radius: 3px; /* 모서리 살짝 둥글게 */
+  margin-bottom: 3px; /* 아래쪽 약간 공간 */
+  user-select: none; /* 드래그해서 선택 불가 */
+}
+
+/* 마우스를 올렸을 때 해당 글자만 확대되고 색상 및 배경 변화 */
+.corp-submenu-link:hover {
+  transform: scale(1.2); /* 20% 크기 확대 */
+  /* 색상과 배경 변화는 원하시면 추가하셔도 됩니다. */
+  z-index: 10; /* 겹쳐도 위로 나오게 함 */
+  position: relative; /* z-index 효과 적용을 위해 필요 */
+}
+
+/* 기업 모바일 메뉴 영역 */
+.corp-mobile-menu {
+  display: none; /* 기본적으로 숨김 */
+  flex-direction: column; /* 세로 방향 정렬 */
+  background: #34495e; /* 어두운 네이비 배경 */
+  border-top: 1px solid #1abc9c; /* 상단에 민트색 경계선 */
+}
+
+.corp-mobile-menu a {
+  padding: 12px 20px; /* 링크 주변 여백 */
+  text-decoration: none; /* 링크 밑줄 제거 */
+  color: #ecf0f1; /* 연한 회색 글자 */
+  border-bottom: 1px solid #2c3e50; /* 하단 경계선 */
+  font-weight: 600; /* 글자 굵기 */
+  transition: background-color 0.3s ease; /* 배경색 부드럽게 변화 */
+}
+
+.corp-mobile-menu a:hover {
+  background-color: #1abc9c; /* 마우스 올리면 민트색 배경 */
+  color: white; /* 글자색 흰색 */
+}
+
+/* 기업 햄버거 버튼 */
+#corp-hamburger {
+  display: none; /* 기본 숨김 */
+  font-size: 28px; /* 크기 */
+  color: #2c3e50; /* 색상 */
+  user-select: none; /* 드래그 선택 방지 */
+}
+
+/* 화면 너비 768px 이하일 때 반응형 적용 */
+@media (max-width: 768px) {
+  .corp-pc-menu {
+    display: none; /* PC 메뉴 숨김 */
+  }
+
+  #corp-hamburger {
+    display: block; /* 햄버거 버튼 보임 */
+  }
+
+  .corp-mobile-menu {
+    display: none; /* 모바일 메뉴 기본 숨김 */
+  }
+
+  .corp-mobile-menu.active {
+    display: flex; /* active 클래스 있을 때 모바일 메뉴 표시 */
+  }
+
+  .corp-top-menu {
+    display: none; /* 상단 로그인/회원가입 메뉴 숨김 */
+  }
+}
+
+.corp-header-link { /* a태그 밑줄 삭제 */
+	text-decoration: none;
+}
+
+.corp-join-btn {
+	border-radius: 5px;
+	color: white;
+	background-color: #00DD6D;
+	padding: 8px 12px;
+}

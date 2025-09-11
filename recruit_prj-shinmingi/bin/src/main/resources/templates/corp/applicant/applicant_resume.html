@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>이력서 상세보기</title>
+<link rel="stylesheet" th:href="@{/corp/applicant/applicant_resume.css}">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<script th:src="@{/corp/applicant/applicant_resume.js}"></script>
+</head>
+<body>
+	<header>
+		<th:block th:replace="~{fragments/corpHeader :: corpHeader}"></th:block>
+	</header>
+	<main>
+		<div class="container">
+			<div class="resume-section">
+				<div class="section">
+					<div class="section-title">기본정보</div>
+					<div class="basic-info">
+						<div class="profile-image">
+							<img th:if="${resume.image != null}"
+								th:src="@{/images/profileImg/{img}(img=${resume.image})}"
+								alt="프로필 사진">
+						</div>
+						<div class="info-details">
+							<div class="name" th:text="${resumeUser.name}"></div>
+							<div class="contact-info">
+								<div class="contact-item" th:text="|✉ ${resumeUser.email}|"></div>
+								<div class="phone-birth">
+									<span th:text="|📞 ${resumeUser.phone}|"></span> <span
+										th:text="|📅 ${resumeUser.birth}년생|"></span>
+								</div>
+							</div>
+						</div>
+					</div>
+					<br>
+					<div>
+						<div class="intro-question" th:if="${resume.introduction}"
+							th:text="${resume.introduction}"></div>
+						<div class="skills-interests"
+							th:if="${!#lists.isEmpty(positions)}">
+							<div class="skill-item">
+								<h4>개발 직무</h4>
+								<th:block th:each="position : ${positions}">
+									<span class="tag" th:text="${position.positionName}"></span>
+								</th:block>
+							</div>
+						</div>
+						<br>
+						<div class="skills-interests">
+							<div class="skill-item" th:if="${!#lists.isEmpty(skills)}">
+								<h4>기술 스택</h4>
+								<th:block th:each="skill : ${skills}">
+									<span class="tag" th:text="${skill.stackName}"></span>
+								</th:block>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="section" th:if="${!#lists.isEmpty(educations)}">
+					<div class="section-title">학력</div>
+					<div class="timeline-item" th:each="education : ${educations}">
+						<div class="timeline-date"
+							th:text="|${education.graduateDate} 졸업|"></div>
+						<div class="timeline-content">
+							<h4 th:text="${education.schoolName}"></h4>
+							<p>
+								<span th:text="${education.educationType}"></span> | <span
+									th:text="${education.department}"></span>
+							</p>
+							<p class="sub-info" th:if="${education.grade != 0}">
+								<span th:text="${education.grade}"></span> / <span
+									th:text="${education.standardGrade}"></span>
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="section" th:if="${!#lists.isEmpty(careers)}">
+					<div class="section-title">경력(업무경험)</div>
+					<div class="timeline-item" th:each="career : ${careers}">
+						<div class="timeline-date"
+							th:text="|${career.startDate} - ${career.endDate}|"></div>
+						<div class="timeline-content">
+							<h4 th:text="${career.companyName}"></h4>
+							<p th:text="${career.position}"></p>
+							<p th:text="${career.careerDescription}"></p>
+						</div>
+					</div>
+				</div>
+
+				<div class="section" th:if="${!#lists.isEmpty(projects)}">
+					<div class="section-title">프로젝트</div>
+					<div class="timeline-item" th:each="project : ${projects}">
+						<div class="timeline-date"
+							th:text="|${project.startDate} - ${project.endDate}|"></div>
+						<div class="timeline-content">
+							<h4 th:text="${project.projectName}"></h4>
+							<div class="project-details">
+								<p>
+									<th:block th:each="skills : ${project.projectSkills}">
+										<span class="tag" th:text="${skills.stackName}"></span>
+									</th:block>
+								</p>
+								<h5>상세내용</h5>
+								<p th:text="${project.projectContent}"></p>
+								<h5>저장소 링크</h5>
+								<p th:text="${project.repositoryLink}"></p>
+								<h5 th:if="${project.releaseStatus == 'Y'}">배포 완료</h5>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="section" th:if="${!#lists.isEmpty(additionals)}">
+					<div class="section-title">기타사항</div>
+					<div class="timeline-item" th:each="additional : ${additionals}">
+						<div class="timeline-date" th:text="${additional.endDate}"></div>
+						<div class="timeline-content">
+							<h4 th:text="${additional.activityName}"></h4>
+							<p>
+								<span th:text="${additional.recordType}"></span> | <span
+									th:text="${additional.relatedAgency}"></span>
+							</p>
+							<h4>상세 내용</h4>
+							<p th:text="${additional.detailContent}"></p>
+						</div>
+					</div>
+				</div>
+
+				<div class="section" th:if="${!#lists.isEmpty(introductions)}">
+					<div class="section-title">자기소개서</div>
+					<div class="timeline-item" th:each="intro : ${introductions}">
+						<div class="timeline-date" th:text="${intro.title}"></div>
+						<br>
+						<div th:text="${intro.content}"></div>
+					</div>
+				</div>
+
+				<div class="section"
+					th:if="${links != null and ((links.githubUrl != null and links.githubUrl != '') or (links.notionUrl != null and links.notionUrl != '') or (links.blogUrl != null and links.blogUrl != ''))}">
+					<div class="section-title">링크</div>
+					<div class="links-section">
+						<div th:if="${links.githubUrl != null and links.githubUrl != ''}"
+							style="margin-bottom: 20px;">
+							<strong>Github</strong> <span th:text="${links.githubUrl}"
+								style="margin-left: 50px;"></span>
+						</div>
+						<div th:if="${links.notionUrl != null and links.notionUrl != ''}"
+							style="margin-bottom: 20px;">
+							<strong>Notion</strong> <span th:text="${links.notionUrl}"
+								style="margin-left: 50px;"></span>
+						</div>
+						<div th:if="${links.blogUrl != null and links.blogUrl != ''}"
+							style="margin-bottom: 20px;">
+							<strong>BLOG</strong> <span th:text="${links.blogUrl}"
+								style="margin-left: 50px;"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="sidebar">
+				<div class="sidebar-buttons">
+					<button class="sidebar-btn position-btn" id="position-btn">
+						<span class="btn-icon">💼</span> <span class="btn-text">지원상태
+							변경</span>
+					</button>
+
+					<button th:data-resume-seq="${resume.resumeSeq}"
+						class="sidebar-btn bookmark-btn"
+						th:classappend="${isScraped} ? 'active'" id="bookmark-btn">
+						<span class="btn-icon">★</span> <span class="btn-text">스크랩</span>
+					</button>
+
+					<button class="sidebar-btn list-btn" id="list-btn">
+						<span class="btn-icon">📋</span> <span class="btn-text">목록으로</span>
+					</button>
+					<button class="sidebar-btn download-btn" id="download-btn"
+						th:attr="data-resume-seq=${resume.resumeSeq}">
+						<i class="fas fa-download"></i> <span>이력서 다운로드</span>
+					</button>
+				</div>
+				<div class="sidebar-attachment-section">
+					<div class="sidebar-attachment-header">
+						<i class="fas fa-paperclip"></i> <span>첨부파일</span>
+					</div>
+					<div class="sidebar-attachment-list" id="fileListContainer">
+						<th:block th:each="attachment : ${attachments}">
+							<div class="sidebar-attachment-item" th:attr="data-value=${attachment.attachmentSeq}">
+								<i class="fas"
+									th:classappend="${attachment.fileType == 'pdf'} ? ' fa-file-pdf' : ' fa-file-word'"></i>
+								<div class="sidebar-attachment-details">
+									<div class="sidebar-attachment-name"
+										th:text="${attachment.originalName}"></div>
+								</div>
+							</div>
+						</th:block>
+					</div>
+				</div>
+			</div>
+
+			<!-- 모달 창 -->
+			<div class="modal" id="interviewModal">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h3>면접 안내 메일 보내기</h3>
+						<button type="button" class="modal-close" id="modal-close">×</button>
+					</div>
+
+					<div class="modal-body">
+						<form method="post" action="/corp/applicant/message">
+							<div class="form-row">
+								<select class="form-select" id="mail-option" name="passStage">
+									<option value="0">신규지원</option>
+									<option value="1">서류통과</option>
+									<option value="2">최종합격</option>
+									<option value="3">불합격</option>
+								</select>
+							</div>
+
+							<div class="email-section">
+								<div class="email-title">
+									<input type="text" class="email-title-input"
+										name="messageTitle" placeholder="이메일 제목을 입력하세요">
+								</div>
+
+								<div class="email-body">
+									<textarea class="form-input email-textarea"
+										name="messageContent" rows="12" placeholder="메일 내용을 입력하세요"></textarea>
+								</div>
+							</div>
+
+							<div class="contact-info">
+								<div>
+									<span class="info-icon">📞</span> 문의: 1588-1234 (평일
+									09:00~18:00)
+								</div>
+								<div>
+									<span class="info-icon">📧</span> 이메일: support@company.com
+								</div>
+							</div>
+
+							<button type="submit" class="submit-btn">
+								<span class="btn-send-icon" id="send-mail">📧</span> 메일 보내기
+
+							</button>
+							<input type="hidden" name="resumeSeq"
+								th:value="${resume.resumeSeq}"> <input type="hidden"
+								name="jobPostingSeq" th:value="${jobPostingSeq}"> <input
+								type="hidden" name="email" th:value="${resumeUser.email}">
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+	<footer>
+		<th:block th:replace="~{fragments/corpFooter :: corpFooter}"></th:block>
+	</footer>
+</body>
+</html>

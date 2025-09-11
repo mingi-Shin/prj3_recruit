@@ -1,0 +1,25 @@
+<div th:fragment="sidebar">
+<div class="sidebar">
+    <h1><a href="/user/mypage" id="mypage">MY페이지</a></h1>
+    <ul>
+    <li><a href="/user/mypage/apply_list" class="menu-item">입사지원 현황</a></li>
+    <li><a href="/user/mypage/mail_list" class="menu-item">메일목록</a></li>
+    <li><a href="/user/mypage/favorite_companies" class="menu-item">관심 기업</a></li>
+    <li><a href="/user/mypage/recent_posting" class="menu-item">최근 본 공고</a></li>
+    <li><a href="/user/mypage/scrap_posting" class="menu-item">스크랩 공고</a></li>
+    <li><a href="/user/mypage/company_reviews" class="menu-item">기업 후기</a></li>
+    <li><a href="/user/mypage/account_resign" class="menu-item">회원 탈퇴</a></li>
+    </ul>
+    </div>
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+	const currentPath = location.pathname;
+	const menuLinks = document.querySelectorAll(".menu-item");
+	menuLinks.forEach(function(link){
+		if(link.getAttribute("href") === currentPath){
+			link.classList.add("active");
+		}
+	});
+});
+</script>
+</div>

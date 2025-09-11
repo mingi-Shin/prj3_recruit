@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.admin.ask.AdminInquiryMapper">
+	
+	<select id="selectSearchAsks" parameterType="map" resultType="kr.co.sist.admin.ask.AdminInquiryDTO">
+  SELECT ask_seq, email, admin_id, title, content, answer, regs_date, category, answer_stat, user_type, answer_date
+  FROM ask
+  <where>
+    <if test="category != null and category != '전체'">
+      category = #{category}
+    </if>
+
+    <if test="answer_stat != null and answer_stat != '전체'">
+      answer_stat = #{answer_stat}
+    </if>
+
+    <if test="keyword != null and keyword != ''">
+      AND
+      <choose>
+        <when test="type == 'email'">
+          email LIKE '%' || #{keyword} || '%'
+        </when>
+        <when test="type == 'title'">
+          title LIKE '%' || #{keyword} || '%'
+        </when>
+        <when test="type == 'content'">
+          content LIKE '%' || #{keyword} || '%'
+        </when>
+        <otherwise>
+          (email LIKE '%' || #{keyword} || '%'
+           OR title LIKE '%' || #{keyword} || '%'
+           OR content LIKE '%' || #{keyword} || '%')
+        </otherwise>
+      </choose>
+    </if>
+  </where>
+
+  <if test="order == 'regs_desc'">
+    ORDER BY regs_date DESC
+  </if>
+  <if test="order == 'regs_asc'">
+    ORDER BY regs_date ASC
+  </if>
+  <if test="order == 'answer_desc'">
+    ORDER BY answer_date DESC
+  </if>
+  <if test="order == 'answer_asc'">
+    ORDER BY answer_date ASC
+  </if>
+
+  OFFSET #{start} ROWS FETCH NEXT #{perPage} ROWS ONLY
+</select>
+
+
+<select id="countSearch"  parameterType="Map" resultType="int">
+ 	select count(*) from ask
+	<where>
+    <if test="category != null and category != '전체'">
+      category = #{category}
+    </if>
+
+    <if test="answer_stat != null and answer_stat != '전체'">
+      answer_stat = #{answer_stat}
+    </if>
+
+    <if test="keyword != null and keyword != ''">
+      AND
+      <choose>
+        <when test="type == 'email'">
+          email LIKE '%' || #{keyword} || '%'
+        </when>
+        <when test="type == 'title'">
+          title LIKE '%' || #{keyword} || '%'
+        </when>
+        <when test="type == 'content'">
+          content LIKE '%' || #{keyword} || '%'
+        </when>
+        <otherwise>
+          (email LIKE '%' || #{keyword} || '%'
+           OR title LIKE '%' || #{keyword} || '%'
+           OR content LIKE '%' || #{keyword} || '%')
+        </otherwise>
+      </choose>
+    </if>
+  </where>
+	
+</select>
+
+<select id="selectSearchAsk" resultType="kr.co.sist.admin.ask.AdminInquiryDTO">
+	select * from ask where ask_seq = #{askSeq}
+</select>
+
+<delete id="deleteInquiry" parameterType="Map">
+	delete from ask
+	where ask_seq in
+	<foreach item="id" collection="askSeq" open="(" separator="," close=")">
+	TO_NUMBER(#{id})
+	</foreach>
+</delete>
+
+<update id="updateInquiry" parameterType="Map">
+	update ask
+	set admin_id = #{adminId},
+	    answer = #{answer},
+	    answer_stat = #{answerStat},
+	    answer_date = #{answerDate}
+	where ask_seq = #{askSeq}
+</update>
+
+
+</mapper>

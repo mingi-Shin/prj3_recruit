@@ -1,0 +1,553 @@
+/* 기본 스타일 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #f5f7fa;
+    line-height: 1.6;
+    color: #333;
+    display: flex;
+    min-height: 100vh;
+}
+
+/* 메인 컨테이너 */
+main {
+    flex: 1;
+    padding: 20px;
+    overflow-x: hidden;
+}
+
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    gap: 30px;
+}
+
+/* 좌측 메인 콘텐츠 */
+.main-container > div:first-child {
+    flex: 1;
+}
+
+/* 제목 */
+.job_posting_title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* 기술스택 섹션 */
+.stack {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 12px;
+}
+
+.tech-stack-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tech-stack-tag {
+    background: #00b574;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* 주요내용 섹션 */
+.job-section {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.content-detail {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #555;
+    margin-top: 12px;
+}
+
+/* 직무 정보 박스 */
+.job-info-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.job-info-box > div {
+    padding: 12px;
+    border-left: 3px solid #00b574;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.job-info-box h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.job-info-box p {
+    font-size: 14px;
+    color: #666;
+}
+
+/* 기업소개 섹션 */
+.company-intro {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.company-content img {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.company-description {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #555;
+}
+
+/* 플로팅 사이드바 */
+.floating-sidebar {
+    width: 280px;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+}
+
+.company-floating-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* 기업 로고 섹션 */
+.company-logo-section {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.logo-placeholder {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.company-title h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.company-title a {
+    font-size: 13px;
+    color: #00b574;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.company-title a:hover {
+    text-decoration: underline;
+}
+
+/* 기업 정보 섹션 */
+.company-info-section {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.info-item:last-child {
+    margin-bottom: 0;
+}
+
+.label {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.value {
+    font-size: 14px;
+    color: #333;
+}
+
+.go-link {
+    font-size: 13px;
+    color: #00b574;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.go-link:hover {
+    text-decoration: underline;
+}
+
+/* 지원하기 버튼 */
+.floating-apply-btn, .apply-button {
+    width: 100%;
+    padding: 14px;
+    background: #00b574;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    text-align: center;
+    display: block;
+    margin: 0 20px 20px 20px;
+    width: calc(100% - 40px);
+}
+
+.floating-apply-btn:hover, .apply-button:hover {
+    background: #009963;
+}
+
+.floating-apply-btn.disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* 플로팅 액션 버튼들 */
+.floating-actions {
+    padding: 20px;
+    display: flex;
+    gap: 12px;
+}
+
+.floating-action-btn {
+    flex: 1;
+    padding: 10px 8px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.floating-action-btn:hover {
+    background: #e9ecef;
+}
+
+.floating-action-btn .icon {
+    font-size: 16px;
+}
+
+.floating-action-btn .text {
+    color: #666;
+    font-weight: 500;
+}
+
+/* 모달 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    opacity: 1;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transform: translateY(-50px);
+    transition: transform 0.3s ease;
+}
+
+.modal.show .modal-content {
+    transform: translateY(0);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.close-btn {
+    font-size: 24px;
+    color: #999;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.job-info {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.job-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.job-company {
+    font-size: 14px;
+    color: #666;
+}
+
+.info-section {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.info-row:last-child {
+    margin-bottom: 0;
+}
+
+.info-label {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
+.info-value {
+    font-size: 14px;
+    color: #333;
+}
+
+.required {
+    color: #e74c3c;
+    font-size: 12px;
+}
+
+/* 이력서 섹션 */
+.resume-section, .attachment-section {
+    margin-bottom: 20px;
+}
+
+.resume-item, .attachment-item {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.resume-item.selected {
+    border-color: #00b574;
+    background-color: #f0f9f6;
+}
+
+.resume-radio, .attachment-checkbox {
+    display: none;
+}
+
+.resume-label, .attachment-label {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    cursor: pointer;
+    gap: 12px;
+}
+
+.resume-icon, .attachment-icon {
+    width: 40px;
+    height: 40px;
+    background: #00b574;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.resume-info, .attachment-info {
+    flex: 1;
+}
+
+.resume-title, .attachment-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 2px;
+}
+
+.resume-meta, .attachment-meta {
+    font-size: 12px;
+    color: #666;
+}
+
+.attachment-description {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+/* 모달 버튼 */
+.modal-buttons {
+    padding: 20px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    gap: 12px;
+}
+
+.modal-cancel-btn, .modal-apply-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.modal-cancel-btn {
+    background: #f8f9fa;
+    color: #666;
+    border: 1px solid #e9ecef;
+}
+
+.modal-cancel-btn:hover {
+    background: #e9ecef;
+}
+
+.modal-apply-btn {
+    background: #00b574;
+    color: white;
+}
+
+.modal-apply-btn:hover {
+    background: #009963;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+    }
+    
+    main {
+        padding: 15px;
+    }
+    
+    .main-container {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .floating-sidebar {
+        width: 100%;
+        position: static;
+    }
+    
+    .job-info-box {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+    }
+    
+    .floating-actions {
+        flex-direction: row;
+    }
+    
+    .company-logo-section {
+        flex-direction: column;
+        text-align: center;
+    }
+}

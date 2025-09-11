@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    
+<mapper namespace="kr.co.sist.user.mapper.MainPageMapper">
+
+<select id="searchJobPostings" resultType="kr.co.sist.user.dto.JobPostDTO">
+  SELECT 
+    JP.JOB_POSTING_SEQ,
+    JP.CORP_NO,
+    JP.POSITION_SEQ,
+    JP.POSTING_TITLE,
+    JP.POSTING_DETAIL,
+    JP.EXP_LEVEL,
+    JP.POSTING_END_DT,
+    JP.POSTING_START_DT,
+    JP.RECRUIT_CNT,
+    JP.EMPLOY_TYPE,
+    JP.WORKDAY,
+    JP.WORK_START_TIME,
+    JP.WORK_END_TIME,
+    JP.SALARY,
+    JP.CONT_START_DT,
+    JP.CONT_END_DT,
+    JP.EDU_LEVEL,
+    JP.VIEW_CNT,
+    JP.ZIPCODE,
+    JP.ROAD_ADDRESS,
+    JP.DETAIL_ADDRESS,
+    JP.REGION,
+    JP.DISTRICT,
+    P.POSITION_NAME,
+    C.CORP_NM,
+    C.CORP_INFO,
+    C.CORP_URL,
+    C.CORP_IMG,
+    LISTAGG(DISTINCT TS.STACK_NAME, ', ') WITHIN GROUP (ORDER BY TS.TECH_STACK_SEQ) AS TECHNAMES
+  FROM JOB_POSTING JP
+  JOIN COMPANY C ON JP.CORP_NO = C.CORP_NO
+  JOIN POSITION_CODE P ON JP.POSITION_SEQ = P.POSITION_SEQ
+  LEFT JOIN JOB_POSTING_TECH_STACK JPTS ON JP.JOB_POSTING_SEQ = JPTS.JOB_POSTING_SEQ
+  LEFT JOIN TECH_STACK TS ON JPTS.TECH_STACK_SEQ = TS.TECH_STACK_SEQ
+  WHERE (LOWER(JP.POSTING_TITLE) LIKE '%' || LOWER(#{keyword}) || '%'
+     OR LOWER(JP.POSTING_DETAIL) LIKE '%' || LOWER(#{keyword}) || '%'
+     OR LOWER(C.CORP_NM) LIKE '%' || LOWER(#{keyword}) || '%')
+    AND JP.IS_ENDED = 'N'
+    AND TO_DATE(JP.POSTING_END_DT, 'YYYY-MM-DD') >= TRUNC(SYSDATE)
+  GROUP BY 
+    JP.JOB_POSTING_SEQ,
+    JP.CORP_NO,
+    JP.POSITION_SEQ,
+    JP.POSTING_TITLE,
+    JP.POSTING_DETAIL,
+    JP.EXP_LEVEL,
+    JP.POSTING_END_DT,
+    JP.POSTING_START_DT,
+    JP.RECRUIT_CNT,
+    JP.EMPLOY_TYPE,
+    JP.WORKDAY,
+    JP.WORK_START_TIME,
+    JP.WORK_END_TIME,
+    JP.SALARY,
+    JP.CONT_START_DT,
+    JP.CONT_END_DT,
+    JP.EDU_LEVEL,
+    JP.VIEW_CNT,
+    JP.ZIPCODE,
+    JP.ROAD_ADDRESS,
+    JP.DETAIL_ADDRESS,
+    JP.REGION,
+    JP.DISTRICT,
+    P.POSITION_NAME,
+    C.CORP_NM,
+    C.CORP_INFO,
+    C.CORP_URL,
+    C.CORP_IMG
+</select>
+
+<!-- 자동완성 추천 -->
+<select id="getAutoCompleteSuggestions" resultType="String">
+    SELECT DISTINCT JP.POSTING_TITLE AS suggestion
+    FROM JOB_POSTING JP
+    WHERE LOWER(JP.POSTING_TITLE) LIKE '%' || LOWER(#{term}) || '%'
+
+    UNION
+
+    SELECT DISTINCT C.CORP_NM AS suggestion
+    FROM COMPANY C
+    WHERE LOWER(C.CORP_NM) LIKE '%' || LOWER(#{term}) || '%'
+
+    UNION
+
+    SELECT DISTINCT PC.POSITION_NAME AS suggestion
+    FROM POSITION_CODE PC
+    WHERE LOWER(PC.POSITION_NAME) LIKE '%' || LOWER(#{term}) || '%'
+</select>
+
+
+</mapper>

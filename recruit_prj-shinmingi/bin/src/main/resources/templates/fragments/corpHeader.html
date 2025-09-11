@@ -1,0 +1,124 @@
+<th:block th:fragment="corpHeader">
+<!-- ✅ CSS --> 
+<link rel="stylesheet" th:href="@{/corp/mainCss/header.css}"/>
+<!-- ✅ JavaScript -->
+<script type="text/javascript">
+	// 기업 PC용 하위 메뉴 show/hide
+	function showCorpSubMenu() {
+	  document.getElementById("corp-submenu").style.display = "table";
+	}
+ 
+	function hideCorpSubMenu() {
+	  document.getElementById("corp-submenu").style.display = "none";
+	}
+ 
+	// 기업 모바일 메뉴 toggle
+	function toggleCorpMobileMenu() {
+	  const menu = document.getElementById("corp-mobile-menu");
+	  menu.classList.toggle("active");
+	}
+
+</script>
+	
+	<!-- corp-header.jsp -->
+	<!-- 전체 헤더 영역 -->
+	<div id="corp-header" >
+	
+	  <!-- 상단 로고 및 로그인 영역 -->
+	  <div id="corp-top-bar">
+	    <a th:href="@{/corp/main}"><img th:src="@{/images/logo.png}" alt="민기인력 로고" class="corp-logo"></a> 
+	    <div class="corp-top-menu">
+	    <!-- GlobalHandler에서 user로 넘겨주고 있다. #authentication으로 securityContextHolder 세션의 객체를 꺼내도 된다. -->
+	    	<div id="userInfo" sec:authorize="hasRole('ROLE_CORP')" >
+		      <a th:href="@{/void}" th:text="${user.name}" class="corp-header-link" style="color: #1abc9c; text-decoration: underline;" onclick="alert('마이페이지 링크입니다.')" ></a> |
+		      <a th:href="@{/logout}" class="corp-header-link">로그아웃</a> |
+		      <a th:href="@{/user/help/help}" class="corp-header-link">고객센터</a> |
+		      <a th:href="@{/}" class="corp-header-link">구직서비스</a>
+		      <input type="hidden" id="userEmail" th:value="${user.email}" >
+		      <input type="hidden" id="userRole" th:value="${user.role}" >
+		      <input type="hidden" id="userCorpNo" th:value="${user.corpNo}" >
+		      <div id="userInfo" th:attr="data-user=${user}" ></div>
+	    	</div>
+	    	<!-- sec:authorize는 내부적으로 SecurityContext에서 현재 사용자의 인증 상태를 확인 : 비로그인 상태인 경우, 내부적으로 ROLE_ANONYMOUS 권한이 부여, 따라서 오류 안남 -->
+	    	<div sec:authorize="!hasRole('ROLE_CORP')"  >
+		      <a th:href="@{/login}" class="corp-header-link">로그인</a> |
+		      <a th:href="@{/corp/join}" class="corp-header-link">회원가입</a> |
+		      <a th:href="@{/user/help/help}" class="corp-header-link">고객센터</a> |
+		      <a th:href="@{/}" class="corp-header-link">구직서비스</a>
+	    	</div>
+	    </div>
+	    <!-- 모바일 햄버거 버튼 -->
+	    <div id="corp-hamburger" onclick="toggleCorpMobileMenu()">☰</div>
+	  </div>
+	
+	  <!-- PC 전용 메뉴 -->
+	  <div id="corp-gnb" class="corp-pc-menu" onmouseover="showCorpSubMenu()" onmouseout="hideCorpSubMenu()">
+	    <table class="corp-main-menu">
+	      <tr>
+	        <td>기업홈</td>
+	        <td>지원자 관리</td>
+	        <td>공고 관리</td>
+	        <td><a th:href="@{/corp/talentPool/talent_pool}">인재 관리</a></td>
+	        <!-- <td>기업상품안내</td> -->
+	        <td>회원정보관리</td>
+	      </tr>
+	    </table>
+	
+	    <!-- 마우스 오버 시 나오는 하위 메뉴 -->
+	    <table id="corp-submenu" class="corp-submenu-table">
+	      <tr>
+	        <td>
+	          <div class="corp-submenu-item">
+	            <a th:href="@{/corp/main}"> <span class="corp-submenu-link">메인페이지</span></a>
+	          </div>
+	        </td>
+	        <td>
+	          <div class="corp-submenu-item">
+	            <a th:href="@{/corp/applicant}"><span class="corp-submenu-link">지원자 관리</span></a>
+	          </div>
+	        </td>
+	        <td>
+	          <div class="corp-submenu-item">
+	            <a th:href="@{/corp/jobPostingForm}"><span class="corp-submenu-link">새로운 공고 등록</span></a> <br>
+	            <a th:href="@{/corp/myJobPostingListPage}"><span class="corp-submenu-link">나의 공고 목록</span></a> <br>
+	          </div>
+	        </td>
+	        <td>
+	          <div class="corp-submenu-item">
+	            <a th:href="@{/corp/talentPool/talent_pool}"><span class="corp-submenu-link">전체 인재</span></a><br>
+<!-- 	            <a th:href="@{/corp/talentPool/offer}"><span class="corp-submenu-link">면접제의한 인재정보</span></a><br> -->
+	            <a th:href="@{/corp/talentPool/scrap}"><span class="corp-submenu-link">스크랩한 인재정보</span></a><br>
+	            <a th:href="@{/corp/talentPool/recently_viewed}"><span class="corp-submenu-link">최근본 인재정보</span></a><br>
+<!-- 	            <span class="corp-submenu-link">AI인재추천</span> -->
+	          </div>
+	        </td>
+<!-- 	        <td>
+	          <div class="corp-submenu-item">
+	            <span class="corp-submenu-link">상품 안내</span><br>
+	            <span class="corp-submenu-link">포인트충전</span><br>
+	            <span class="corp-submenu-link">결제 내역</span>
+	          </div>
+	        </td> -->
+	        <td>
+	          <div class="corp-submenu-item">
+	            <a th:href="@{/corp/info/edit}"><span class="corp-submenu-link">기업 정보 수정</span></a><br>
+	           	<a th:href="@{/corp/image/upload}"><span class="corp-submenu-link">이미지 등록</span></a><br>
+	            <a href="#void"><span class="corp-submenu-link">비밀번호 변경</span></a>
+	          </div>
+	        </td>
+	      </tr>
+	    </table>
+	  </div>
+	
+	  <!-- 모바일 전용 메뉴 -->
+	  <div id="corp-mobile-menu" class="corp-mobile-menu">
+	    <a href="@{/void}" class="corp-header-link">기업홈</a>
+	    <a href="@{/void}" class="corp-header-link">지원자 관리</a>
+	    <a href="@{/void}" class="corp-header-link">공고 관리</a>
+	    <a href="@{/void}" class="corp-header-link">인재 관리</a>
+	    <a href="@{/void}" class="corp-header-link">기업상품안내</a>
+	    <a href="@{/void}" class="corp-header-link">회원정보관리</a>
+	  </div>
+	</div>
+
+</th:block>

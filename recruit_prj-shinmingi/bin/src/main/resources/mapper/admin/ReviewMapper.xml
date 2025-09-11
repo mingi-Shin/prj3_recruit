@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.sist.user.mapper.ReviewMapper">
+	
+	<select id="selectSearchReviews" parameterType="map" resultType="kr.co.sist.admin.review.AdminReviewDTO">
+  SELECT review_seq, corp_no, email, rating, summary, pros, cons, created_at
+  FROM review
+  <where>
+    <if test="rating != null and rating != '전체'">
+      rating = TO_NUMBER(#{rating})
+    </if>
+
+    <if test="keyword != null and keyword != ''">
+      AND
+      <choose>
+        <when test="type == 'email'">
+          email LIKE '%' || #{keyword} || '%'
+        </when>
+        <when test="type == 'summary'">
+          summary LIKE '%' || #{keyword} || '%'
+        </when>
+        <when test="type == 'corp_no'">
+          corp_no LIKE '%' || #{keyword} || '%'
+        </when>
+        <otherwise>
+          (email LIKE '%' || #{keyword} || '%'
+           OR summary LIKE '%' || #{keyword} || '%'
+           OR corp_no LIKE '%' || #{keyword} || '%')
+        </otherwise>
+      </choose>
+    </if>
+  </where>
+
+  <if test="order == 'desc'">
+    ORDER BY created_at DESC
+  </if>
+  <if test="order == 'asc'">
+    ORDER BY created_at ASC
+  </if>
+
+  OFFSET #{start} ROWS FETCH NEXT #{perPage} ROWS ONLY
+</select>
+
+
+<select id="countSearch"  parameterType="Map" resultType="int">
+ 	select count(*) from review
+	<where>
+    <if test="rating != null and rating != '전체'">
+      rating = TO_NUMBER(#{rating})
+    </if>
+
+    <if test="keyword != null and keyword != ''">
+      AND
+      <choose>
+        <when test="type == 'email'">
+          email LIKE '%' || #{keyword} || '%'
+        </when>
+        <when test="type == 'summary'">
+          summary LIKE '%' || #{keyword} || '%'
+        </when>
+        <when test="type == 'corp_no'">
+          corp_no LIKE '%' || #{keyword} || '%'
+        </when>
+        <otherwise>
+          (email LIKE '%' || #{keyword} || '%'
+           OR summary LIKE '%' || #{keyword} || '%'
+           OR corp_no LIKE '%' || #{keyword} || '%')
+        </otherwise>
+      </choose>
+    </if>
+  </where>
+	
+</select>
+
+<delete id="deleteReview" parameterType="Map">
+	delete from review
+	where review_seq in
+	<foreach item="id" collection="reviewSeq" open="(" separator="," close=")">
+	TO_NUMBER(#{id})
+	</foreach>
+</delete>
+
+
+</mapper>

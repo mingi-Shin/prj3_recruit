@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>민기인력 - 관리자</title>
+<link rel="stylesheet" th:href="@{/admin/css/admin_board.css}"/>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript">
+$(function() {
+  // 전체선택 체크박스 클릭 시
+  $('#selectAll').on('change', function() {
+    const isChecked = $(this).prop('checked');
+    $('.select-row').prop('checked', isChecked);
+    updateSelectedCount();
+    updateButtonStates();
+  });
+
+  // 개별 체크박스 클릭 시
+  $(document).on('change', '.select-row', function() {
+    const total = $('.select-row').length;
+    const checked = $('.select-row:checked').length;
+    $('#selectAll').prop('checked', total === checked);
+    updateSelectedCount();
+    updateButtonStates();
+  });
+
+  function updateSelectedCount() {
+    const checked = $('.select-row:checked').length;
+    const total = $('.select-row').length;
+    $('#selectedCount').text(checked);
+    $('#totalCount').text(total);
+  }
+
+  // 체크된 항목 상태에 따라 버튼 활성/비활성 처리
+  function updateButtonStates() {
+    let canApprove = false;
+    let canWithdraw = false;
+
+    $('tbody tr').each(function() {
+      const isChecked = $(this).find('.select-row').prop('checked');
+      if (!isChecked) return;
+
+      const stat = $(this).find('td.stat').text().trim();
+
+      if (stat !== '승인됨' && stat !== '탈퇴') {
+        canApprove = true;
+      }
+      if (stat !== '탈퇴') {
+        canWithdraw = true;
+      }
+    });
+
+    $('#btnApprove').prop('disabled', !canApprove);
+    $('#btnWithdraw').prop('disabled', !canWithdraw);
+  }
+
+  updateSelectedCount();
+  updateButtonStates();
+
+  // 승인 버튼 클릭
+  $('#btnApprove').on('click', function() {
+    let hasWithdrawn = false;
+    let hasAlreadyApproved = false;
+    let selectedIds = [];
+
+    $('tbody tr').each(function() {
+      const isChecked = $(this).find('.select-row').prop('checked');
+      const stat = $(this).find('td.stat').text().trim();
+      const adminId = $(this).find('.admin-id-cell').text().trim();
+
+      if (isChecked) {
+        if (stat === '탈퇴') {
+          hasWithdrawn = true;
+          return false;
+        }
+        if (stat === '승인됨') {
+          hasAlreadyApproved = true;
+          return false;
+        }
+        selectedIds.push(adminId);
+      }
+    });
+
+    if (selectedIds.length === 0) {
+      alert('승인할 관리자를 선택해주세요.');
+      return;
+    }
+
+    if (hasWithdrawn) {
+      alert('탈퇴된 관리자는 승인할 수 없습니다.');
+      return;
+    }
+
+    if (hasAlreadyApproved) {
+      alert('이미 승인된 관리자는 다시 승인할 수 없습니다.');
+      return;
+    }
+
+    $.ajax({
+      url: '/admin/updateStatus',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({adminIds: selectedIds, status: '승인됨'}),
+      success: function(response) {
+        alert('승인 처리 완료');
+        location.reload();
+      },
+      error: function() {
+        alert('승인 처리 중 오류가 발생했습니다.');
+      }
+    });
+  });
+
+  // 탈퇴 버튼 클릭
+  $('#btnWithdraw').on('click', function() {
+    let hasAlreadyWithdrawn = false;
+    let selectedIds = [];
+
+    $('tbody tr').each(function() {
+      const isChecked = $(this).find('.select-row').prop('checked');
+      const stat = $(this).find('td.stat').text().trim();
+      const adminId = $(this).find('.admin-id-cell').text().trim();
+
+      if (isChecked) {
+        if (stat === '탈퇴') {
+          hasAlreadyWithdrawn = true;
+          return false;
+        }
+        selectedIds.push(adminId);
+      }
+    });
+
+    if (selectedIds.length === 0) {
+      alert('탈퇴할 관리자를 선택해주세요.');
+      return;
+    }
+
+    if (hasAlreadyWithdrawn) {
+      alert('이미 탈퇴된 관리자는 다시 탈퇴 처리할 수 없습니다.');
+      return;
+    }
+
+    if (!confirm('선택한 관리자를 탈퇴 처리하시겠습니까?')) {
+      return;
+    }
+
+    $.ajax({
+      url: '/admin/updateStatus',
+      method: 'POST',
+      contentType: 'application/json',
+      data: JSON.stringify({adminIds: selectedIds, status: '탈퇴'}),
+      success: function(response) {
+        alert('탈퇴 처리 완료');
+        location.reload();
+      },
+      error: function() {
+        alert('탈퇴 처리 중 오류가 발생했습니다.');
+      }
+    });
+  });
+
+  // --- 모달 관련 코드 ---
+  $('#modalCloseBtn').on('click', function() {
+    $('#adminDetailModal').hide();
+  });
+
+  // 관리자 아이디 클릭 이벤트 - ID 기반으로 변경
+  function setupAdminIdClickEvents() {
+    // 모든 관리자 ID 셀에 클릭 이벤트 바인딩
+    $('.admin-id-cell').off('click').on('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      console.log('관리자 ID 클릭됨:', $(this).text());
+      
+      const adminId = $(this).text().trim();
+      
+      // 모달 데이터 로딩 표시
+      const tbody = $('#loginLogsTableBody');
+      tbody.html('<tr><td colspan="5">데이터를 불러오는 중...</td></tr>');
+      
+      // 모달 먼저 표시
+      $('#adminDetailModal').show().css({
+        'display': 'block',
+        'visibility': 'visible',
+        'z-index': '1000'
+      });
+
+      $.ajax({
+        url: '/admin/loginLogs/' + encodeURIComponent(adminId),
+        method: 'GET',
+        dataType: 'json',
+        success: function(data) {
+          console.log('Ajax 성공, 받은 데이터:', data);
+          
+          tbody.empty();
+
+          if (!data || data.length === 0) {
+            tbody.append('<tr><td colspan="5">로그인 기록이 없습니다.</td></tr>');
+          } else {
+            data.forEach(function(log) {
+              const row = `
+                <tr>
+                  <td>${log.loginTime || log.login_time}</td>
+                  <td>${log.loginResult || log.login_result}</td>
+                  <td>${log.loginFail || log.login_fail}</td>
+                  <td>${log.loginIp || log.login_ip}</td>
+                  <td>${log.userAgent || log.user_agent}</td>
+                </tr>
+              `;
+              tbody.append(row);
+            });
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('Ajax 오류:', status, error);
+          tbody.html('<tr><td colspan="5">데이터를 불러오는데 실패했습니다.</td></tr>');
+          alert('관리자 로그인 이력 정보를 불러오는데 실패했습니다.');
+        }
+      });
+    });
+  }
+
+  // 페이지 로드 후 이벤트 설정
+  setupAdminIdClickEvents();
+  
+  // 페이지네이션이나 검색 후 다시 이벤트 설정이 필요한 경우를 위해
+  // 전역 함수로 노출
+  window.setupAdminIdClickEvents = setupAdminIdClickEvents;
+});
+</script>
+<style type="text/css">
+  #adminDetailModal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    padding: 30px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    z-index: 1000;
+    min-width: 700px;
+    max-width: 90%;
+    max-height: 80%;
+    overflow-y: auto;
+  }
+  
+  #adminDetailModal h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 18px;
+  }
+  
+  #adminDetailModal button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 15px;
+  }
+  
+  #adminDetailModal button:hover {
+    background-color: #0056b3;
+  }
+  
+  #adminDetailModal table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-bottom: 20px;
+  }
+  
+  #adminDetailModal th, #adminDetailModal td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  #adminDetailModal th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+  }
+  
+  /* 관리자 ID 셀 스타일 */
+  .admin-id-cell {
+    cursor: pointer;
+    color: #007bff;
+    text-decoration: underline;
+    font-weight: 500;
+  }
+  
+  .admin-id-cell:hover {
+    color: #0056b3;
+    background-color: #f8f9fa;
+  }
+</style>
+</head>
+
+<body>
+
+<th:block th:replace="~{fragments/adminHeader :: adminHeader}"></th:block>
+
+<div class="admin-container">
+  <section class="review-wrapper">
+    <h2 class="review-title">관리자 명단</h2>
+
+    <form th:action="@{/admin/admin_list}" method="get">
+      <div class="search-area">
+        <div class="search-group">
+          <select name="searchType" aria-label="검색 조건 선택">
+            <option th:value="전체" th:selected="${searchType == '전체'}">전체</option>
+            <option th:value="이름" th:selected="${searchType == '이름'}">이름</option>
+            <option th:value="이메일" th:selected="${searchType == '이메일'}">이메일</option>
+          </select>
+        </div>
+        <div class="search-group">
+          <input type="text" name="keyword" th:value="${keyword}" placeholder="검색어 입력" aria-label="검색어 입력"/>
+        </div>
+        <button class="search-btn" type="submit">검색</button>
+      </div>
+
+      <div class="filter-area">
+        <div class="filter-group">
+          <label>부서:</label>
+          <select name="dept" aria-label="부서 선택">
+            <option th:value="전체" th:selected="${dept == '전체'}">전체</option>
+            <option th:value="고객센터팀" th:selected="${dept == '고객센터팀'}">고객센터팀</option>
+            <option th:value="회원관리팀" th:selected="${dept == '회원관리팀'}">회원관리팀</option>
+            <option th:value="기업관리팀" th:selected="${dept == '기업관리팀'}">기업관리팀</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>직급:</label>
+          <select name="job" aria-label="직급 선택">
+            <option th:value="전체" th:selected="${job == '전체'}">전체</option>
+            <option th:value="팀장" th:selected="${job == '팀장'}">팀장</option>
+            <option th:value="과장" th:selected="${job == '과장'}">과장</option>
+            <option th:value="대리" th:selected="${job == '대리'}">대리</option>
+            <option th:value="사원" th:selected="${job == '사원'}">사원</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>상태:</label>
+          <select name="stat" aria-label="상태 선택">
+            <option th:value="전체" th:selected="${stat == '전체'}">전체</option>
+            <option th:value="승인대기" th:selected="${stat == '승인대기'}">승인대기</option>
+            <option th:value="승인됨" th:selected="${stat == '승인됨'}">승인됨</option>
+            <option th:value="탈퇴" th:selected="${stat == '탈퇴'}">탈퇴</option>
+          </select>
+        </div>
+      </div>
+    </form>
+
+    <div class="review-table-wrapper">
+      <div class="selection-info">
+        <span>현재 선택된 항목: <span id="selectedCount">0</span> / 모두 <span id="totalCount" th:text="${adminList.size()}">0</span></span>
+      </div>
+
+      <table class="admin-table" summary="리뷰 목록 테이블">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll" /></th>
+            <th>번호</th>
+            <th>아이디</th>
+            <th>이름</th>
+            <th>부서</th>
+            <th>직급</th>
+            <th>상태</th>
+            <th>승인신청날짜</th>
+            <th>승인날짜</th>
+            <th>탈퇴날짜</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="list, iterStat : ${adminList}">
+            <td><input type="checkbox" class="select-row" /></td>
+            <td th:text="${totalCount - (currentPage * 10 + iterStat.index)}">번호</td>
+            <!-- 클래스명을 admin-id-cell로 변경 -->
+            <td class="admin-id-cell" th:text="${list.adminId}">아이디</td>
+            <td th:text="${list.name}">이름</td>
+            <td th:text="${list.dept}">부서</td>
+            <td th:text="${list.job}">직급</td>
+            <td class="stat" th:text="${list.stat}">상태</td>
+            <td th:text="${list.approvalRequestDate}">승인신청날짜</td>
+            <td th:text="${list.approvalDate}">승인날짜</td>
+            <td th:text="${list.resignationDate}">탈퇴날짜</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination-wrapper">
+      <div class="button-group">
+      <span sec:authorize="hasRole('SUPER')">
+        <button id="btnApprove" class="delete-btn" type="button">승인</button>
+        <button id="btnWithdraw" class="delete-btn" type="button">탈퇴</button>
+        </span>
+      </div>
+
+      <nav class="pagination" aria-label="페이지 네비게이션">
+        <a th:href="@{/admin/admin_list(page=0)}"
+           th:classappend="${currentPage == 0} ? ' disabled' : ''"
+           th:attr="aria-disabled=${currentPage == 0}">[<<]</a>
+
+        <a th:href="@{/admin/admin_list(page=${(currentPage > 0) ? currentPage - 1 : 0})}"
+           th:classappend="${currentPage == 0} ? ' disabled' : ''"
+           th:attr="aria-disabled=${currentPage == 0}">[<]</a>
+
+        <a th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+           th:href="@{/admin/admin_list(page=${i})}"
+           th:text="${i + 1}"
+           th:classappend="${i == currentPage} ? ' active' : ''">1</a>
+
+        <a th:href="@{/admin/admin_list(page=${(currentPage < totalPages - 1) ? currentPage + 1 : totalPages - 1})}"
+           th:classappend="${currentPage == totalPages - 1} ? ' disabled' : ''"
+           th:attr="aria-disabled=${currentPage == totalPages - 1}">[>]</a>
+
+        <a th:href="@{/admin/admin_list(page=${totalPages - 1})}"
+           th:classappend="${currentPage == totalPages - 1} ? ' disabled' : ''"
+           th:attr="aria-disabled=${totalPages - 1}">[>>]</a>
+      </nav>
+    </div>
+  </section>
+</div>
+
+<!-- 관리자 상세 모달 -->
+<div id="adminDetailModal">
+  <h3>관리자 로그인 이력(최근 5회)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>로그인 시도 시각</th>
+        <th>로그인 성공 여부</th>
+        <th>원인</th>
+        <th>IP</th>
+        <th>접속환경</th>
+      </tr>
+    </thead>
+    <tbody id="loginLogsTableBody">
+      <!-- Ajax로 행이 동적으로 추가 -->
+    </tbody>
+  </table>
+  <button type="button" id="modalCloseBtn">닫기</button>
+</div>
+
+</body>
+</html>

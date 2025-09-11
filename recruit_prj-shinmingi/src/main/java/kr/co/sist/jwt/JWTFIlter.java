@@ -36,6 +36,7 @@ public class JWTFIlter extends OncePerRequestFilter{
 			throws ServletException, IOException {
 		
 		Authentication testAuthentication = SecurityContextHolder.getContext().getAuthentication();
+		System.out.println("doFilterInternal 실행중 ");
 		System.out.println(testAuthentication);
 		
 		/** 더이상 Authrozation은 쿠키가 아님, 헤더임 
@@ -60,6 +61,8 @@ public class JWTFIlter extends OncePerRequestFilter{
 		String accessToken = null;
 		
 		String header = request.getHeader("Authorization"); // NPE조심 .. 
+		
+		System.out.println("-- JWTFilter 디버깅 -- request.getHeader(\"Authorization\") : " + header);
 		
 		if(header != null && header.startsWith("Bearer")) {
 			accessToken = request.getHeader("Authorization").split(" ")[1];
@@ -123,6 +126,10 @@ public class JWTFIlter extends OncePerRequestFilter{
 
 		//시큐리티 세션에 저장 (stateless 동작)
 		SecurityContextHolder.getContext().setAuthentication(authToken);
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		System.out.print("시큐리티 세션에 저장 성공 = ");
+		System.out.println(auth);
+		
 		
 		//끝~ 다음 필터로 이동
 		filterChain.doFilter(request, response);

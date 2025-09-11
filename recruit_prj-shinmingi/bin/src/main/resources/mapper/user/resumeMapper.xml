@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @Mapper와 패키지명, 인터페이스명 같아야함 -->
+<mapper namespace="kr.co.sist.user.mapper.ResumeMapper">
+
+<!-- 해당 유저의 모든 이력서 가져오기 -->
+<select id="selectAllResumeByUser" parameterType="String" resultType="userResumeDTO">
+SELECT RESUME_SEQ, EMAIL, TITLE, IMAGE, INTRODUCTION, CREATED_AT, UPDATED_AT, CAREER_TYPE, IS_PUBLIC
+FROM resume
+WHERE email = #{email}
+ORDER BY created_at desc 
+</select>
+
+<!-- 해당 이력서 삭제 -->
+<delete id="deleteResume" parameterType="int">
+delete from resume
+where resume_seq = #{resumeSeq}
+</delete>
+
+<!-- 해당 유저의 모든 첨부파일 가져오기 -->
+<select id="selectAllAttachment" parameterType="String" resultType="userAttachmentDTO">
+SELECT ATTACHMENT_SEQ, EMAIL, FILE_NAME , FILE_SIZE , FILE_TYPE, CREATED_AT, ORIGINAL_NAME 
+FROM attachment
+WHERE email = #{email}
+</select>
+
+<!-- JOIN 후 해당 이력서의 포지션 코드 가져오기 -->
+<select id="selectPositionByResume" parameterType="int" resultType="userResumePositionCodeDTO">
+SELECT resume_position_seq, resume_seq, p.position_seq, position_name
+FROM position_code p
+JOIN resume_position_code r ON r.position_seq = p.position_seq
+WHERE resume_seq = #{resumeSeq}
+</select>
+
+<!-- JOIN 후 해당 이력서의 기술 스택 가져오기 -->
+<select id="selectStackByResume" parameterType="int" resultType="userResumeTechStackDTO">
+SELECT RESUME_TECH_STACK_SEQ, r.TECH_STACK_SEQ, RESUME_SEQ, STACK_NAME
+FROM resume_tech_stack r
+JOIN tech_stack t ON r.tech_stack_seq = t.tech_stack_seq
+WHERE resume_seq = #{resumeSeq}
+</select>
+
+<!-- 해당 이력서의 링크 가져오기 -->
+<select id="selectLinkByResume" parameterType="int" resultType="userLinkDTO">
+SELECT LINK_SEQ, RESUME_SEQ, GITHUB_URL, NOTION_URL, BLOG_URL
+FROM LINK
+WHERE resume_seq=#{resumeSeq}
+</select>
+
+<!-- 해당 이력서의 학력 가져오기 -->
+<select id="selectEduByResume" parameterType="int" resultType="userEducationHistoryDTO">
+SELECT EDUCATION_HISTORY_SEQ, RESUME_SEQ, INDEX_NUM, SCHOOL_NAME, DEPARTMENT, GRADE, STANDARD_GRADE, EDUCATION_TYPE, ADMISSION_DATE, GRADUATE_DATE
+FROM EDUCATION_HISTORY
+WHERE resume_seq=#{resumeSeq}
+order by GRADUATE_DATE
+</select>
+
+<!-- 해당 이력서의 경력 가져오기 -->
+<select id="selectCareerByResume" parameterType="int" resultType="userCareerDTO">
+SELECT CAREER_SEQ, RESUME_SEQ, INDEX_NUM, COMPANY_NAME, POSITION, CAREER_DESCRIPTION, START_DATE, END_DATE
+FROM CAREER
+WHERE resume_seq=#{resumeSeq}
+order by END_DATE 
+</select>
+
+<!-- 해당 이력서의 기타사항 가져오기 -->
+<select id="selectEtcByResume" parameterType="int" resultType="userAdditionalInfoDTO">
+SELECT ADDITIONAL_INFO_SEQ, RESUME_SEQ, ACTIVITY_NAME, RECORD_TYPE, RELATED_AGENCY, DETAIL_CONTENT, END_DATE
+FROM ADDITIONAL_INFO
+WHERE resume_seq=#{resumeSeq}
+order by END_DATE
+</select>
+
+<!-- 해당 이력서의 자기소개서 가져오기 -->
+<select id="selectIntroByResume" parameterType="int" resultType="userSelfIntroductionDTO">
+SELECT SELF_INTRODUCTION_SEQ, RESUME_SEQ, TITLE, CONTENT
+FROM SELF_INTRODUCTION
+WHERE resume_seq=#{resumeSeq}
+</select>
+
+<!-- 해당 이력서의 요소들 삭제 -->
+<delete id="deletePositionByResume" parameterType="int">
+delete from resume_position_code
+where resume_seq = #{resumeSeq}
+</delete>
+<delete id="deleteStackByResume" parameterType="int">
+delete from resume_tech_stack
+where resume_seq = #{resumeSeq}
+</delete>
+<delete id="deleteLinkByResume" parameterType="int">
+delete from link
+where resume_seq = #{resumeSeq}
+</delete>
+<delete id="deleteEducationByResume" parameterType="int">
+delete from education_history
+where resume_seq = #{resumeSeq}
+</delete>
+<delete id="deleteCareerByResume" parameterType="int">
+delete from career
+where resume_seq = #{resumeSeq}
+</delete>
+<delete id="deleteProjectByResume" parameterType="int">
+delete from project
+where resume_seq = #{resumeSeq}
+</delete>
+<delete id="deleteIntroByResume" parameterType="int">
+delete from self_introduction
+where resume_seq = #{resumeSeq}
+</delete>
+<delete id="deleteAdditionalByResume" parameterType="int">
+delete from additional_info
+where resume_seq = #{resumeSeq}
+</delete>
+
+
+</mapper>

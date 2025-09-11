@@ -64,46 +64,66 @@ function joinPageForm(){
  * 프론트엔드에서 로그인 API 호출하는 예시
  * jQuery, Fetch API, Axios 등을 사용할 수 있음
  */
- async function loginWithFetch(email,password){
-	try {
-		const response = await fetch('/api/auth/login', {
-			method : 'POST',
-			headers : {
-				'Content-Type' : 'application/json',
-			},
-			body : JSON.stringfy({
-				email : email,
-				password : password
-			})
-		});
-		
-		const result = await response.json();
-		if(result.sucess){
-			//로그인 성공시 
-			console.log('로그인 성공 ', result.message);
-			
-			//Access 토큰을 localStorage에 저장 
-			localStorage.setItem('accessToken', result.accessToken);
-			
-			// 사용자 역할 저장 (필요 시)
-            localStorage.setItem('userRole', result.role);
-			
-            // 리다이렉트 URL로 이동
-            window.location.href = result.redirectUrl;
-		
-		} else {
-            // 로그인 실패 시
-            console.error('로그인 실패:', result.message);
-            alert('로그인 실패: ' + result.message);
-        }
-		
-	} catch (error) {
-        console.error('로그인 요청 오류:', error);
-        alert('로그인 중 오류가 발생했습니다.');
-    }
-	
-	
-}
+ async function loginWithFetch(email, password) {
+	    try {
+	        // 1️ 로그인 요청
+	        const response = await fetch('/api/auth/login', {
+	            method: 'POST',
+	            headers: {
+	                'Content-Type': 'application/json'
+	            },
+	            body: JSON.stringify({ 
+	            	email : email, 
+	            	password : password
+            	})
+	        });
+
+	        // 상태 코드 확인
+	        if (!response.ok) {
+	            const errorData = await response.json().catch(() => null);
+	            const errorMsg = errorData?.message || `로그인 실패 (status: ${response.status})`;
+	            throw new Error(errorMsg);
+	        }
+
+	        // 서버 응답 데이터
+	        const data = await response.json();
+	        
+	        alert(data.redirectUrl);
+	        
+	        if (!data.success) {
+	            throw new Error(data.message || "로그인에 실패했습니다.");
+	        }
+
+	        // 2️. accessToken 저장
+	        localStorage.setItem('accessToken', data.accessToken);
+
+	        // 3️. 메인 페이지 데이터 가져오기 (SPA용)
+	        const token = localStorage.getItem('accessToken');
+	        console.log("accessToken 토큰가져왔니? " + token);
+	        
+	       	//이동하면 setHeader값 초기화됨
+	        //location.href = "http://localhost:8080/corp/main";
+	        
+	       	fetch('/corp/main',{
+	       		headers : {
+	       			'Authorization': `Bearer ${token}`
+	       		}
+	       	});
+	       	
+	    } catch (error) {
+	        console.error("로그인 오류:", error);
+	        alert(error.message || "로그인 중 문제가 발생했습니다.");
+	    }
+	}
+
+/**
+ * API 요청 시 토큰 포함
+ fetch('/api/some-endpoint', {
+	    headers: {
+	        'Authorization': 'Bearer ' + localStorage.getItem('accessToken')
+	    }
+	});
+ */
 
 </script>
 </head>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>마이페이지</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script th:src="@{/user/mypage/js/apply_list.js}"></script>
+<link rel="stylesheet" th:href="@{/user/mypage/css/sidebar.css}">
+<link rel="stylesheet" th:href="@{/user/mypage/css/apply_list.css}">
+</head>
+<body>
+	<header>
+		<div th:replace="~{fragments/header :: header}"></div>
+	</header>
+	<main>
+
+		<div class="container">
+			<div th:replace="~{user/mypage/sidebar :: sidebar}"></div>
+			<!-- 메인 콘텐츠 -->
+			<div class="main-content">
+				<div id="content-area">
+					<div class="page-title">입사지원 현황</div>
+					<!-- 통계 그리드 -->
+					<div class="stats-grid">
+						<div class="stats-item" data-filter="all">
+							<div class="stats-label">지원완료</div>
+							<div class="stats-number" th:classappend="${search.type == null or search.type=='all'}?' highlight'" th:text="${statistics.completed}">1</div>
+						</div>
+						<div class="stats-item" data-filter="passed">
+							<div class="stats-label">서류 통과</div>
+							<div class="stats-number" th:classappend="${search.type=='passed'}?' highlight'" th:text="${statistics.docPassed}">0</div>
+						</div>
+						<div class="stats-item" data-filter="hired">
+							<div class="stats-label">최종합격</div>
+							<div class="stats-number" th:classappend="${search.type=='hired'}?' highlight'" th:text="${statistics.passed}">0</div>
+						</div>
+						<div class="stats-item" data-filter="rejected">
+							<div class="stats-label">불합격</div>
+							<div class="stats-number" th:classappend="${search.type=='rejected'}?' highlight'" th:text="${statistics.failed}">0</div>
+						</div>
+					</div>
+
+					<!-- 필터 버튼 - 개선된 디자인 -->
+					<div class="filter-buttons">
+						<div class="filter-checkbox">
+							<input type="checkbox" th:checked="${search.includeCanceled =='false'}" id="exclude-canceled"> <label
+								for="exclude-canceled">지원취소 제외</label>
+						</div>
+						<div class="filter-select">
+							<select id="period">
+								<option th:selected="${search.period == '1'}" value="1">지난 1개월</option>
+								<option th:selected="${search.period == '6'}" value="6">지난 6개월</option>
+								<option th:selected="${search.period == '12'}" value="12">지난 1년</option>
+								<option th:selected="${search.period == '24'}" value="24">지난 2년</option>
+							</select>
+						</div>
+					</div>
+
+					<!-- 지원 현황 리스트 -->
+					<div class="application-list">
+						<th:block th:each="applicant : ${applicants}">
+							<div class="application-item"
+								th:classappend="${applicant.applicationStatus == 2} ? ' read-mail'">
+								<div class="application-info">
+									<div class="company-name" th:text="${applicant.corpNm}"></div>
+									<div class="job-title" th:text="${applicant.postingTitle}">=</div>
+									<div class="application-meta">
+										<span th:text="${applicant.dDay}"></span> | <span
+											class="view-resume"
+											th:data-resumeSeq="${applicant.resumeSeq}">지원이력서</span> | <span
+											th:text="|지원일시 : ${applicant.applicationDate}|"></span> |<span
+											class="cancel-applicant"
+											th:data-applicantSeq="${applicant.jobApplicationSeq}" th:text="${applicant.applicationStatus == 2}?'삭제':'지원취소'"></span>
+									</div>
+								</div>
+								<div class="application-actions">
+									<span class = "badge"
+										th:classappend="${applicant.applicationStatus == 2} ? ' status-canceled'"
+										th:text="${applicant.applicationStatus == 2} ? '지원취소'"></span>
+								</div>
+							</div>
+						</th:block>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+	<footer>
+		<div th:replace="~{fragments/footer :: footer}"></div>
+	</footer>
+</body>
+</html>

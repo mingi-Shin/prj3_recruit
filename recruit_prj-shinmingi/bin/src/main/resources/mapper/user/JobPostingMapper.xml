@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="kr.co.sist.user.mapper.JobPostingMapper">
+
+<resultMap id="jobPostResultMap" type="kr.co.sist.user.dto.JobPostDTO">
+    <id property="jobPostingSeq" column="jobPostingSeq"/>
+    <result property="postingTitle" column="postingTitle"/>
+    <result property="postingDetail" column="postingDetail"/>
+    <result property="expLevel" column="expLevel"/>
+    <result property="recruitCnt" column="recruitCnt"/>
+    <result property="salary" column="salary"/>
+    <result property="postingStartDt" column="postingStartDt"/>
+    <result property="postingEndDt" column="postingEndDt"/>
+    <result property="workday" column="workday"/>
+    <result property="workStartTime" column="workStartTime"/>
+    <result property="workEndTime" column="workEndTime"/>
+    <result property="viewCnt" column="viewCnt"/>
+    <result property="zipcode" column="zipcode"/>
+    <result property="region" column="region"/>
+    <result property="district" column="district"/>
+    <result property="isEnded" column="isEnded"/>
+    <result property="corpNm" column="corpNm"/>
+    <result property="corpImg" column="corpImg"/>
+    <result property="corpInfo" column="corpInfo"/>
+    <result property="corpUrl" column="corpUrl"/>
+    <result property="corpNo" column="corpNo"/>
+    <result property="corpLogo" column="corpLogo"/>
+    <result property="corpAvgSal" column="corpAvgSal"/>
+    <result property="positionName" column="positionName"/>
+    <result property="positionSeq" column="positionSeq"/>
+    <result property="stackName" column="stackName"/>
+    <result property="daysRemaining" column="daysRemaining"/>
+    <result property="eduLevel" column="eduLevel"/>
+    <result property="contStartDt" column="contStartDt"/>
+    <result property="contEndDt" column="contEndDt"/>
+</resultMap>
+
+<!-- 전체 공고 조회 (마감일 지나지 않은 것만) -->
+<select id="selectAllJobPostings" resultMap="jobPostResultMap">
+   SELECT
+  jp.job_posting_seq AS jobPostingSeq,
+  jp.posting_title AS postingTitle,
+  jp.posting_detail AS postingDetail,
+  jp.exp_level AS expLevel,
+  jp.recruit_cnt AS recruitCnt,
+  jp.salary AS salary,
+  jp.posting_start_dt AS postingStartDt,
+  jp.posting_end_dt AS postingEndDt,
+  jp.workday AS workday,
+  jp.work_start_time AS workStartTime,
+  jp.work_end_time AS workEndTime,
+  jp.view_cnt AS viewCnt,
+  jp.zipcode AS zipcode,
+  jp.region AS region,
+  jp.district AS district,
+  jp.position_seq AS positionSeq,
+  jp.is_ended AS isEnded,
+  c.corp_nm AS corpNm,
+  c.corp_info AS corpInfo,
+  c.corp_url AS corpUrl,
+  c.corp_img AS corpImg,
+  c.corp_logo AS corpLogo,
+  c.corp_avg_sal AS corpAvgSal,
+  pc.position_name AS positionName,
+  TRUNC(TO_DATE(jp.posting_end_dt, 'YYYY-MM-DD')) - TRUNC(SYSDATE) AS daysRemaining,
+  LISTAGG(DISTINCT ts.stack_name, ', ') WITHIN GROUP (ORDER BY ts.tech_stack_seq) AS techNames
+FROM JOB_POSTING jp
+JOIN COMPANY c ON jp.corp_no = c.corp_no
+JOIN POSITION_CODE pc ON jp.position_seq = pc.position_seq
+LEFT JOIN JOB_POSTING_TECH_STACK jpts ON jp.job_posting_seq = jpts.job_posting_seq
+LEFT JOIN TECH_STACK ts ON jpts.tech_stack_seq = ts.tech_stack_seq
+WHERE jp.is_ended = 'N'
+  AND TO_DATE(jp.posting_end_dt, 'YYYY-MM-DD') >= TRUNC(SYSDATE)
+GROUP BY
+  jp.job_posting_seq,
+  jp.posting_title,
+  jp.posting_detail,
+  jp.exp_level,
+  jp.recruit_cnt,
+  jp.salary,
+  jp.posting_start_dt,
+  jp.posting_end_dt,
+  jp.workday,
+  jp.work_start_time,
+  jp.work_end_time,
+  jp.view_cnt,
+  jp.zipcode,
+  jp.region,
+  jp.district,
+  jp.position_seq,
+  jp.is_ended,
+  c.corp_nm,
+  c.corp_info,
+  c.corp_url,
+  c.corp_img,
+  c.corp_logo,
+  c.corp_avg_sal,
+  pc.position_name,
+  jp.corp_no
+ORDER BY jp.job_posting_seq
+</select>
+
+<!-- 특정 jobPostingSeq에 해당하는 공고 조회 -->
+<select id="selectJobPostingsBySeq" parameterType="Integer" resultMap="jobPostResultMap">
+   SELECT
+    jp.job_posting_seq AS jobPostingSeq,
+    jp.posting_title AS postingTitle,
+    jp.posting_detail AS postingDetail,
+    jp.exp_level AS expLevel,
+    jp.employ_type AS employType,
+    jp.recruit_cnt AS recruitCnt,
+    jp.salary AS salary,
+    jp.posting_start_dt AS postingStartDt,
+    jp.posting_end_dt AS postingEndDt,
+    jp.workday AS workday,
+    jp.work_start_time AS workStartTime,
+    jp.work_end_time AS workEndTime,
+    jp.view_cnt AS viewCnt,
+    jp.zipcode AS zipcode,
+    jp.region AS region,
+    jp.district AS district,
+    jp.position_seq AS positionSeq,
+    jp.edu_level AS eduLevel,
+    jp.cont_start_dt AS contStartDt,
+    jp.cont_end_dt AS contEndDt,
+    jp.detail_address AS detailAddress,
+    jp.road_address AS roadAddress,
+    c.corp_nm AS corpNm,
+    c.corp_info AS corpInfo,
+    c.corp_url AS corpUrl,
+    c.corp_no AS corpNo,
+    c.corp_img AS corpImg,
+    c.corp_logo AS corpLogo,
+    c.corp_avg_sal AS corpAvgSal,
+    c.corp_created_at AS corpCreatedAt,
+    pc.position_name AS positionName,
+    jp.is_ended AS isEnded,
+    TRUNC(TO_DATE(jp.posting_end_dt, 'YYYY-MM-DD')) - TRUNC(SYSDATE) AS daysRemaining,
+    LISTAGG(DISTINCT ts.stack_name, ', ') WITHIN GROUP (ORDER BY ts.tech_stack_seq) AS techNames
+FROM JOB_POSTING jp
+JOIN COMPANY c ON jp.corp_no = c.corp_no
+JOIN POSITION_CODE pc ON jp.position_seq = pc.position_seq
+LEFT JOIN JOB_POSTING_TECH_STACK jpts ON jp.job_posting_seq = jpts.job_posting_seq
+LEFT JOIN TECH_STACK ts ON jpts.tech_stack_seq = ts.tech_stack_seq
+WHERE jp.job_posting_seq = #{jobPostingSeq}
+  AND jp.is_ended = 'N'
+GROUP BY
+    jp.job_posting_seq,
+    jp.posting_title,
+    jp.posting_detail,
+    jp.exp_level,
+    jp.employ_type,
+    jp.recruit_cnt,
+    jp.salary,
+    jp.posting_start_dt,
+    jp.posting_end_dt,
+    jp.workday,
+    jp.work_start_time,
+    jp.work_end_time,
+    jp.view_cnt,
+    jp.zipcode,
+	jp.region,
+	jp.district,
+	jp.detail_address,
+    jp.road_address,
+    jp.position_seq,
+    jp.edu_level,
+    jp.cont_start_dt,
+    jp.cont_end_dt,
+    c.corp_nm,
+    c.corp_info,
+    c.corp_url,
+    c.corp_no,
+    c.corp_img,
+    c.corp_logo,
+    c.corp_avg_sal,
+    c.corp_created_at,
+    pc.position_name,
+    jp.is_ended
+ORDER BY
+    jp.job_posting_seq
+</select>
+
+<!-- 특정 공고에 대한 기술 스택만 조회 -->
+<select id="selectTechStacksByJobPostingSeq" parameterType="Integer" resultType="string">
+    SELECT ts.stack_name
+    FROM TECH_STACK ts
+    JOIN JOB_POSTING_TECH_STACK jpts ON ts.tech_stack_seq = jpts.tech_stack_seq
+    WHERE jpts.job_posting_seq = #{jobPostingSeq}
+    ORDER BY ts.stack_name
+</select>
+
+<!-- 조회수 업데이트 -->
+<update id="updateJobPostingViewCount" parameterType="map">
+    UPDATE JOB_POSTING
+    SET view_cnt = #{viewCount}
+    WHERE job_posting_seq = #{jobPostingSeq}
+</update>
+
+<!-- 인기순 공고 8개 조회 (조회수 기준) -->
+<select id="getPopularJobPostings" resultMap="jobPostResultMap">
+    SELECT 
+    jp.job_posting_seq AS jobPostingSeq,
+    jp.posting_title AS postingTitle,
+    jp.posting_detail AS postingDetail,
+    jp.exp_level AS expLevel,
+    jp.recruit_cnt AS recruitCnt,
+    jp.salary AS salary,
+    jp.posting_start_dt AS postingStartDt,
+    jp.posting_end_dt AS postingEndDt,
+    jp.workday AS workday,
+    jp.work_start_time AS workStartTime,
+    jp.work_end_time AS workEndTime,
+    jp.view_cnt AS viewCnt,
+    jp.zipcode AS zipcode,
+    jp.region AS region,
+    jp.district AS district,
+    jp.position_seq AS positionSeq,
+    c.corp_nm AS corpNm,
+    c.corp_info AS corpInfo,
+    c.corp_url AS corpUrl,
+    c.corp_img AS corpImg,
+    pc.position_name AS positionName,
+    TRUNC(TO_DATE(jp.posting_end_dt, 'YYYY-MM-DD')) - TRUNC(SYSDATE) AS daysRemaining,
+    LISTAGG(DISTINCT ts.stack_name, ', ') WITHIN GROUP (ORDER BY ts.tech_stack_seq) AS techNames
+FROM JOB_POSTING jp
+JOIN COMPANY c ON jp.corp_no = c.corp_no
+JOIN POSITION_CODE pc ON jp.position_seq = pc.position_seq
+LEFT JOIN JOB_POSTING_TECH_STACK jpts ON jp.job_posting_seq = jpts.job_posting_seq
+LEFT JOIN TECH_STACK ts ON jpts.tech_stack_seq = ts.tech_stack_seq
+WHERE jp.is_ended = 'N'
+GROUP BY
+  jp.job_posting_seq,
+  jp.posting_title,
+  jp.posting_detail,
+  jp.exp_level,
+  jp.recruit_cnt,
+  jp.salary,
+  jp.posting_start_dt,
+  jp.posting_end_dt,
+  jp.workday,
+  jp.work_start_time,
+  jp.work_end_time,
+  jp.view_cnt,
+  jp.zipcode,
+  jp.region,
+  jp.district,
+  jp.position_seq,
+  jp.is_ended,
+  c.corp_nm,
+  c.corp_info,
+  c.corp_url,
+  c.corp_img,
+  pc.position_name,
+  jp.corp_no
+ORDER BY jp.view_cnt DESC
+FETCH FIRST 8 ROWS ONLY
+</select>
+
+<!-- 특정 기업의 채용중인 공고 조회 -->
+<select id="selectJobPostingsByCorpNo" parameterType="long" resultMap="jobPostResultMap">
+   SELECT
+    jp.job_posting_seq AS jobPostingSeq,
+    jp.posting_title AS postingTitle,
+    jp.posting_detail AS postingDetail,
+    jp.exp_level AS expLevel,
+    jp.employ_type AS employType,
+    jp.recruit_cnt AS recruitCnt,
+    jp.salary AS salary,
+    jp.posting_start_dt AS postingStartDt,
+    jp.posting_end_dt AS postingEndDt,
+    jp.workday AS workday,
+    jp.work_start_time AS workStartTime,
+    jp.work_end_time AS workEndTime,
+    jp.view_cnt AS viewCnt,
+    jp.zipcode AS zipcode,
+    jp.road_address AS roadAddress,
+    jp.detail_address AS detailAddress,
+    jp.position_seq AS positionSeq,
+    jp.edu_level AS eduLevel,
+    jp.is_ended AS isEnded,
+    c.corp_nm AS corpNm,
+    c.corp_info AS corpInfo,
+    c.corp_url AS corpUrl,
+    c.corp_no AS corpNo,
+    c.corp_img AS corpImg,
+    pc.position_name AS positionName,
+    TRUNC(TO_DATE(jp.posting_end_dt, 'YYYY-MM-DD')) - TRUNC(SYSDATE) AS daysRemaining,
+    LISTAGG(DISTINCT ts.stack_name, ', ') WITHIN GROUP (ORDER BY ts.tech_stack_seq) AS stackName
+FROM JOB_POSTING jp
+JOIN COMPANY c ON jp.corp_no = c.corp_no
+JOIN POSITION_CODE pc ON jp.position_seq = pc.position_seq
+LEFT JOIN JOB_POSTING_TECH_STACK jpts ON jp.job_posting_seq = jpts.job_posting_seq
+LEFT JOIN TECH_STACK ts ON jpts.tech_stack_seq = ts.tech_stack_seq
+WHERE jp.corp_no = #{corpNo}
+  AND jp.is_ended = 'N'
+GROUP BY
+    jp.job_posting_seq,
+    jp.posting_title,
+    jp.posting_detail,
+    jp.exp_level,
+    jp.employ_type,
+    jp.recruit_cnt,
+    jp.salary,
+    jp.posting_start_dt,
+    jp.posting_end_dt,
+    jp.workday,
+    jp.work_start_time,
+    jp.work_end_time,
+    jp.view_cnt,
+    jp.zipcode,
+    jp.road_address,
+    jp.detail_address,
+    jp.position_seq,
+    jp.edu_level,
+    jp.is_ended,
+    c.corp_nm,
+    c.corp_info,
+    c.corp_url,
+    c.corp_no,
+    c.corp_img,
+    pc.position_name
+ORDER BY jp.job_posting_seq
+</select>
+ 
+</mapper>
