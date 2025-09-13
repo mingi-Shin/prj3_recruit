@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SI 백엔드 개발자 프론트엔드 필수 코드</title>
+<th:block th:replace="~{fragments/external_file :: cdn_block}"></th:block>
+<style type="text/css">
+/* ===========================================
+   CSS 기초 - SI 프로젝트에서 자주 사용되는 스타일
+=========================================== */
+
+/* 1. CSS Reset - 브라우저 기본 스타일 초기화 */
+* {
+    margin: 0; /* 모든 요소의 기본 바깥 여백 제거 */
+    padding: 0; /* 모든 요소의 기본 안쪽 여백 제거 */
+    box-sizing: border-box; /* padding, border를 width에 포함 → 크기 계산 쉬워짐 */
+}
+
+body {
+    font-family: 'Malgun Gothic', sans-serif; /* 글꼴: 맑은 고딕 + 기본 sans-serif */
+    line-height: 1.6; /* 줄 간격 */
+    color: #333; /* 글자색 (짙은 회색) */
+    background-color: #f5f5f5; /* 페이지 배경색 (연한 회색) */
+}
+
+/* 2. 레이아웃 - Flexbox 기본 패턴 */
+.container {
+    max-width: 1200px; /* 내용 최대 폭 */
+    margin: 0 auto; /* 가운데 정렬 */
+    padding: 20px; /* 안쪽 여백 */
+}
+
+.flex-row {
+    display: flex; /* 가로 정렬용 플렉스 박스 */
+    justify-content: space-between; /* 양 끝으로 배치 */
+    align-items: center; /* 세로 중앙 정렬 */
+    gap: 20px; /* 요소 간격 */
+}
+
+.flex-column {
+    display: flex; /* 세로 정렬용 플렉스 박스 */
+    flex-direction: column; /* 세로 방향 */
+    gap: 15px; /* 요소 간격 */
+}
+
+/* 3. 그리드 레이아웃 - 카드 형태 리스트 */
+.grid-container {
+    display: grid; /* CSS 그리드 사용 */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+    /* 300px 이상 → 자동으로 칸 채우기 (반응형) */
+    gap: 20px; /* 카드 간격 */
+    margin: 20px 0; /* 위아래 여백 */
+}
+
+/* 4. 카드 컴포넌트 - 관리시스템에서 자주 사용 */
+.card {
+    background: white; /* 카드 배경: 흰색 */
+    border-radius: 8px; /* 모서리 둥글게 */
+    padding: 20px; /* 내부 여백 */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* 그림자 효과 */
+    border: 1px solid #e0e0e0; /* 연한 테두리 */
+    transition: transform 0.2s ease, box-shadow 0.2s ease; /* hover 시 부드럽게 변화 */
+}
+
+.card:hover {
+    transform: translateY(-2px); /* 살짝 위로 올라옴 */
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15); /* 더 진한 그림자 */
+}
+
+/* 5. 폼 스타일링 - 업무시스템 필수 */
+.form-group {
+    margin-bottom: 20px; /* 각 폼 그룹 사이 간격 */
+}
+
+.form-label {
+    display: block; /* 한 줄 전체 차지 */
+    margin-bottom: 8px; /* 라벨과 입력창 간격 */
+    font-weight: bold; /* 글씨 두껍게 */
+    color: #555; /* 글자색: 회색 */
+}
+
+.form-input {
+    width: 100%; /* 입력창 너비 100% */
+    padding: 12px 16px; /* 입력창 내부 여백 */
+    border: 2px solid #ddd; /* 연한 회색 테두리 */
+    border-radius: 6px; /* 모서리 둥글게 */
+    font-size: 14px; /* 글자 크기 */
+    transition: border-color 0.3s ease; /* 포커스 애니메이션 */
+}
+
+.form-input:focus {
+    outline: none; /* 기본 외곽선 제거 */
+    border-color: #007bff; /* 포커스 시 파란색 테두리 */
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1); /* 연한 파란색 그림자 */
+}
+
+/* 6. 버튼 스타일 - 상태별 구분 */
+.btn {
+    padding: 12px 24px; /* 버튼 안 여백 */
+    border: none; /* 테두리 제거 */
+    border-radius: 6px; /* 둥근 버튼 */
+    cursor: pointer; /* 마우스 올리면 손가락 모양 */
+    font-size: 14px; /* 글자 크기 */
+    font-weight: bold; /* 글자 굵게 */
+    text-decoration: none; /* 밑줄 제거 */
+    display: inline-block; /* 인라인 + 블록 속성 */
+    transition: all 0.3s ease; /* hover 애니메이션 */
+}
+
+.btn-primary { background-color: #007bff; color: white; } /* 파란 버튼 */
+.btn-success { background-color: #28a745; color: white; } /* 초록 버튼 */
+.btn-warning { background-color: #ffc107; color: #333; } /* 노랑 버튼 */
+.btn-danger { background-color: #dc3545; color: white; } /* 빨강 버튼 */
+
+.btn:hover { transform: translateY(-1px); opacity: 0.9; } /* hover 시 살짝 올라감, 투명도 변경 */
+
+/* 7. 테이블 스타일 - 데이터 표시용 */
+.data-table {
+    width: 100%; /* 테이블 폭 100% */
+    border-collapse: collapse; /* 테두리 겹침 제거 */
+    background: white; /* 배경 흰색 */
+    border-radius: 8px; /* 모서리 둥글게 */
+    overflow: hidden; /* 넘치는 부분 잘라내기 */
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* 그림자 */
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px 16px; /* 셀 안쪽 여백 */
+    text-align: left; /* 왼쪽 정렬 */
+    border-bottom: 1px solid #e0e0e0; /* 아래쪽 테두리 */
+}
+
+.data-table th {
+    background-color: #f8f9fa; /* 헤더 배경 연한 회색 */
+    font-weight: bold; /* 굵은 글씨 */
+    color: #555; /* 글자색 */
+}
+
+.data-table tr:hover {
+    background-color: #f8f9fa; /* 마우스 올리면 행 색 변경 */
+}
+
+/* 8. 모달 스타일 - 팝업 창 */
+.modal-overlay {
+    position: fixed; /* 화면 고정 */
+    top: 0;
+    left: 0;
+    width: 100%; /* 전체 화면 덮음 */
+    height: 100%;
+    background: rgba(0,0,0,0.5); /* 반투명 검은 배경 */
+    display: none; /* 처음엔 안 보임 */
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+    z-index: 1000; /* 위에 표시되도록 */
+}
+
+.modal-content {
+    background: white; /* 모달 창 배경 */
+    padding: 30px; /* 안쪽 여백 */
+    border-radius: 8px; /* 둥근 모서리 */
+    max-width: 500px; /* 최대 너비 */
+    width: 90%; /* 화면의 90% 차지 */
+    max-height: 80vh; /* 세로 최대 크기 */
+    overflow-y: auto; /* 내용 넘치면 스크롤 */
+}
+
+/* 9. 로딩 스피너 - 비동기 작업 시 사용 */
+.loading-spinner {
+    border: 4px solid #f3f3f3; /* 기본 테두리 (연한 회색) */
+    border-top: 4px solid #007bff; /* 위쪽 테두리만 파란색 */
+    border-radius: 50%; /* 원형 */
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite; /* 계속 회전 */
+    margin: 20px auto; /* 중앙 배치 */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); } /* 시작 위치 */
+    100% { transform: rotate(360deg); } /* 한 바퀴 회전 */
+}
+
+/* 10. 유틸리티 클래스 - 자주 사용하는 스타일 */
+.text-center { text-align: center; } /* 가운데 정렬 */
+.text-right { text-align: right; } /* 오른쪽 정렬 */
+.hidden { display: none; } /* 숨김 */
+.visible { display: block; } /* 표시 */
+.mt-20 { margin-top: 20px; } /* 위쪽 여백 */
+.mb-20 { margin-bottom: 20px; } /* 아래쪽 여백 */
+.p-20 { padding: 20px; } /* 안쪽 여백 */
+
+/* 11. 반응형 디자인 - 모바일 대응 */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px; /* 모바일에서 여백 줄이기 */
+    }
+    
+    .flex-row {
+        flex-direction: column; /* 모바일에선 세로 정렬 */
+        align-items: stretch; /* 넓게 늘리기 */
+    }
+    
+    .btn {
+        width: 100%; /* 버튼을 전체 너비로 */
+        margin-bottom: 10px; /* 버튼 간격 */
+    }
+}
+
+</style>
+<script type="text/javascript">
+
+</script>
+</head>
+<body>
+<!-- 로그인여부(session)만 표시 가능 -->
+<th:block th:replace="~{fragments/corpHeader :: corpHeader}"></th:block>
+
+<!-- 프론트엔드 필수 코드 복습하기 시작  -->
+   <div class="container">
+        <h1>SI 백엔드 개발자를 위한 프론트엔드 필수 코드</h1>
+        
+        <!-- 1. 기본 레이아웃 예제 -->
+        <section class="card">
+            <h2>1. 기본 레이아웃 (Flexbox)</h2>
+            <div class="flex-row">
+                <div>왼쪽 컨텐츠</div>
+                <div>오른쪽 컨텐츠</div>
+            </div>
+        </section>
+
+        <!-- 2. 폼 예제 -->
+        <section class="card">
+            <h2>2. 폼 입력 (사용자 등록)</h2>
+            <div class="form-group">
+                <label class="form-label" for="username">사용자명</label>
+                <input type="text" id="username" class="form-input" placeholder="사용자명을 입력하세요">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="email">이메일</label>
+                <input type="email" id="email" class="form-input" placeholder="이메일을 입력하세요">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="submitForm()">등록</button>
+        </section>
+
+        <!-- 3. 데이터 테이블 -->
+        <section class="card">
+            <h2>3. 데이터 테이블</h2>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>이름</th>
+                        <th>이메일</th>
+                        <th>상태</th>
+                        <th>액션</th>
+                    </tr>
+                </thead>
+                <tbody id="userTable">
+                    <!-- JavaScript로 동적 생성 -->
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 4. 카드 그리드 -->
+        <section class="card">
+            <h2>4. 카드 그리드 레이아웃</h2>
+            <div class="grid-container" id="cardGrid">
+                <!-- JavaScript로 동적 생성 -->
+            </div>
+        </section>
+
+        <!-- 5. 액션 버튼들 -->
+        <section class="card">
+            <h2>5. 액션 버튼 예제</h2>
+            <div class="flex-row">
+                <button class="btn btn-primary" onclick="showModal()">모달 열기</button>
+                <button class="btn btn-success" onclick="loadData()">데이터 로드</button>
+                <button class="btn btn-warning" onclick="exportData()">데이터 내보내기</button>
+                <button class="btn btn-danger" onclick="deleteSelected()">선택 삭제</button>
+            </div>
+        </section>
+
+        <!-- 로딩 스피너 -->
+        <div id="loading" class="loading-spinner hidden"></div>
+    </div>
+
+    <!-- 모달 -->
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>모달 창</h3>
+            <p>여기에 모달 내용이 들어갑니다.</p>
+            <button class="btn btn-primary" onclick="closeModal()">닫기</button>
+        </div>
+    </div>
+
+    <script>
+        // ===========================================
+        // JavaScript 기초 - SI 프로젝트 필수 함수들
+        // ===========================================
+
+        // 1. DOM 조작 기본 함수들
+        
+        // 요소 선택 (jQuery의 $()와 유사)
+        function $(selector) {
+            return document.querySelector(selector);
+        }
+        
+        function $$(selector) {
+            return document.querySelectorAll(selector);
+        }
+
+        // 2. 이벤트 처리 함수들
+        
+        // 폼 제출 처리
+        function submitForm() {
+            const username = $('#username').value;
+            const email = $('#email').value;
+            
+            // 유효성 검사
+            if (!username || !email) {
+                alert('모든 필드를 입력해주세요.');
+                return;
+            }
+            
+            // 이메일 형식 검사
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+                alert('올바른 이메일 형식을 입력해주세요.');
+                return;
+            }
+            
+            // 서버로 데이터 전송 (AJAX)
+            const userData = {
+                username: username,
+                email: email
+            };
+            
+            sendDataToServer('/api/users', 'POST', userData)
+                .then(response => {
+                    alert('사용자가 성공적으로 등록되었습니다.');
+                    clearForm();
+                    loadData(); // 테이블 새로고침
+                })
+                .catch(error => {
+                    alert('등록 중 오류가 발생했습니다: ' + error.message);
+                });
+        }
+        
+        // 폼 초기화
+        function clearForm() {
+            $('#username').value = '';
+            $('#email').value = '';
+        }
+
+        // 3. AJAX 통신 함수 (fetch API 사용)
+        
+        // 서버로 데이터 전송
+        async function sendDataToServer(url, method, data) {
+            try {
+                showLoading(true); // 로딩 표시
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 'Authorization': 'Bearer ' + getToken() // JWT 토큰이 있을 경우
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                return result;
+                
+            } catch (error) {
+                console.error('서버 통신 오류:', error);
+                throw error;
+            } finally {
+                showLoading(false); // 로딩 숨김
+            }
+        }
+        
+        // 서버에서 데이터 가져오기
+        async function getDataFromServer(url) {
+            try {
+                showLoading(true);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 'Authorization': 'Bearer ' + getToken()
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return data;
+                
+            } catch (error) {
+                console.error('데이터 로드 오류:', error);
+                throw error;
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 4. UI 조작 함수들
+        
+        // 로딩 표시/숨김
+        function showLoading(show) {
+            const loading = $('#loading');
+            if (show) {
+                loading.classList.remove('hidden');
+            } else {
+                loading.classList.add('hidden');
+            }
+        }
+        
+        // 모달 열기/닫기
+        function showModal() {
+            $('#modal').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            $('#modal').style.display = 'none';
+        }
+        
+        // 모달 배경 클릭 시 닫기
+        $('#modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // 5. 데이터 처리 함수들
+        
+        // 테이블에 데이터 표시
+        function renderTable(users) {
+            const tbody = $('#userTable');
+            tbody.innerHTML = ''; // 기존 내용 삭제
+            
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>
+                        <span class="badge ${user.active ? 'badge-success' : 'badge-danger'}">
+                            ${user.active ? '활성' : '비활성'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="editUser(${user.id})">편집</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">삭제</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // 카드 그리드 렌더링
+        function renderCards(items) {
+            const container = $('#cardGrid');
+            container.innerHTML = '';
+            
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <h4>${item.title}</h4>
+                    <p>${item.description}</p>
+                    <div class="flex-row">
+                        <span class="badge badge-primary">${item.category}</span>
+                        <span class="text-muted">${formatDate(item.createdAt)}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 6. 유틸리티 함수들
+        
+        // 날짜 포맷팅
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+        }
+        
+        // 숫자 포맷팅 (콤마 추가)
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        
+        // 문자열 자르기
+        function truncateString(str, length) {
+            return str.length > length ? str.substring(0, length) + '...' : str;
+        }
+        
+        // 디바운스 함수 (검색 등에 사용)
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 7. 샘플 데이터 및 초기화
+        
+        // 샘플 사용자 데이터
+        const sampleUsers = [
+            { id: 1, name: '김철수', email: 'kim@example.com', active: true },
+            { id: 2, name: '이영희', email: 'lee@example.com', active: false },
+            { id: 3, name: '박민수', email: 'park@example.com', active: true }
+        ];
+        
+        // 샘플 카드 데이터
+        const sampleCards = [
+            { id: 1, title: '프로젝트 A', description: '웹 개발 프로젝트', category: '개발', createdAt: '2024-01-15' },
+            { id: 2, title: '프로젝트 B', description: 'SI 시스템 구축', category: '시스템', createdAt: '2024-01-20' },
+            { id: 3, title: '프로젝트 C', description: '데이터베이스 설계', category: 'DB', createdAt: '2024-01-25' }
+        ];
+        
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('페이지가 로드되었습니다.');
+            
+            // 초기 데이터 표시
+            renderTable(sampleUsers);
+            renderCards(sampleCards);
+            
+            // 검색 기능 추가 (디바운스 적용)
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.className = 'form-input';
+            searchInput.placeholder = '검색어를 입력하세요...';
+            searchInput.addEventListener('input', debounce(handleSearch, 300));
+        });
+        
+        // 8. 실무에서 자주 사용되는 함수들
+        
+        function loadData() {
+            // 실제로는 서버에서 데이터를 가져옴
+            console.log('데이터를 로딩중...');
+            showLoading(true);
+            
+            // 시뮬레이션용 setTimeout
+            setTimeout(() => {
+                renderTable(sampleUsers);
+                showLoading(false);
+                console.log('데이터 로딩 완료');
+            }, 1000);
+        }
+        
+        function exportData() {
+            // CSV 형태로 데이터 내보내기
+            const csvContent = convertToCSV(sampleUsers);
+            downloadCSV(csvContent, 'users.csv');
+        }
+        
+        function convertToCSV(data) {
+            const headers = ['ID', '이름', '이메일', '상태'];
+            const rows = data.map(user => [
+                user.id,
+                user.name,
+                user.email,
+                user.active ? '활성' : '비활성'
+            ]);
+            
+            return [headers, ...rows]
+                .map(row => row.join(','))
+                .join('\n');
+        }
+        
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+        
+        function deleteSelected() {
+            if (confirm('선택된 항목을 삭제하시겠습니까?')) {
+                console.log('삭제 처리중...');
+                // 실제 삭제 로직 구현
+            }
+        }
+        
+        function editUser(userId) {
+            const user = sampleUsers.find(u => u.id === userId);
+            if (user) {
+                $('#username').value = user.name;
+                $('#email').value = user.email;
+                console.log('사용자 편집 모드:', user);
+            }
+        }
+        
+        function deleteUser(userId) {
+            if (confirm('이 사용자를 삭제하시겠습니까?')) {
+                console.log('사용자 삭제:', userId);
+                // 실제 삭제 후 테이블 갱신
+            }
+        }
+        
+        function handleSearch(event) {
+            const query = event.target.value.toLowerCase();
+            const filteredUsers = sampleUsers.filter(user => 
+                user.name.toLowerCase().includes(query) ||
+                user.email.toLowerCase().includes(query)
+            );
+            renderTable(filteredUsers);
+        }
+        
+        // 9. 키보드 이벤트 처리 (ESC로 모달 닫기 등)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+
+
+<!-- 프론트엔드 필수 코드 복습하기 끝  -->
+
+<th:block th:replace="~{fragments/corpFooter :: corpFooter}"></th:block>
+</body>
+</html>

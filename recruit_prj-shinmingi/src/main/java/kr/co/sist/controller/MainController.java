@@ -82,6 +82,16 @@ public class MainController {
 	}
 	
 	
+	/**
+	 * si_corp_practice_code.html 연습 바로가기 
+	 */
+	@GetMapping("/corp/si_practice")
+	public String goToSiPractice() {
+		
+		return "/corp/si_corp_practice_code";
+	}
+	
+	
 	
 	
 	
