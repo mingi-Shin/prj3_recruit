@@ -44,7 +44,6 @@ $(function(){
                 alert('이메일과 비밀번호를 입력해주세요.');
                 return;
             }
-            
             // 로그인 API 호출
             loginWithFetch(email, password);
         });
@@ -61,8 +60,7 @@ function joinPageForm(){
 }
 
 /**
- * 프론트엔드에서 로그인 API 호출하는 예시
- * jQuery, Fetch API, Axios 등을 사용할 수 있음
+ * 로그인 API 호출
  */
  async function loginWithFetch(email, password) {
 	    try {
@@ -88,27 +86,30 @@ function joinPageForm(){
 	        // 서버 응답 데이터
 	        const data = await response.json();
 	        
-	        alert(data.redirectUrl);
-	        
 	        if (!data.success) {
 	            throw new Error(data.message || "로그인에 실패했습니다.");
 	        }
-
 	        // 2️. accessToken 저장
 	        localStorage.setItem('accessToken', data.accessToken);
-
 	        // 3️. 메인 페이지 데이터 가져오기 (SPA용)
 	        const token = localStorage.getItem('accessToken');
-	        console.log("accessToken 토큰가져왔니? " + token);
 	        
 	       	//이동하면 setHeader값 초기화됨
 	        //location.href = "http://localhost:8080/corp/main";
 	        
 	       	fetch('/corp/main',{
+	       		method : 'GET',
 	       		headers : {
 	       			'Authorization': `Bearer ${token}`
 	       		}
-	       	});
+	       	})
+	       	.then(res => res.json())
+	       	.then(data => {
+	       		console.log(data.user); //유저정보 출력해봄 
+	       		location.href = data.redirectUrl;
+	       	})
+	       	
+	       	alert("Authorization 확인 : " + token);
 	       	
 	    } catch (error) {
 	        console.error("로그인 오류:", error);
