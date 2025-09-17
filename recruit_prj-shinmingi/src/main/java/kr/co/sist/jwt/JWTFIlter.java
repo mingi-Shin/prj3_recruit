@@ -36,8 +36,6 @@ public class JWTFIlter extends OncePerRequestFilter{
 			throws ServletException, IOException {
 		
 		Authentication testAuthentication = SecurityContextHolder.getContext().getAuthentication();
-		System.out.println("doFilterInternal 실행중 ");
-		System.out.println(testAuthentication);
 		
 		/** 더이상 Authrozation은 쿠키가 아님, 헤더임 
 		Cookie[] cookies = request.getCookies();
@@ -62,26 +60,32 @@ public class JWTFIlter extends OncePerRequestFilter{
 		
 		String header = request.getHeader("Authorization"); // NPE조심 .. 
 		
-		System.out.println("-- JWTFilter 디버깅 -- request.getHeader(\"Authorization\") : " + header);
-		
-		if(header != null && header.startsWith("Bearer")) {
-			accessToken = request.getHeader("Authorization").split(" ")[1];
-			
-			System.out.println("-- JWTFilter 디버깅 -- accessToken: " + accessToken);
+		if(header != null && header.startsWith("Bearer ")) {
+			accessToken = header.substring(7);
 		}
 		
 		// 1. accessToken 없으면 다음필터로 
 		if(accessToken == null) {
 			
-			filterChain.doFilter(request, response);
-			return;
+			//로그인 직후에는 페이지 넘어갈때 Header가 날라가서 cookie로 받아와야 함 
+			Cookie[] cookies =request.getCookies();
+			if(cookies == null || cookies.length == 0) {
+				//쿠키도 없어? 그럼 다음 필터로 넘어가. 
+				filterChain.doFilter(request, response);
+				return;
+			}
+			for(Cookie cookie : cookies) {
+				if(cookie.getName().equals("access")) {
+					accessToken = cookie.getValue();                 //출력 정상 
+				}
+			}
 		}
 		
 		// 2. 토큰이 access 인지 확인(발급시에 페이로드에 명시)
 		String category = jwtUtil.getCategory(accessToken);
 		
-		System.out.println("-- JWTFilter 디버깅 -- category : " + category);
-
+		System.out.println("category 값 = " + category);
+		
 		if(!category.equals("access")) { 
 			
 			//response Body
@@ -110,6 +114,8 @@ public class JWTFIlter extends OncePerRequestFilter{
 		}
 		
 
+		System.out.println("access 토큰 정상 ");
+		
 		//accessToken이 정상이니 SecurityContextHolder세션에 저장하자, principal에 들어갈 것들: (CustomUser 클래스 생성 -> Authentication 인터페이스의 구현체인 UsernamePasswordAuthenticationToken 객체로 생성 )
 		// 참고로 stateless 모드이므로 요청이 끝나면 Context는 소멸 (메모리에 남지않는다는 의미) 
 		UserDTO uDTO = new UserDTO();

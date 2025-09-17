@@ -43,8 +43,8 @@ public class MainController {
 	}
 	
 	@GetMapping("/corp/main")
-	@ResponseBody
-	public Map<String, Object> corpMainPage(HttpServletRequest request, @AuthenticationPrincipal CustomUser user, Model model) {
+	//@ResponseBody
+	public String corpMainPage(HttpServletRequest request, @AuthenticationPrincipal CustomUser user, Model model) {
 		// @AuthenticationPrincipal : Spring Security가 SecurityContextHolder에서 현재 인증(Authentication) 정보를 꺼내서 주입해주는 어노테이션, 현재 없음 
 		
 		CustomUser loginUser = null;
@@ -52,13 +52,7 @@ public class MainController {
 		System.out.println("@AuthenticationPrincipal 테스트중 = " + user); // 나옴 
 		System.out.println("Authorization 테스트중 = " + Authorization); // 나옴 
 		
-		
-		//json으로 응답
-    Map<String, Object> response = new HashMap<>();
-    response.put("redirectUrl", "/corp/main_page");
-    response.put("user", user);
-		
-		return response;
+		return "/corp/main_page";
 	}
 	
 	@GetMapping("/corp/main_page")

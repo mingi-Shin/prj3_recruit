@@ -91,6 +91,9 @@ function joinPageForm(){
 	        }
 	        // 2️. accessToken 저장
 	        localStorage.setItem('accessToken', data.accessToken);
+       		location.href = data.redirectUrl;
+	        
+	        /**
 	        // 3️. 메인 페이지 데이터 가져오기 (SPA용)
 	        const token = localStorage.getItem('accessToken');
 	        
@@ -110,6 +113,7 @@ function joinPageForm(){
 	       	})
 	       	
 	       	alert("Authorization 확인 : " + token);
+	       	*/
 	       	
 	    } catch (error) {
 	        console.error("로그인 오류:", error);

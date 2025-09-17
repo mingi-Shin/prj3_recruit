@@ -33,12 +33,12 @@ public class NewLoginFilter extends UsernamePasswordAuthenticationFilter {
         this.jwtUtil = jwtUtil;
         this.objectMapper = new ObjectMapper();
         
-        // 로그인 처리 URL 설정
-        setFilterProcessesUrl("/api/auth/login");
+        // 로그인 처리 URL 설정 1,2
+        //setFilterProcessesUrl("/api/auth/login"); //1. post,get 모두 가능 
         
         setRequiresAuthenticationRequestMatcher(
             new org.springframework.security.web.util.matcher.AntPathRequestMatcher("/api/auth/login", "POST")
-        );
+        ); // POST만 가능 
     }
 
     @Override
@@ -101,6 +101,12 @@ public class NewLoginFilter extends UsernamePasswordAuthenticationFilter {
             // Access Token을 응답 헤더에 설정
             response.setHeader("Authorization", "Bearer " + accessToken);
             
+            /**
+             * 로그인 필터에서만 임시로 access 쿠키 저장 (0914) 
+             */
+            ResponseCookie accessCookie = createAccessCookie(accessToken); //바로 삭제할 것 
+            response.addHeader("Set-Cookie", accessCookie.toString());
+            
             // Refresh Token을 HttpOnly 쿠키로 설정
             ResponseCookie refreshCookie = createRefreshCookie(refreshToken);
             response.addHeader("Set-Cookie", refreshCookie.toString());
@@ -122,8 +128,8 @@ public class NewLoginFilter extends UsernamePasswordAuthenticationFilter {
             response.setCharacterEncoding("UTF-8");
             response.setStatus(HttpStatus.OK.value());
             
-            // 응답 전송
-            objectMapper.writeValue(response.getWriter(), loginResponse);
+            // 응답 전송, 자바 -> json  
+            objectMapper.writeValue(response.getWriter(), loginResponse); 
             
         } catch (Exception e) {
             log.error("로그인 성공 처리 중 오류", e);
@@ -166,16 +172,28 @@ public class NewLoginFilter extends UsernamePasswordAuthenticationFilter {
     }
     
     /**
-     * Refresh Token용 HttpOnly 쿠키 생성
+     * access Token용 쿠키 생성
      */
-    private ResponseCookie createRefreshCookie(String refreshToken) {
-        return ResponseCookie.from("refresh", refreshToken)
-                .httpOnly(true)
+    private ResponseCookie createAccessCookie(String accessToken) {
+        return ResponseCookie.from("access", accessToken)
+                .httpOnly(false) //js에서 접근 불가 
                 .secure(false) // 개발환경: false, 운영환경: true
                 .sameSite("Lax") // CSRF 방지
                 .path("/")
-                .maxAge(Duration.ofHours(24))
+                .maxAge(Duration.ofMinutes(10))
                 .build();
+    }
+    /**
+     * Refresh Token용 HttpOnly 쿠키 생성
+     */
+    private ResponseCookie createRefreshCookie(String refreshToken) {
+    	return ResponseCookie.from("refresh", refreshToken)
+    			.httpOnly(true) //js에서 접근 불가 
+    			.secure(false) // 개발환경: false, 운영환경: true
+    			.sameSite("Lax") // CSRF 방지
+    			.path("/")
+    			.maxAge(Duration.ofHours(24))
+    			.build();
     }
     
     /**
