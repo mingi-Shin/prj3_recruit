@@ -148,9 +148,9 @@ public class NewLoginFilter extends UsernamePasswordAuthenticationFilter {
          */
         String errorMessage;
         if (failed instanceof BadCredentialsException) {
-            errorMessage = "이메일 또는 비밀번호가 올바르지 않습니다.";
+            errorMessage = "이메일 또는 비밀번호가 올바르지 않습니다. (아마 비밀번호 문제임)";
         } else if (failed instanceof InternalAuthenticationServiceException) {
-            errorMessage = "사용자 정보를 찾을 수 없습니다.";
+            errorMessage = "사용자 정보를 찾을 수 없습니다.(아이디 존재하지 않음)";
         } else {
             errorMessage = "로그인에 실패했습니다.";
         }

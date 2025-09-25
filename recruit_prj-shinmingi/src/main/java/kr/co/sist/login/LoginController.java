@@ -244,25 +244,20 @@ public class LoginController {
    * 사업자등록번호 실시간 조회 메서드 (apiKey)
    */
   @PostMapping("/api/business-status")
-  @ResponseBody
+  @ResponseBody //메서드 반환값을 HTTP 응답 바디로 직렬화
   public  ResponseEntity<String> checkBusiness (@RequestBody Map<String, Object> payload){
   	
-  	//System.out.println(payload);  //{b_no=[4178112848]}
-  	RestTemplate restTemplate = new RestTemplate();
+  	RestTemplate restTemplate = new RestTemplate(); //외부 요청을 동기 방식으로 보낼 RestTemplate 인스턴스 생성. (한 번만 쓰는 경우라면 괜찮지만, 보통은 빈으로 주입하거나 RestTemplateBuilder로 생성)
   	String url = "https://api.odcloud.kr/api/nts-businessman/v1/status?serviceKey=" + apiKey;
   	
-  	System.out.println(url);
-  	
-    //HTTP 요청 헤더에 JSON 타입 명시rhtod
   	HttpHeaders headers = new HttpHeaders();
   	headers.setContentType(MediaType.APPLICATION_JSON);
-  	//System.out.println(headers); //[Content-Type:"application/json"]
   	
-  	//클라이언트가 보낸 데이터(payload)를 담아서 HTTP 요청 준비
+  	//바디 + 헤더를 합친 HTTP 요청 엔티티 생성.
   	HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
   	//System.out.println(entity); //<{b_no=[1208800767]},[Content-Type:"application/json"]>
   	
-  	// RestTemplate을 이용해서 외부 API에 POST 요청을 보내고, 응답을 받음
+  	// 외부 API로부터 받은 ResponseEntity를 그대로 컨트롤러의 응답으로 반환 — status 코드와 바디가 클라이언트로 전달
   	return restTemplate.postForEntity(url, entity, String.class);
   }
   

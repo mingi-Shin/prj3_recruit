@@ -167,10 +167,10 @@ public class LoginJoinService {
     public CorpEntity registerCorp(@RequestAttribute UserCorpDTO ucDTO, String bizCertName) {
 
     	//사업자등록번호 중복 조회
-    	if(cr.existsById(ucDTO.getCorpNo())){
+    	if(cr.existsById(ucDTO.getCorpNo())){   
     		//가입 내역이 이미 존재한다.
-    		throw new IllegalStateException("이미 등록된 사업자 등록번호입니다.");
-    	}
+    		throw new IllegalStateException("이미 등록된 사업자 등록번호입니다.");    
+    	}      
     	
         // 기업정보 기입
         CorpEntity ce = new CorpEntity();

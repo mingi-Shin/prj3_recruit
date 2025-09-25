@@ -35,11 +35,13 @@ public class JWTUtil {
 	public JWTUtil(@Value("${spring.jwt.mysecret}") String secret, CipherUtil cipherUtil, Environment environment) {
 	   
 	  // 문자열 형태의 시크릿 키를 바이트 배열로 변환하고 [JWT 서명 알고리즘에서는 byte[] 키를 사용해야 하기 때문],
-	  // HMAC SHA-256 [대칭키 방식] 알고리즘을 사용하는 SecretKey 객체로 생성
+	  // HMAC SHA-256 : 양방향 암호화가 아닌 해시 함수를 사용하므로 복호화가 불가능
+		// 대칭키 방식 (서명과 검증에 같은 secretKey 사용)
 	  secretKey = new SecretKeySpec(
-       secret.getBytes(StandardCharsets.UTF_8),
-       Jwts.SIG.HS256.key().build().getAlgorithm()
+       secret.getBytes(StandardCharsets.UTF_8), //문자열 형태의 시크릿 키(secret)를 바이트 배열로 변환 ->  "mySecretKey" → [109, 121, 83, 101, 99, ...]
+       Jwts.SIG.HS256.key().build().getAlgorithm() //jjwt 라이브러리에서 제공하는 HS256 알고리즘 이름 가져오기
 	  );
+	  //위 바이트 배열과 알고리즘명을 사용해 javax.crypto.SecretKey 객체 생성
 	  
 	  this.cipherUtil = cipherUtil;
 	  this.environment = environment;

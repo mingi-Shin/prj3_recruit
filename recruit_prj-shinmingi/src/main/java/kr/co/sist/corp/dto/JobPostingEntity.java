@@ -12,10 +12,10 @@ import jakarta.persistence.Table;
 import kr.co.sist.user.entity.PositionCodeEntity;
 import lombok.Data;
 
-@Entity
+@Entity //이 클래스가 DB 테이블과 매핑되는 엔티티임을 선언
 @Data
-@Table(name="JOB_POSTING")
-public class JobPostingEntity {
+@Table(name="JOB_POSTING") //Entity이름과 table이름이 다를때 따로 이렇게 설정하기도 
+public class JobPostingEntity { //클래스와 필드 이름이 기본적으로 테이블과 컬럼 이름으로 매핑됨
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

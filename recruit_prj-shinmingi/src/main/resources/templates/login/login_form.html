@@ -65,7 +65,7 @@ function joinPageForm(){
  async function loginWithFetch(email, password) {
 	    try {
 	        // 1️ 로그인 요청
-	        const response = await fetch('/api/auth/login', {
+	        const response = await fetch('/api/auth/login', { //NewLoginFilter.class 로 이동중 
 	            method: 'POST',
 	            headers: {
 	                'Content-Type': 'application/json'
