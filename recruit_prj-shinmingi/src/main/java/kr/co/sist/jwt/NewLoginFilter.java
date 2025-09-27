@@ -188,9 +188,9 @@ public class NewLoginFilter extends UsernamePasswordAuthenticationFilter {
      */
     private ResponseCookie createRefreshCookie(String refreshToken) {
     	return ResponseCookie.from("refresh", refreshToken)
-    			.httpOnly(true) //js에서 접근 불가 
+    			.httpOnly(true) //쿠키를 js에서 접근 불가, 단지 그뿐  
     			.secure(false) // 개발환경: false, 운영환경: true
-    			.sameSite("Lax") // CSRF 방지
+    			.sameSite("Lax") // CSRF 방지 ( Lax : 크로스사이트 GET만 허용	링크, GET 폼 전송 등. 보안성은 Strict가 더 높음) 
     			.path("/")
     			.maxAge(Duration.ofHours(24))
     			.build();
