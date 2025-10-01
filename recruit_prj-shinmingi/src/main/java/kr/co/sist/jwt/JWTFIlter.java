@@ -59,12 +59,12 @@ public class JWTFIlter extends OncePerRequestFilter{
 		String accessToken = null;
 		
 		String header = request.getHeader("Authorization"); // NPE조심 .. 
-		
+
 		if(header != null && header.startsWith("Bearer ")) {
 			accessToken = header.substring(7);
 		}
 		
-		// 1. accessToken 없으면 다음필터로 
+		// 1. 헤더에 accessToken 없으면 다음필터로 
 		if(accessToken == null) {
 			
 			//로그인 직후에는 페이지 넘어갈때 Header가 날라가서 cookie로 받아와야 함 
@@ -74,10 +74,19 @@ public class JWTFIlter extends OncePerRequestFilter{
 				filterChain.doFilter(request, response);
 				return;
 			}
+			//쿠키에서 access뽑는 이유 : 로그인시 리다이렉트에서 Authentication 객체를 유지하기 위해서 
 			for(Cookie cookie : cookies) {
 				if(cookie.getName().equals("access")) {
-					accessToken = cookie.getValue();                 //출력 정상 
-				}
+					accessToken = cookie.getValue();                 
+					System.out.println("accessToken: " + accessToken);
+					break;
+				} 
+			}
+			
+			// 쿠키 중 access가 없으면 다음 필터로
+			if(accessToken == null) {
+		    filterChain.doFilter(request, response);
+		    return;
 			}
 		}
 		
@@ -107,6 +116,8 @@ public class JWTFIlter extends OncePerRequestFilter{
 			//response Body
 			PrintWriter writer = response.getWriter();
 			writer.print("access token expired!");
+			
+			//Filter에서 리이슈 컨트롤러를 호출해야 하나? 
 		
 			//response status code
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); //401 
@@ -115,7 +126,6 @@ public class JWTFIlter extends OncePerRequestFilter{
 		
 
 		System.out.println("access 토큰 정상 ");
-		
 		//accessToken이 정상이니 SecurityContextHolder세션에 저장하자, principal에 들어갈 것들: (CustomUser 클래스 생성 -> Authentication 인터페이스의 구현체인 UsernamePasswordAuthenticationToken 객체로 생성 )
 		// 참고로 stateless 모드이므로 요청이 끝나면 Context는 소멸 (메모리에 남지않는다는 의미) 
 		UserDTO uDTO = new UserDTO();

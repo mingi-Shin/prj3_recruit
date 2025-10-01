@@ -89,6 +89,7 @@ public class ReissueService {
 	
 	/**
 	 * 문자열 리턴은 오타나 유지보수시 불편, enum이나 Result객체로 관리하는게 안정적 
+	 * 널, 무효값, 기간지남, 성공 
 	 */
 	public enum ReissueResult {
 		NULL, INVALID, EXPIRED, SUCCESS
@@ -106,6 +107,11 @@ public class ReissueService {
 														.build();
 		return cookie;
 	}
+	/**
+	 * 만약 new 생성자였다면, new ResponseCookie("refresh", refreshJwt, true, false, "Strict", "/", 24시간....);
+	 * 이렇게 길고 가독성 떨어지는 코드가 되었을 것
+	 * 즉, new 대신 빌더객체를 쓰는 이유는, 가독성이 좋고 필요한 속성만 선택적으로 셋팅할수 있기 때문  
+	 */
 	
 	
 }

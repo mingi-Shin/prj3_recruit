@@ -475,7 +475,8 @@ function startTimer(duration, display) {
 }
 
 //----- 사업자등록정보 진위확인 API 호출 -----
-let isCorpNumActive = false;
+let isCorpNumActive = true; // 전산망 오류, 임시로 true 처리. 
+
 function chkCorpNum(){
 	document.getElementById("corpNo").addEventListener("input", callAPI);
 	

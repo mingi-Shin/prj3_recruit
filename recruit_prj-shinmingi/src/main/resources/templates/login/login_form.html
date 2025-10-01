@@ -90,7 +90,7 @@ function joinPageForm(){
 	            throw new Error(data.message || "로그인에 실패했습니다.");
 	        }
 	        // 2️. accessToken 저장
-	        localStorage.setItem('accessToken', data.accessToken);
+	        //localStorage.setItem('accessToken', data.accessToken);
        		location.href = data.redirectUrl;
 	        
 	        /**
